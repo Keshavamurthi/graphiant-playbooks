@@ -1,4 +1,5 @@
 import os
+import yaml
 from concurrent.futures import Future, wait
 from concurrent.futures.thread import ThreadPoolExecutor
 from gcsdk_client import GcsdkClient
@@ -15,10 +16,6 @@ class PortalUtils(object):
         #self.templates_path = cwd + "/../templates/"
         #self.artefacts_path = cwd + "/../artefacts/"
         self.gcsdk = GcsdkClient(base_url=base_url, username=username, password=password)
-
-    def update_device_bringup_status(self, device_id, status):
-        result = self.gcsdk.put_devices_bringup(device_ids=[device_id], status=status)
-        return result
 
     def concurrent_task_execution(self, function, config_dict):
         output_dict = {}
@@ -47,3 +44,16 @@ class PortalUtils(object):
                     future.result(timeout=0)
             except Exception as e:
                 print(f"future failed: {e}")
+
+    def update_device_bringup_status(self, device_id, status):
+        result = self.gcsdk.put_devices_bringup(device_ids=[device_id], status=status)
+        return result
+
+    def update_multiple_devices_bringup_status(self, yaml_file):
+        input_file_path = self.templates_path + yaml_file
+        input_dict = {}
+        with open(input_file_path, "r") as file:
+            config_data = yaml.safe_load(file)
+            for device_id, config in config_data.items():
+                input_dict[device_id] = {"device_id": device_id, "status": config["status"]}
+            self.concurrent_task_execution(self.update_device_bringup_status, input_dict)
