@@ -1,0 +1,50 @@
+30000050143:
+  wan:
+    - interface_name: GigabitEthernet5/0/0
+      ipv4_address: 10.90.1.2/24
+      circuit_name: c-GigabitEthernet5/0/0
+      default_lan: default-10000000288
+  lan:
+    - interface_name: GigabitEthernet8/0/0
+      ipv4_address: 10.1.8.2/24
+      ipv6_address: 2001:10:1:8::2/64
+      lan: lan-8-bgpfilters-new
+      default_lan: default-10000000288
+30000050144:
+  wan:
+    - interface_name: GigabitEthernet5/0/0
+      ipv4_address: 10.90.2.3/24
+      circuit_name: c-GigabitEthernet5/0/0
+      default_lan: default-10000000288
+  lan:
+    - interface_name: GigabitEthernet8/0/0
+      ipv4_address: 10.1.18.3/24
+      ipv6_address: 2001:10:1:18::3/64
+      lan: lan-18-bgpfilters-new
+      vlan: 18
+      default_lan: default-10000000288
+    - interface_name: GigabitEthernet8/0/0
+      ipv4_address: 10.1.19.3/24
+      ipv6_address: 2001:10:1:19::3/64
+      lan: lan-19-bgpfilters-new
+      vlan: 19
+      default_lan: default-10000000288
+30000050145:
+  wan:
+    - interface_name: GigabitEthernet5/0/0
+      ipv4_address: 10.90.2.4/24
+      circuit_name: c-GigabitEthernet5/0/0
+      default_lan: default-10000000288
+  lan:
+    - interface_name: GigabitEthernet8/0/0
+      ipv4_address: 10.1.18.4/24
+      ipv6_address: 2001:10:1:18::4/64
+      lan: lan-18-bgpfilters-new
+      vlan: 18
+      default_lan: default-10000000288
+    - interface_name: GigabitEthernet8/0/0
+      ipv4_address: 10.1.19.4/24
+      ipv6_address: 2001:10:1:19::4/64
+      lan: lan-19-bgpfilters-new
+      vlan: 19
+      default_lan: default-10000000288

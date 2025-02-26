@@ -1,0 +1,26 @@
+- device_name: Edge-1
+  config:
+    interfaces:
+      name: GigabitEthernet6
+      description: Lan to Branch1
+      ipv4:
+        address: 70.1.1.1/24
+        dhcp_client: 'false'
+      ipv6:
+        address: None
+        dhcp_client: 'false'
+      mtu: 1500
+      status: up
+- device_name: Edge-1
+  config:
+    interfaces:
+      name: GigabitEthernet7
+      description: Lan to Branch2
+      ipv4:
+        address: 70.1.2.1/24
+        dhcp_client: 'false'
+      ipv6:
+        address: None
+        dhcp_client: 'false'
+      mtu: 1500
+      status: up

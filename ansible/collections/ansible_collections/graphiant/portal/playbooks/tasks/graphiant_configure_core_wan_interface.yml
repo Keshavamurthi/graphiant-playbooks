@@ -1,0 +1,36 @@
+---
+- name: Configuring WAN interfaces in Graphiant Core Devices
+  hosts: localhost
+  gather_facts: false
+
+  # Option #1 - Variables can be inventory file as host, group or all hosts variables.
+  # Option #2 - Variables from var files and can be included in plabook/role using vars_file or include_vars directive.
+  # Option #3 - Variables inside playbook/role using vars directive.
+  # Option #4 - Variables can be passed in runtime using --extra_vars or -e (Higher precedence) 
+  #             key=value format (or)J SON string format (or) JSON or Yaml file  --extra-vars=@vars/credentials.yml)
+  # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence
+
+  vars:
+    portal_api_url: https://api.hestia.graphiant.io/
+    portal_username: keshav@graphiant.com
+    # portal_password: 
+
+    gcs_client_params: &gcs_client_params
+      base_url: "{{ portal_api_url }}"
+      password: "{{ portal_password }}"
+      username: "{{ portal_username }}"
+      
+
+  tasks:
+    - name: Configuring Graphiant WAN interfaces
+      graphiant.portal.graphiant_core_wan_interface:
+        <<: *gcs_client_params
+        method: PUT
+        uri: v1/devices/30000000037/config
+        input_csv_file: config_core_wan_interfaces.csv
+        device_id: 30000000037
+      register: request_results
+    - name: Display request_results
+      ansible.builtin.debug:
+        var: request_results
+
