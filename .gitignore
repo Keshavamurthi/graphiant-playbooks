@@ -1,0 +1,4 @@
+*.log
+ansible/collections/collections
+.DS_Store
+__pycache__

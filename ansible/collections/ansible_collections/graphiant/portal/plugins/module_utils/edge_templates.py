@@ -1,3 +1,7 @@
+from .logger import setup_logger
+
+LOG = setup_logger()
+
 class EdgeTemplates(object):
 
     @staticmethod

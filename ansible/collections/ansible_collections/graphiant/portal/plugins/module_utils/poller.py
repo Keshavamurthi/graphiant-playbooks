@@ -4,8 +4,9 @@ import sys
 import time
 import traceback
 from future.utils import raise_
+from .logger import setup_logger
 
-LOG = logging.getLogger(__name__)
+LOG = setup_logger()
 
 
 def poller(timeout=60, wait=0.1, retries=None):

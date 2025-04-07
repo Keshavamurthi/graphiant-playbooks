@@ -1,5 +1,5 @@
 ---
-- name: Graphiant Portal Client Examples
+- name: Configuring interfaces for Edge Devices from Input YAML
   hosts: localhost
   gather_facts: false
 
@@ -11,24 +11,21 @@
   # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence
 
   vars:
-    portal_api_url: https://api.hestia.graphiant.io/
-    portal_username: keshav@graphiant.com
-    # portal_password: 
+    portal_url: https://api.test.graphiant.io
+    portal_username: None
+    portal_password: None
 
     gcs_client_params: &gcs_client_params
-      base_url: "{{ portal_api_url }}"
+      portal_url: "{{ portal_url }}"
       password: "{{ portal_password }}"
       username: "{{ portal_username }}"
-      
+
 
   tasks:
-    - name: Sending REST API request to Graphiant Portal
-      graphiant.portal.graphiant_api_requests:
+    - name: Configuring Graphiant Edge interfaces
+      graphiant.portal.graphiant_interfaces:
         <<: *gcs_client_params
-        method: GET
-        uri: v1/devices
+        input_config_yaml: edge_configs.yaml
+        action: config
+        device_type: edge
       register: request_results
-    - name: Display request_results
-      ansible.builtin.debug:
-        var: request_results
-

@@ -1,12 +1,15 @@
-from portal_utils import PortalUtils
-from edge_templates import EdgeTemplates
+from .portal_utils import PortalUtils
+from .edge_templates import EdgeTemplates
 from time import sleep
 import yaml
+from .logger import setup_logger
+
+LOG = setup_logger()
 
 class Edge(PortalUtils):
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, base_url=None, username=None, password=None, **kwargs):
+        super().__init__(base_url=base_url, username=username, password=password, **kwargs)
         self.template = EdgeTemplates()
 
     def add_wan_interface(self, device_id, **kwargs):
@@ -80,7 +83,8 @@ class Edge(PortalUtils):
         with open(input_file_path, "r") as file:
             config_data = yaml.safe_load(file)
         output_config = {}
-        for device_id, iface_configs in config_data.items():
+        for device_name, iface_configs in config_data.items():
+            device_id = self.get_device_id(device_name=device_name)
             device_config = {"interfaces": {}, "circuits": {}}
             for iface, config_list in iface_configs.items():
                 if iface == "wan":
@@ -107,16 +111,20 @@ class Edge(PortalUtils):
             config_data = yaml.safe_load(file)
         default_lan_config = {}
         default_interface_config = {}
-        for device_id, iface_configs in config_data.items():
+        default_lan = f'default-{self.get_enterprise_id()}'
+        for device_name, iface_configs in config_data.items():
+            device_id = self.get_device_id(device_name=device_name)
             default_lan_device_config = {"interfaces": {}}
             default_interface_device_config = {"interfaces": {}}
             for iface, config_list in iface_configs.items():
                 if iface == "wan":
                     for config in config_list:
+                        config['default_lan'] = default_lan
                         default_lan_device_config["interfaces"].update(self.template._default_lan_interface_template(**config)["interfaces"])
                         default_interface_device_config["interfaces"].update(self.template._default_interface_template(**config)["interfaces"])
                 if iface == "lan":
                     for config in config_list:
+                        config['default_lan'] = default_lan
                         if "vlan" in config.keys():
                             try:
                                 if default_lan_device_config["interfaces"].get(config["interface_name"]).get("interface").get("subinterfaces"):

@@ -1,4 +1,4 @@
-from edge_utils import PortalUtils
+from .edge_utils import PortalUtils
 
 class Core(PortalUtils):
 
@@ -107,10 +107,10 @@ class Core(PortalUtils):
         result = result if output.job_id else False
         return result
 
-core = Core()
-result = core.add_core_interface(device_id=30000049005, interface_name="TenGigabitEthernet7/5", ipv4_address="92.93.94.97/30", gw_address="92.93.94.98",
-                                 ipv6_address="fc01:2001::1/127", peer_name="uk-read-rc-et-0-6520", ospf_cost=100, circuit_name="isp-8")
-result = core.delete_interface(device_id=30000049005, interface_name="TenGigabitEthernet7/5", default_lan="default-10000000000")
+# core = Core()
+# result = core.add_core_interface(device_id=30000049005, interface_name="TenGigabitEthernet7/5", ipv4_address="92.93.94.97/30", gw_address="92.93.94.98",
+#                                 ipv6_address="fc01:2001::1/127", peer_name="uk-read-rc-et-0-6520", ospf_cost=100, circuit_name="isp-8")
+# result = core.delete_interface(device_id=30000049005, interface_name="TenGigabitEthernet7/5", default_lan="default-10000000000")
 
 #core = Core()
 #result = core.add_core_interface(device_id=30000049005, interface_name="TenGigabitEthernet7/5", ipv4_address="92.93.94.97/30", 

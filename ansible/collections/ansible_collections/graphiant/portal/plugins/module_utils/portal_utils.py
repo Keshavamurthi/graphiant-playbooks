@@ -2,15 +2,20 @@ import os
 import yaml
 from concurrent.futures import Future, wait
 from concurrent.futures.thread import ThreadPoolExecutor
-from gcsdk_client import GcsdkClient
+from .logger import setup_logger
+from .gcsdk_client import GcsdkClient
 from typing import Sequence
+
+LOG = setup_logger()
 
 class PortalUtils(object):
 
     def __init__(self, base_url=None, username=None, password=None):
         cwd = os.getcwd()
-        self.ansible_playbook_path = cwd + \
-        "/graphiant-playbooks/ansible/collections/ansible_collections/graphiant/portal/playbooks"
+        #LOG.info(cwd)
+        # self.ansible_playbook_path = cwd + \
+        # "/graphiant-playbooks/ansible/collections/ansible_collections/graphiant/portal/playbooks"
+        self.ansible_playbook_path = cwd
         self.templates_path = self.ansible_playbook_path + "/templates/"
         self.artefacts_path = self.ansible_playbook_path + "/artefacts/"
         #self.templates_path = cwd + "/../templates/"
@@ -36,14 +41,14 @@ class PortalUtils(object):
         # If called with default arguments, `wait` should only return when
         # all the futures completed
         if not_done:
-            print(f"{len(not_done)} futures did not finish running")
+            LOG.warning(f"{len(not_done)} futures did not finish running")
 
         for future in futures:
             try:
                 if future:
                     future.result(timeout=0)
             except Exception as e:
-                print(f"future failed: {e}")
+                LOG.error(f"future failed: {e}")
 
     def update_device_bringup_status(self, device_id, status):
         result = self.gcsdk.put_devices_bringup(device_ids=[device_id], status=status)
@@ -54,6 +59,25 @@ class PortalUtils(object):
         input_dict = {}
         with open(input_file_path, "r") as file:
             config_data = yaml.safe_load(file)
-            for device_id, config in config_data.items():
+            for device_name, config in config_data.items():
+                device_id = self.get_device_id(device_name=device_name)
                 input_dict[device_id] = {"device_id": device_id, "status": config["status"]}
             self.concurrent_task_execution(self.update_device_bringup_status, input_dict)
+
+    def get_device_id(self, device_name):
+        output = self.gcsdk.get_edges_summary()
+        output_dict = {}
+        for device_info in output:
+            if device_name in device_info.hostname:
+                output_dict[device_info.hostname] = device_info.device_id
+        LOG.debug(f"get_device_id : {output_dict}")
+        if len(output_dict) == 1:
+            for device_id in output_dict.values():
+                return device_id
+        return output_dict
+    
+    def get_enterprise_id(self):
+        output = self.gcsdk.get_edges_summary()
+        for device_info in output:
+            LOG.debug(f"get_enterprise_id : {device_info.enterprise_id}")
+            return device_info.enterprise_id

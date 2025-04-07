@@ -1,5 +1,5 @@
 ---
-- name: Deconfiguring WAN interfaces in Graphiant Core Devices
+- name: Configuring interfaces for Edge Devices from Input YAML
   hosts: localhost
   gather_facts: false
 
@@ -11,26 +11,21 @@
   # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence
 
   vars:
-    portal_api_url: https://api.hestia.graphiant.io/
-    portal_username: keshav@graphiant.com
-    # portal_password: 
+    portal_url: https://api.test.graphiant.io
+    portal_username: None
+    portal_password: None
 
     gcs_client_params: &gcs_client_params
-      base_url: "{{ portal_api_url }}"
+      portal_url: "{{ portal_url }}"
       password: "{{ portal_password }}"
       username: "{{ portal_username }}"
-      
+
 
   tasks:
-    - name: Deconfiguring Graphiant WAN interfaces
-      graphiant.portal.graphiant_core_wan_interface:
+    - name: Configuring Graphiant Edge interfaces
+      graphiant.portal.graphiant_interfaces:
         <<: *gcs_client_params
-        method: PUT
-        uri: v1/devices/30000000037/config
-        input_csv_file: deconfig_core_wan_interfaces.csv
-        device_id: 30000000037
+        input_config_yaml: edge_configs.yaml
+        action: deconfig
+        device_type: edge
       register: request_results
-    - name: Display request_results
-      ansible.builtin.debug:
-        var: request_results
-
