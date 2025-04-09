@@ -1,0 +1,21 @@
+{
+  "interfaces": {        
+        "{{ interface_name }}": {
+            "interface": {
+                    "lan": "{{ lan }}",
+                    "description": "{{ description | default(lan)}}",
+                    "ipv4": {
+                        "address": {
+                            "address": "{{ ipv4_address }}"
+                        }
+                    },
+                    "ipv6": {
+                        "address": {
+                            "address": "{{ ipv6_address }}"
+                        }
+                    },
+                    "maxTransmissionUnit": {{ mtu | default(9000) }}
+            }
+        }
+  }
+}

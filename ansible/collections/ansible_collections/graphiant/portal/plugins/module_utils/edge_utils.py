@@ -10,7 +10,7 @@ class Edge(PortalUtils):
 
     def __init__(self, base_url=None, username=None, password=None, **kwargs):
         super().__init__(base_url=base_url, username=username, password=password, **kwargs)
-        self.template = EdgeTemplates()
+        self.template = EdgeTemplates(self.config_templates_path)
 
     def add_wan_interface(self, device_id, **kwargs):
         config = self.template._wan_interface_template(**kwargs)
@@ -79,7 +79,7 @@ class Edge(PortalUtils):
         self.concurrent_task_execution(self.delete_subinterface, config_dict)
     
     def add_multiple_interfaces_from_yaml(self, yaml_file):
-        input_file_path = self.templates_path + yaml_file
+        input_file_path = self.config_path + yaml_file
         with open(input_file_path, "r") as file:
             config_data = yaml.safe_load(file)
         output_config = {}
@@ -106,7 +106,7 @@ class Edge(PortalUtils):
         self.concurrent_task_execution(self.gcsdk.put_device_config, output_config)
 
     def delete_multiple_interfaces_from_yaml(self, yaml_file):
-        input_file_path = self.templates_path + yaml_file
+        input_file_path = self.config_path + yaml_file
         with open(input_file_path, "r") as file:
             config_data = yaml.safe_load(file)
         default_lan_config = {}

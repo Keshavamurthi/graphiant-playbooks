@@ -1,0 +1,8 @@
+{                  
+    "{{ vlan }}": {
+        "interface": {
+            "vlan": {{ vlan }},
+            "lan": "{{ default_lan }}"
+        }
+    }
+}

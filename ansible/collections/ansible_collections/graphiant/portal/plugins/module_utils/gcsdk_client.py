@@ -53,15 +53,15 @@ class GcsdkClient():
         try:
             edge_summary = self.get_edges_summary(device_id=device_id)
             if edge_summary.portal_status == "Ready":
-                LOG.debug(f"put_device_config : config to be pushed for {device_id}: \n{body}")
+                LOG.info(f"put_device_config : config to be pushed for {device_id}: \n{body}")
                 response = self.api.v1_devices_device_id_config_put(authorization=self.bearer_token, 
                                                                     device_id=device_id, body=body)
                 return response
             else:
-                LOG.debug(f"put_device_config : Retrying,  {device_id} Portal Status: {edge_summary.portal_status} (Expected Ready)")
+                LOG.info(f"put_device_config : Retrying,  {device_id} Portal Status: {edge_summary.portal_status} (Expected Ready)")
                 assert False, f"put_device_config : Retrying,  {device_id} Portal Status: {edge_summary.portal_status} (Expected Ready)"
         except self.swagger_client.rest.ApiException as e:
-            LOG.debug(f"put_device_config : Exception While config push {e}")
+            LOG.warning(f"put_device_config : Exception While config push {e}")
             assert False, f"put_device_config : Retrying, Exception while config push to {device_id}"
     
     def post_devices_bringup(self, device_ids):

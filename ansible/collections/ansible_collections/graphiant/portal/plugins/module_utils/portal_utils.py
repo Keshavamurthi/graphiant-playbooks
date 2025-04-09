@@ -12,14 +12,15 @@ class PortalUtils(object):
 
     def __init__(self, base_url=None, username=None, password=None):
         cwd = os.getcwd()
-        #LOG.info(cwd)
-        # self.ansible_playbook_path = cwd + \
-        # "/graphiant-playbooks/ansible/collections/ansible_collections/graphiant/portal/playbooks"
         self.ansible_playbook_path = cwd
-        self.templates_path = self.ansible_playbook_path + "/templates/"
+        self.config_path = self.ansible_playbook_path + "/configs/"
         self.artefacts_path = self.ansible_playbook_path + "/artefacts/"
-        #self.templates_path = cwd + "/../templates/"
-        #self.artefacts_path = cwd + "/../artefacts/"
+        self.config_templates_path = self.ansible_playbook_path + "/../../plugins/module_utils/config_templates/"
+        self.logs_path = self.ansible_playbook_path + "/logs/"
+        LOG.info(f"PortalUtils : templates_path : {self.config_path}")
+        LOG.info(f"PortalUtils : artefacts_path : {self.artefacts_path}")
+        LOG.info(f"PortalUtils : config_templates : {self.config_templates_path}")
+        LOG.info(f"PortalUtils : logs_path : {self.logs_path}")
         self.gcsdk = GcsdkClient(base_url=base_url, username=username, password=password)
 
     def concurrent_task_execution(self, function, config_dict):
@@ -55,7 +56,7 @@ class PortalUtils(object):
         return result
 
     def update_multiple_devices_bringup_status(self, yaml_file):
-        input_file_path = self.templates_path + yaml_file
+        input_file_path = self.config_path + yaml_file
         input_dict = {}
         with open(input_file_path, "r") as file:
             config_data = yaml.safe_load(file)

@@ -1,6 +1,6 @@
 import logging
 
-def setup_logger(logfile="ansible.log", level=logging.DEBUG):
+def setup_logger(logfile="logs/ansible.log", level=logging.INFO):
     logger = logging.getLogger("Graphiant_playbook")
     logger.setLevel(level)
 
