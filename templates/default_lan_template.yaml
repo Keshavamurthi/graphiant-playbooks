@@ -1,0 +1,3 @@
+{
+    "lan": "{{ default_lan }}"
+}

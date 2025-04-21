@@ -1,0 +1,34 @@
+import logging
+from datetime import datetime
+from pathlib import Path as path
+
+def setup_logger(level=logging.INFO):
+    logger = logging.getLogger("Graphiant_playbook")
+    logger.setLevel(level)
+
+    # Prevent duplicate handlers in Jupyter/IDE environments
+    if not logger.handlers:
+        cwd = path.cwd()
+        timestamp_str = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        log_file = cwd / 'logs' / f'log_{timestamp_str}.log'
+        
+        # File handler
+        fh = logging.FileHandler(log_file)
+        fh.setLevel(level)
+        
+        # Console handler
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.ERROR)  # Only errors to console
+        
+        # Formatter
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        
+        # Add handlers
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+    
+    return logger

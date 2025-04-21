@@ -1,0 +1,32 @@
+{            
+    "{{ interface_name }}": {
+        "interface": {
+            "adminStatus": "{{ admin_status | default('true')}}",
+            "circuit": "{{ circuit_name }}",
+            "description": "{{ description | default(circuit_name)}}",
+            "ipv4": {
+                {% if ipv4_address %},
+                "address": {
+                    "address": "{{ ipv4_address }}",
+                },
+                {% else %}
+                "dhcp": {
+                    "dhcpClient": "{{ ipv4_dhcp | default('true')}}"
+                },
+                {% endif %}
+            },
+            "ipv6": {
+                {% if ipv6_address %},
+                "address": {
+                    "address": "{{ ipv6_address }}",
+                },
+                {% else %}
+                "dhcp": {
+                    "dhcpClient": "{{ ipv6_dhcp | default('true')}}"
+                },
+                {% endif %}
+            },
+            "maxTransmissionUnit": {{ mtu | default(1500) }},
+        }
+    }
+}

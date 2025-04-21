@@ -1,0 +1,22 @@
+{
+  "{{ vlan }}": {
+    "interface": {
+      "lan": "{{ lan }}",
+      "vlan": {{ vlan }},
+      "description": "{{ description | default(vlan ~ '_' ~ lan, true) }}",
+      "adminStatus": "true",
+      "ipv4": {
+        "address": {
+          "address": "{{ ipv4_address }}"
+        }
+      }
+      {% if ipv6_address %},
+      "ipv6": {
+        "address": {
+          "address": "{{ ipv6_address }}"
+        }
+      }
+      {% endif %}
+    }
+  }
+}

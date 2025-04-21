@@ -1,0 +1,19 @@
+{ 
+    "{{ circuit_name }}": {
+        "name": "{{ circuit_name }}",
+        "description": "{{ description | default(circuit_name) }}",
+        "linkUpSpeedMbps": "{{ upload_bandwidth | default(50) }}",
+        "linkDownSpeedMbps": "{{ download_bandwidth | default(100) }}",
+        "connectionType": "{{ connection_type | default('internet_dia') }}",
+        "label": "{{ label | default('internet_dia_4') }}",
+        "qosProfile": "{{ qos_profile | default('gold25') }}",
+        "qosProfileType": "{{ qos_profile_type | default('balanced') }}",
+        "diaEnabled": {{ dia | default(False) }},
+        "patAddresses": [],
+        "interfaceName": "",
+        "snmpIndex": 0,
+        "coreLogicalInterfaces": [],
+        "staticRoutes": [],
+        "diaSnmpIndex": 0
+    }
+}

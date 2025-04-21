@@ -1,9 +1,0 @@
-{
-    "interfaces": {
-        "{{ interface_name }}": {
-            "interface": {
-                "lan": "{{ default_lan }}"
-            }
-        }
-    }
-}
