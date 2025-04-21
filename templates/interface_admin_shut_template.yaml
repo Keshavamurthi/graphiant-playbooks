@@ -1,5 +1,7 @@
 {
-    "adminStatus": "false",
+    "adminStatus": False,
     "description": "",
-    "maxTransmissionUnit": 1500
+    "maxTransmissionUnit": 1500,
+    'ipv4': {'address': {}}, 
+    'ipv6': {'address': {}},
 }

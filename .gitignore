@@ -2,3 +2,4 @@
 ansible/collections/collections
 .DS_Store
 __pycache__
+test.py
