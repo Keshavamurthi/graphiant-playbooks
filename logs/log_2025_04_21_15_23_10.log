@@ -1,0 +1,46 @@
+2025-04-21 15:23:10,486 - Graphiant_playbook - INFO - PortalUtils : templates_path : /Users/keshav/ws/graphiant-playbooks/configs/
+2025-04-21 15:23:10,487 - Graphiant_playbook - INFO - PortalUtils : config_templates : /Users/keshav/ws/graphiant-playbooks/templates/
+2025-04-21 15:23:10,487 - Graphiant_playbook - INFO - PortalUtils : logs_path : /Users/keshav/ws/graphiant-playbooks/logs/
+2025-04-21 15:23:12,530 - Graphiant_playbook - INFO - Poller attempt: 1/12
+2025-04-21 15:23:12,531 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-21 15:23:12,789 - Graphiant_playbook - INFO - put_device_config : config to be pushed for 30000051080: 
+{'configuration_metadata': None,
+ 'core': None,
+ 'description': None,
+ 'edge': {'interfaces': {'GigabitEthernet5/0/0': {'interface': {'lan': 'default-10000000288'}},
+                         'GigabitEthernet8/0/0': {'interface': {'subinterfaces': {'18': {'interface': {'lan': 'default-10000000288',
+                                                                                                       'vlan': 18}}}}}}},
+ 'local_web_server_password': None,
+ 'replace': None}
+2025-04-21 15:23:15,016 - Graphiant_playbook - INFO - Poller attempt: 1/12
+2025-04-21 15:23:15,016 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-21 15:23:15,342 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-21 15:23:15,343 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-21 15:23:15,343 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-21 15:23:25,345 - Graphiant_playbook - INFO - Poller attempt: 2/12
+2025-04-21 15:23:25,345 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-21 15:23:25,604 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-21 15:23:25,605 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-21 15:23:25,605 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-21 15:23:35,607 - Graphiant_playbook - INFO - Poller attempt: 3/12
+2025-04-21 15:23:35,607 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-21 15:23:35,856 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-21 15:23:35,856 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-21 15:23:35,856 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-21 15:23:45,861 - Graphiant_playbook - INFO - Poller attempt: 4/12
+2025-04-21 15:23:45,862 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-21 15:23:46,167 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-21 15:23:46,167 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-21 15:23:46,167 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-21 15:23:56,173 - Graphiant_playbook - INFO - Poller attempt: 5/12
+2025-04-21 15:23:56,173 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-21 15:23:56,435 - Graphiant_playbook - INFO - put_device_config : config to be pushed for 30000051080: 
+{'configuration_metadata': None,
+ 'core': None,
+ 'description': None,
+ 'edge': {'interfaces': {'GigabitEthernet5/0/0': {'interface': {'adminStatus': False,
+                                                                'description': '',
+                                                                'maxTransmissionUnit': 1500}},
+                         'GigabitEthernet8/0/0': {'interface': {'subinterfaces': {'18': {'interface': None}}}}}},
+ 'local_web_server_password': None,
+ 'replace': None}

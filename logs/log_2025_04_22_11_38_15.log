@@ -1,0 +1,160 @@
+2025-04-22 11:38:15,460 - Graphiant_playbook - INFO - PortalUtils : templates_path : /Users/keshav/ws/graphiant-playbooks/configs/
+2025-04-22 11:38:15,460 - Graphiant_playbook - INFO - PortalUtils : config_templates : /Users/keshav/ws/graphiant-playbooks/templates/
+2025-04-22 11:38:15,460 - Graphiant_playbook - INFO - PortalUtils : logs_path : /Users/keshav/ws/graphiant-playbooks/logs/
+2025-04-22 11:38:17,309 - Graphiant_playbook - INFO - Poller attempt: 1/12
+2025-04-22 11:38:17,309 - Graphiant_playbook - INFO - Poller attempt: 1/12
+2025-04-22 11:38:17,309 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:17,310 - Graphiant_playbook - INFO - Poller attempt: 1/12
+2025-04-22 11:38:17,310 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:17,310 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:17,419 - Graphiant_playbook - INFO - put_device_config : config to be pushed for 30000051080: 
+{'configuration_metadata': None,
+ 'core': None,
+ 'description': None,
+ 'edge': {'interfaces': {'GigabitEthernet5/0/0': {'interface': {'adminStatus': 'true',
+                                                                'lan': 'default-10000000288'}},
+                         'GigabitEthernet8/0/0': {'interface': {'adminStatus': 'true',
+                                                                'subinterfaces': {'18': {'interface': {'adminStatus': 'true',
+                                                                                                       'lan': 'default-10000000288',
+                                                                                                       'vlan': 18}}}}}}},
+ 'local_web_server_password': None,
+ 'replace': None}
+2025-04-22 11:38:17,639 - Graphiant_playbook - INFO - put_device_config : config to be pushed for 30000051081: 
+{'configuration_metadata': None,
+ 'core': None,
+ 'description': None,
+ 'edge': {'interfaces': {'GigabitEthernet5/0/0': {'interface': {'adminStatus': 'true',
+                                                                'lan': 'default-10000000288'}},
+                         'GigabitEthernet8/0/0': {'interface': {'adminStatus': 'true',
+                                                                'subinterfaces': {'28': {'interface': {'adminStatus': 'true',
+                                                                                                       'lan': 'default-10000000288',
+                                                                                                       'vlan': 28}}}}}}},
+ 'local_web_server_password': None,
+ 'replace': None}
+2025-04-22 11:38:17,646 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051082 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:17,647 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051082 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:17,647 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-22 11:38:27,653 - Graphiant_playbook - INFO - Poller attempt: 2/12
+2025-04-22 11:38:27,654 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:27,771 - Graphiant_playbook - INFO - put_device_config : config to be pushed for 30000051082: 
+{'configuration_metadata': None,
+ 'core': None,
+ 'description': None,
+ 'edge': {'interfaces': {'GigabitEthernet5/0/0': {'interface': {'adminStatus': 'true',
+                                                                'lan': 'default-10000000288'}},
+                         'GigabitEthernet8/0/0': {'interface': {'adminStatus': 'true',
+                                                                'lan': 'default-10000000288'}}}},
+ 'local_web_server_password': None,
+ 'replace': None}
+2025-04-22 11:38:29,771 - Graphiant_playbook - INFO - Poller attempt: 1/12
+2025-04-22 11:38:29,771 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:29,771 - Graphiant_playbook - INFO - Poller attempt: 1/12
+2025-04-22 11:38:29,771 - Graphiant_playbook - INFO - Poller attempt: 1/12
+2025-04-22 11:38:29,772 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:29,772 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:29,888 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:29,889 - Graphiant_playbook - INFO - put_device_config : config to be pushed for 30000051082: 
+{'configuration_metadata': None,
+ 'core': None,
+ 'description': None,
+ 'edge': {'interfaces': {'GigabitEthernet5/0/0': {'interface': {'adminStatus': False,
+                                                                'alias': '',
+                                                                'description': '',
+                                                                'maxTransmissionUnit': 1500}},
+                         'GigabitEthernet8/0/0': {'interface': {'adminStatus': False,
+                                                                'alias': '',
+                                                                'description': '',
+                                                                'maxTransmissionUnit': 1500}}}},
+ 'local_web_server_password': None,
+ 'replace': None}
+2025-04-22 11:38:29,889 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:29,890 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-22 11:38:29,891 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051081 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:29,891 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051081 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:29,891 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-22 11:38:30,002 - Graphiant_playbook - WARNING - put_device_config : Exception While config push (428)
+Reason: Precondition Required
+HTTP response headers: HTTPHeaderDict({'Date': 'Tue, 22 Apr 2025 18:38:11 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '298', 'Connection': 'keep-alive', 'Access-Control-Allow-Origin': '*', 'Referrer-Policy': 'no-referrer', 'Strict-Transport-Security': 'max-age=15552000; includeSubDomains', 'Access-Control-Allow-Methods': 'PATCH, DELETE, PUT, GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Pragma, Authorization, Content-Type, Accept, Expires, Referer, Cache-Control, Baggage, Sentry-Trace', 'Content-Security-Policy': "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests", 'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Resource-Policy': 'same-origin', 'Origin-Agent-Cluster': '?1', 'X-Content-Type-Options': 'nosniff', 'X-DNS-Prefetch-Control': 'off', 'X-Download-Options': 'noopen', 'X-Frame-Options': 'SAMEORIGIN', 'X-Permitted-Cross-Domain-Policies': 'none', 'X-XSS-Protection': '0', 'ETag': 'W/"12a-LZOy3Z0hMW/ZOxM72wTCbl7k4nU"', 'Set-Cookie': 'connect.sid=s%3AHZhWlKqSyQLEeh-mWB94jDJemHvOHTjp.F0lUwAPU8gWC0LkQw98VlOIy21Zgx3bJDnhRaQ%2BZ5bg; Path=/; HttpOnly'})
+HTTP response body: b'{"errorCode":9,"displayError":"this device is not ready for a configuration push. Please retry again in some time. Consider creating a draft configuration","detailedError":"this device is not ready for a configuration push. Please retry again in some time. Consider creating a draft configuration"}'
+
+2025-04-22 11:38:30,003 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying, Exception while config push to 30000051082
+2025-04-22 11:38:30,003 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-22 11:38:39,895 - Graphiant_playbook - INFO - Poller attempt: 2/12
+2025-04-22 11:38:39,895 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:39,896 - Graphiant_playbook - INFO - Poller attempt: 2/12
+2025-04-22 11:38:39,896 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:40,008 - Graphiant_playbook - INFO - Poller attempt: 2/12
+2025-04-22 11:38:40,008 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:40,027 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:40,028 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051081 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:40,028 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:40,029 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051081 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:40,029 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-22 11:38:40,029 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-22 11:38:40,128 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051082 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:40,128 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051082 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:40,128 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-22 11:38:50,032 - Graphiant_playbook - INFO - Poller attempt: 3/12
+2025-04-22 11:38:50,033 - Graphiant_playbook - INFO - Poller attempt: 3/12
+2025-04-22 11:38:50,033 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:50,033 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:50,131 - Graphiant_playbook - INFO - Poller attempt: 3/12
+2025-04-22 11:38:50,132 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:38:50,154 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:50,154 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051080 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:50,154 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-22 11:38:50,164 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051081 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:50,164 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051081 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:50,164 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-22 11:38:50,256 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051082 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:50,256 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051082 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:38:50,256 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-22 11:39:00,158 - Graphiant_playbook - INFO - Poller attempt: 4/12
+2025-04-22 11:39:00,159 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:39:00,169 - Graphiant_playbook - INFO - Poller attempt: 4/12
+2025-04-22 11:39:00,170 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:39:00,257 - Graphiant_playbook - INFO - Poller attempt: 4/12
+2025-04-22 11:39:00,257 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:39:00,294 - Graphiant_playbook - INFO - put_device_config : config to be pushed for 30000051081: 
+{'configuration_metadata': None,
+ 'core': None,
+ 'description': None,
+ 'edge': {'interfaces': {'GigabitEthernet5/0/0': {'interface': {'adminStatus': False,
+                                                                'alias': '',
+                                                                'description': '',
+                                                                'maxTransmissionUnit': 1500}},
+                         'GigabitEthernet8/0/0': {'interface': {'adminStatus': 'true',
+                                                                'subinterfaces': {'28': {'interface': None}}}}}},
+ 'local_web_server_password': None,
+ 'replace': None}
+2025-04-22 11:39:00,298 - Graphiant_playbook - INFO - put_device_config : config to be pushed for 30000051080: 
+{'configuration_metadata': None,
+ 'core': None,
+ 'description': None,
+ 'edge': {'interfaces': {'GigabitEthernet5/0/0': {'interface': {'adminStatus': False,
+                                                                'alias': '',
+                                                                'description': '',
+                                                                'maxTransmissionUnit': 1500}},
+                         'GigabitEthernet8/0/0': {'interface': {'adminStatus': 'true',
+                                                                'subinterfaces': {'18': {'interface': None}}}}}},
+ 'local_web_server_password': None,
+ 'replace': None}
+2025-04-22 11:39:00,377 - Graphiant_playbook - INFO - put_device_config : Retrying,  30000051082 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:39:00,377 - Graphiant_playbook - INFO - Exception caught while calling method put_device_config(): put_device_config : Retrying,  30000051082 Portal Status: Configuring (Expected Ready)
+2025-04-22 11:39:00,378 - Graphiant_playbook - INFO - Sleeping for 10 seconds before retry...
+2025-04-22 11:39:10,386 - Graphiant_playbook - INFO - Poller attempt: 5/12
+2025-04-22 11:39:10,394 - Graphiant_playbook - INFO - Calling method put_device_config()...
+2025-04-22 11:39:10,518 - Graphiant_playbook - INFO - put_device_config : config to be pushed for 30000051082: 
+{'configuration_metadata': None,
+ 'core': None,
+ 'description': None,
+ 'edge': {'interfaces': {'GigabitEthernet5/0/0': {'interface': {'adminStatus': False,
+                                                                'alias': '',
+                                                                'description': '',
+                                                                'maxTransmissionUnit': 1500}},
+                         'GigabitEthernet8/0/0': {'interface': {'adminStatus': False,
+                                                                'alias': '',
+                                                                'description': '',
+                                                                'maxTransmissionUnit': 1500}}}},
+ 'local_web_server_password': None,
+ 'replace': None}
