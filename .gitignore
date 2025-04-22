@@ -1,4 +1,4 @@
-.logs/*.log
+logs
 ansible/collections/collections
 .DS_Store
 __pycache__
