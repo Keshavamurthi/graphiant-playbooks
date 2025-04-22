@@ -44,7 +44,7 @@ class Edge(EdgeUtils):
                     for config in config_list:
                         self.configure_default_lan_for_vlan_interfaces(default_lan, default_lan_config, **config)
             final_config_payload[device_id] = {"device_id": device_id, "edge": default_lan_config}
-        #self.concurrent_task_execution(self.gcsdk.put_device_config, final_config_payload)
+        self.concurrent_task_execution(self.gcsdk.put_device_config, final_config_payload)
 
         final_config_payload = {}
         for device_name, iface_configs in config_data.items():

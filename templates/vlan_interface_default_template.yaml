@@ -1,6 +1,7 @@
 {                  
     "{{ vlan }}": {
         "interface": {
+            "adminStatus": "{{ admin_status | default('true')}}",
             "vlan": {{ vlan }},
             "lan": "{{ default_lan }}"
         }

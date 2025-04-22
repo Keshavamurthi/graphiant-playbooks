@@ -35,19 +35,19 @@ class EdgeUtils(PortalUtils):
             self.create_vlan_interface(config_payload, **kwargs)
         else:
             LOG.debug(f"create_lan: Adding lan interface {kwargs.get("lan")}")
-            config_payload["interfaces"][kwargs["interface_name"]].update(self.template._lan_interface(**kwargs))
+            config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").update(self.template._lan_interface(**kwargs))
 
     def create_vlan_interface(self, config_payload, **kwargs):
         self.create_subinterfaces(config_payload, **kwargs)
         LOG.debug(f"create_vlan_interface: Adding vlan interface {kwargs.get('vlan')}")  
         vlan_interface = self.template._vlan_interface(**kwargs)
-        config_payload["interfaces"][kwargs["interface_name"]]["interface"]["subinterfaces"].update(vlan_interface)
+        config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").get("subinterfaces").update(vlan_interface)
 
     def configure_default_lan(self, default_lan, config_payload, **kwargs):
         self.create_interfaces(config_payload, **kwargs)
         LOG.debug(f"configure_default_lan: Configuring {kwargs.get("interface_name")} : {default_lan}(default lan)")
         kwargs['default_lan'] = default_lan
-        config_payload["interfaces"][kwargs["interface_name"]]["interface"].update(self.template._default_lan(**kwargs))
+        config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").update(self.template._default_lan(**kwargs))
     
     def configure_default_lan_for_vlan_interfaces(self, default_lan, config_payload, **kwargs):
         self.create_interfaces(config_payload, **kwargs)
@@ -63,7 +63,7 @@ class EdgeUtils(PortalUtils):
     def delete_interfaces(self, config_payload, **kwargs):
         self.create_interfaces(config_payload, **kwargs)
         LOG.debug(f"delete_interfaces: Deleting {kwargs.get("interface_name")}")
-        config_payload["interfaces"][kwargs["interface_name"]]["interface"].update(self.template._interface_admin_shut(**kwargs))
+        config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").update(self.template._interface_admin_shut(**kwargs))
 
     def delete_vlan_interfaces(self, config_payload, **kwargs):
         self.create_interfaces(config_payload, **kwargs)

@@ -1,6 +1,7 @@
 {  
     "{{ interface_name }}": {
         "interface": {
+            "adminStatus": "{{ admin_status | default('true')}}"
         }
     }
 }

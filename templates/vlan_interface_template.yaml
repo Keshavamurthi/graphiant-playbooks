@@ -4,6 +4,7 @@
       "lan": "{{ lan }}",
       "vlan": {{ vlan }},
       "description": "{{ description | default(vlan ~ '_' ~ lan, true) }}",
+      "alias": "{{ alias | default(vlan ~ '_' ~ lan, true) }}",
       "adminStatus": "true",
       "ipv4": {
         "address": {

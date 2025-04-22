@@ -4,10 +4,11 @@
             "adminStatus": "{{ admin_status | default('true')}}",
             "circuit": "{{ circuit_name }}",
             "description": "{{ description | default(circuit_name)}}",
+            "alias": "{{ alias | default(circuit_name)}}",
             "ipv4": {
-                {% if ipv4_address %},
+                {% if ipv4_address %}
                 "address": {
-                    "address": "{{ ipv4_address }}",
+                    "address": "{{ ipv4_address }}"
                 },
                 {% else %}
                 "dhcp": {
@@ -16,9 +17,9 @@
                 {% endif %}
             },
             "ipv6": {
-                {% if ipv6_address %},
+                {% if ipv6_address %}
                 "address": {
-                    "address": "{{ ipv6_address }}",
+                    "address": "{{ ipv6_address }}"
                 },
                 {% else %}
                 "dhcp": {
