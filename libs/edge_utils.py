@@ -12,85 +12,26 @@ class EdgeUtils(PortalUtils):
     def __init__(self, base_url=None, username=None, password=None, **kwargs):
         super().__init__(base_url=base_url, username=username, password=password, **kwargs)
         self.template = EdgeTemplates(self.templates)
-    
-    def create_wan(self, config_payload, **kwargs):
-        config_payload["circuits"].update(self.template._wan_circuit(**kwargs))
-        config_payload["interfaces"].update(self.template._wan_interface(**kwargs))
 
-    def create_interfaces(self, config_payload, **kwargs):
-        if not config_payload["interfaces"].get(kwargs["interface_name"]):
-            LOG.debug(f"create_interfaces: Adding interface {kwargs.get("interface_name")}")
-            interface_config = self.template._interface(**kwargs)
-            config_payload["interfaces"].update(interface_config)
-
-    def create_subinterfaces(self, config_payload, **kwargs):
-        if not config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").get("subinterfaces"):
-            LOG.debug(f"create_subinterfaces: Adding subinterfaces under {kwargs.get("interface_name")}")
-            sub_interface = self.template._subinterface(**kwargs)
-            config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").update(sub_interface)
-
-    def create_lan(self, config_payload, **kwargs):
-        self.create_interfaces(config_payload, **kwargs)
-        if "vlan" in kwargs.keys():
-            self.create_vlan_interface(config_payload, **kwargs)
-        else:
-            LOG.debug(f"create_lan: Adding lan interface {kwargs.get("lan")}")
-            config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").update(self.template._lan_interface(**kwargs))
-
-    def create_vlan_interface(self, config_payload, **kwargs):
-        self.create_subinterfaces(config_payload, **kwargs)
-        LOG.debug(f"create_vlan_interface: Adding vlan interface {kwargs.get('vlan')}")  
-        vlan_interface = self.template._vlan_interface(**kwargs)
-        config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").get("subinterfaces").update(vlan_interface)
-
-    def configure_default_lan(self, default_lan, config_payload, **kwargs):
-        self.create_interfaces(config_payload, **kwargs)
-        LOG.debug(f"configure_default_lan: Configuring {kwargs.get("interface_name")} : {default_lan}(default lan)")
-        kwargs['default_lan'] = default_lan
-        config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").update(self.template._default_lan(**kwargs))
-    
-    def configure_default_lan_for_vlan_interfaces(self, default_lan, config_payload, **kwargs):
-        self.create_interfaces(config_payload, **kwargs)
-        if "vlan" in kwargs.keys():
-            self.create_subinterfaces(config_payload, **kwargs)
-            LOG.debug(f"configure_default_lan_for_vlan_interfaces: Configuring {kwargs.get("vlan")} : {default_lan}(default lan)")
-            kwargs['default_lan'] = default_lan
-            defaut_lan_vlan = self.template._vlan_interface_default(**kwargs)
-            config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").get("subinterfaces").update(defaut_lan_vlan)
-        else:
-            self.configure_default_lan(default_lan, config_payload, **kwargs)
-
-    def delete_interfaces(self, config_payload, **kwargs):
-        self.create_interfaces(config_payload, **kwargs)
-        LOG.debug(f"delete_interfaces: Deleting {kwargs.get("interface_name")}")
-        config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").update(self.template._interface_admin_shut(**kwargs))
-
-    def delete_vlan_interfaces(self, config_payload, **kwargs):
-        self.create_interfaces(config_payload, **kwargs)
-        if "vlan" in kwargs.keys():
-            self.create_subinterfaces(config_payload, **kwargs)
-            LOG.debug(f"delete_vlan_interfaces: Configuring {kwargs.get("vlan")}")
-            delete_vlan_interface = self.template._vlan_interface_delete(**kwargs)
-            config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").get("subinterfaces").update(delete_vlan_interface)
-        else:
-            self.delete_interfaces(config_payload, **kwargs)
-
-    def configure_global_prefix_set(self, config_payload, **kwargs):
-        LOG.debug(f"configure_global_prefix_set : Configuring Global prefix set {kwargs.get("name")}")
-        global_prefix_set = self.template._global_prefix_set(**kwargs)
+    def global_prefix_set(self, config_payload, action="add", **kwargs):
+        LOG.debug(f"global_prefix_set : {action.upper()} Global Prefix Set {kwargs.get("name")}")
+        global_prefix_set = self.template._global_prefix_set(action=action, **kwargs)
         config_payload['global_prefix_sets'].update(global_prefix_set)
 
-    def deconfigure_global_prefix_set(self, config_payload, **kwargs):
-        LOG.debug(f"configure_global_prefix_set : Configuring Global prefix set {kwargs.get("name")}")
-        global_prefix_set = self.template._global_prefix_set(action="delete", **kwargs)
-        config_payload['global_prefix_sets'].update(global_prefix_set)
-
-    def configure_global_bgp_filters(self, config_payload, **kwargs):
-        LOG.debug(f"configure_global_bgp_filters : Configuring Global BGP filters {kwargs.get("name")}")
-        global_bgp_filter = self.template._global_bgp_filter(**kwargs)
+    def global_bgp_filter(self, config_payload, action="add", **kwargs):
+        LOG.debug(f"global_bgp_filter : {action.upper()} Global BGP Filter {kwargs.get("name")}")
+        global_bgp_filter = self.template._global_bgp_filter(action=action, **kwargs)
         config_payload['routing_policies'].update(global_bgp_filter)
-
-    def deconfigure_global_bgp_filters(self, config_payload, **kwargs):
-        LOG.debug(f"deconfigure_global_bgp_filters : Deconfiguring Global BGP filters {kwargs.get("name")}")
-        global_bgp_filter = self.template._global_bgp_filter(action="delete", **kwargs)
-        config_payload['routing_policies'].update(global_bgp_filter)
+    
+    def edge_bgp_peering(self, config_payload, action="add", **kwargs):
+        LOG.debug(f"edge_bgp_peering : {action.upper()} BGP Peering :\n {kwargs}")
+        bgp_peering = self.template._edge_bgp_peering(action=action, **kwargs)
+        config_payload.update(bgp_peering)
+    
+    def edge_interface(self, config_payload, action="add", **kwargs):
+        LOG.debug(f"edge_interfaces : {action.upper()} Edge Interfaces :\n {kwargs}")
+        interface = self.template._edge_interface(action=action, **kwargs)
+        config_payload["interfaces"].update(interface.get("interfaces"))
+        if interface.get('circuits'):
+            config_payload['circuits'].update(interface.get("circuits"))
+    

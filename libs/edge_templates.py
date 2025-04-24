@@ -18,41 +18,14 @@ class EdgeTemplates(object):
         LOG.debug(f"edge_templates : _{config_template_file} (rendered_data)- \n{config}")
         return config
 
-    def _default_lan(self, **kwargs):
-        return self.render_template("default_lan_template.yaml", **kwargs)
-
-    def _interface_admin_shut(self, **kwargs):
-        return self.render_template("interface_admin_shut_template.yaml", **kwargs)
-
-    def _interface(self, **kwargs):
+    def _edge_interface(self, **kwargs):
         return self.render_template("interface_template.yaml", **kwargs)
-    
-    def _lan_interface(self, **kwargs):
-        return self.render_template("lan_interface_template.yaml", **kwargs)
-
-    def _subinterface(self, **kwargs):
-        return self.render_template("subinterface_template.yaml", **kwargs)
-    
-    def _vlan_interface_default(self, **kwargs):
-        return self.render_template("vlan_interface_default_template.yaml", **kwargs)
-
-    def _vlan_interface_delete(self, **kwargs):
-        return self.render_template("vlan_interface_delete_template.yaml", **kwargs)
-
-    def _vlan_interface(self, **kwargs):
-        return self.render_template("vlan_interface_template.yaml", **kwargs)
-
-    def _wan_circuit(self, **kwargs):
-        return self.render_template("wan_circuit_template.yaml", **kwargs)
-
-    def _wan_interface(self, **kwargs):
-        return self.render_template("wan_interface_template.yaml", **kwargs)
 
     def _global_prefix_set(self, **kwargs):
         return self.render_template("global_prefix_set_template.yaml", **kwargs)
     
-    def _ip_prefix(self, **kwargs):
-        return self.render_template("ip_prefix_template.yaml", **kwargs)
-    
     def _global_bgp_filter(self, **kwargs):
         return self.render_template("global_bgp_routing_policies_template.yaml", **kwargs)
+    
+    def _edge_bgp_peering(self, **kwargs):
+        return self.render_template("bgp_peering_template.yaml", **kwargs)

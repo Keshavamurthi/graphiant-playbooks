@@ -25,10 +25,10 @@
                                                 {% endif %}
                                             },
                                             "community": {
-                                                {% if policy.match_community_list %}
+                                                {% if policy.match_community %}
                                                     "community": {
                                                         "community": [
-                                                            {% for value in policy.match_community_list %}
+                                                            {% for value in policy.match_community %}
                                                                 "{{ value }}"
                                                             {% endfor %}
                                                         ]

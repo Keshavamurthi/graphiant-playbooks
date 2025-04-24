@@ -80,3 +80,13 @@ class PortalUtils(object):
         for device_info in output:
             LOG.debug(f"get_enterprise_id : {device_info.enterprise_id}")
             return device_info.enterprise_id
+
+    def render_config_file(self, yaml_file):
+        input_file_path = self.config_path + yaml_file
+        try:
+            with open(input_file_path, "r") as file:
+                config_data = yaml.safe_load(file)
+            return config_data
+        except FileNotFoundError as e:
+            LOG.warning(f"File not found : {input_file_path}")
+        

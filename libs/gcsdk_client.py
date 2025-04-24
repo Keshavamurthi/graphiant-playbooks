@@ -25,7 +25,6 @@ class GcsdkClient():
     def get_all_enterprises(self):
         """
         Get All Enterprises On GCS
-        Class Object EnterpriseMembers has a List of Individual Objects EnterpriseMember
         """
         enterprises = self.api.v1_enterprises_get(authorization=self.bearer_token)
         LOG.debug(f"get_all_enterprises : {enterprises}")
@@ -34,24 +33,22 @@ class GcsdkClient():
     def get_edges_summary(self, device_id=None):
         """
         Get All Edges Summary On GCS
-        Class Object EnterpriseMembers has a List of Individual Objects EnterpriseMember
         """
         response = self.api.v1_edges_summary_get(authorization=self.bearer_token)
         if device_id:
             for edge_info in response.edges_summary:
                 if edge_info.device_id == str(device_id):
-                    # LOG.debug(f"get_edges_summary : \n{edge_info}")
                     return edge_info
         return response.edges_summary
 
     @poller(retries=12, wait=10)
     def put_device_config(self, device_id: int, core=None, edge=None):
         """
-        Put Devices Config
+        Put Devices Config On GCS
         """
         body = swagger_client.DeviceIdConfigBody(core=core, edge=edge)
-        #LOG.info(f"put_device_config : config to be pushed for {device_id}: \n{body}")
-        #return True
+        # LOG.info(f"put_device_config : config to be pushed for {device_id}: \n{body}")
+        # return True
         try:
             edge_summary = self.get_edges_summary(device_id=device_id)
             if edge_summary.portal_status == "Ready":
@@ -67,6 +64,9 @@ class GcsdkClient():
             assert False, f"put_device_config : Retrying, Exception while config push to {device_id}"
     
     def post_devices_bringup(self, device_ids):
+        """
+        Post Devices Bringup On GCS
+        """
         data = {'deviceIds': device_ids}
         LOG.debug(f"post_devices_bringup : {data}")
         response = self.api.v1_devices_bringup_post(authorization=self.bearer_token, body=data)

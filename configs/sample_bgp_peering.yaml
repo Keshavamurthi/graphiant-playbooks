@@ -1,0 +1,40 @@
+bgp_peering:
+  - edge-1-keshav:
+      route_policies:
+        - canva_prod_prefix_list_1
+        - canva_prod_prefix_list_2
+      segments:
+        - lan_segment: lan-7-keshav
+          local_ipv4_address: 10.2.7.1
+          local_interface: GigabitEthernet8/0/0.18
+          neighbors:
+            - remote_ipv4_address: 10.2.7.11
+              peer_as: 60011
+              ipv4_inbound_filter: canva_prod_prefix_list_1
+              ipv4_outbound_filter: canva_prod_prefix_list_2
+  - edge-2-keshav:
+      route_policies:
+        - canva_prod_prefix_list_1
+        - canva_prod_prefix_list_2
+      segments:
+        - lan_segment: lan-7-keshav
+          local_ipv4_address: 10.2.7.2
+          local_interface: GigabitEthernet8/0/0.28
+          neighbors:
+            - remote_ipv4_address: 10.2.7.12
+              peer_as: 60021
+              ipv4_inbound_filter: canva_prod_prefix_list_1
+              ipv4_outbound_filter: canva_prod_prefix_list_2
+  - edge-3-keshav:
+      route_policies:
+        - canva_prod_prefix_list_1
+        - canva_prod_prefix_list_2
+      segments:
+        - lan_segment: lan-7-keshav
+          local_ipv4_address: 10.2.7.3
+          local_interface: GigabitEthernet8/0/0.28
+          neighbors:
+            - remote_ipv4_address: 10.2.7.13
+              peer_as: 60031
+              ipv4_inbound_filter: canva_prod_prefix_list_1
+              ipv4_outbound_filter: canva_prod_prefix_list_2

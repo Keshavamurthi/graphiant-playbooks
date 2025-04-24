@@ -1,5 +1,0 @@
-{
-    "{{ vlan }}": {
-        "interface": null
-    }
-}

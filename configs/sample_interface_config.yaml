@@ -1,0 +1,33 @@
+interfaces:
+  - edge-1-keshav:
+    - interface_name: GigabitEthernet5/0/0
+      circuit: c-gigabitethernet5-0-0
+    - interface_name: GigabitEthernet8/0/0
+      sub_interfaces:
+        - ipv4_address: 10.2.7.1/24
+          ipv6_address: 2001:10:2:7::1/64
+          lan: lan-7-keshav
+          vlan: 18
+  - edge-2-keshav:
+    - interface_name: GigabitEthernet5/0/0
+      circuit: c-gigabitethernet5-0-0
+      ipv4_address: 100.200.1.1/24
+      admin_status: False
+    - interface_name: GigabitEthernet8/0/0
+      sub_interfaces:
+        - ipv4_address: 10.2.7.2/24
+          ipv6_address: 2001:10:2:7::2/64
+          lan: lan-7-keshav
+          vlan: 28
+  - edge-3-keshav:
+    - interface_name: GigabitEthernet5/0/0
+      circuit: c-gigabitethernet5-0-0
+      ipv4_address: 100.200.2.1/24
+      admin_status: False
+    - interface_name: GigabitEthernet8/0/0
+      sub_interfaces:
+        - ipv4_address: 10.2.7.3/24
+          ipv6_address: 2001:10:2:7::3/64
+          lan: lan-7-keshav
+          vlan: 28
+

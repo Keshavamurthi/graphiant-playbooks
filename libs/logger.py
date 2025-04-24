@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from pathlib import Path as path
 
-def setup_logger(level=logging.DEBUG):
+def setup_logger(level=logging.INFO):
     logger = logging.getLogger("Graphiant_playbook")
     logger.setLevel(level)
 
