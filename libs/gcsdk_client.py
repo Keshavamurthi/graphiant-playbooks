@@ -92,3 +92,20 @@ class GcsdkClient():
             return True
         except self.swagger_client.rest.ApiException:
             return False
+
+    @poller(retries=12, wait=10)
+    def patch_global_config(self, **kwargs):
+        """
+        Patch Global Config
+        """
+        #import pdb; pdb.set_trace()
+        body = swagger_client.GlobalConfigBody(**kwargs)
+        #LOG.info(f"patch_global_config : config to be pushed : \n{body}")
+        #return True
+        try:
+            LOG.info(f"patch_global_config : config to be pushed : \n{body}")
+            response = self.api.v1_global_config_patch(authorization=self.bearer_token, body=body)
+            return response
+        except self.swagger_client.rest.ApiException as e:
+            LOG.warning(f"patch_global_config : Exception While Global config patch {e}")
+            assert False, f"patch_global_config : Retrying, Exception while Global config patch"

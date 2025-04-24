@@ -48,43 +48,11 @@ class EdgeTemplates(object):
     def _wan_interface(self, **kwargs):
         return self.render_template("wan_interface_template.yaml", **kwargs)
 
-"""
-    def _configure_lan_interface(self, **kwargs):
-        return self.render_template("configure_lan_interface_template.yaml")
-
-    def _create_subinterface(self, **kwargs):
-        return self.render_template("create_subinterface_template.yaml", **kwargs)
-
-    def _configure_subinterface_vlan(self, **kwargs):
-        return self.render_template("configure_subinterface_vlan_template.yaml", **kwargs)
-
-    def _lan_subinterface_template(self, **kwargs):
-        config = self.render_template("lan_subinterface_template.yaml", **kwargs)
-        vlan_config = self._lan_subinterface_vlan_template(**kwargs)
-        config["interfaces"][kwargs.get("interface_name")]["interface"]["subinterfaces"] = vlan_config
-        return config
-
-    def _default_lan_interface_template(self, **kwargs):
-        return self.render_template("default_lan_interface_template.yaml", **kwargs)
-
-    def _shutdown_interface_template(self, **kwargs):
-        return self.render_template("shutdown_interface_template.yaml", **kwargs)
+    def _global_prefix_set(self, **kwargs):
+        return self.render_template("global_prefix_set_template.yaml", **kwargs)
     
-    def _default_vlan_interface_template(self, **kwargs):
-        return self.render_template("default_vlan_interface_template.yaml", **kwargs)
-
-    def _default_lan_subinterface_template(self, **kwargs):
-        config = self._create_subinterface(**kwargs)
-        vlan_config = self._default_vlan_interface_template(**kwargs)
-        config["interfaces"][kwargs.get("interface_name")]["interface"]["subinterfaces"] = vlan_config
-        return config
+    def _ip_prefix(self, **kwargs):
+        return self.render_template("ip_prefix_template.yaml", **kwargs)
     
-    def _delete_vlan_interface_template(self, **kwargs):
-        return self.render_template("delete_vlan_interface_template.yaml", **kwargs)
-
-    def _default_subinterface_template(self, **kwargs):
-        config = self.render_template("lan_subinterface_template.yaml", **kwargs)
-        vlan_config = self._default_subinterface_vlan_template(**kwargs)
-        config["interfaces"][kwargs.get("interface_name")]["interface"]["subinterfaces"] = vlan_config
-        return config
-        """
+    def _global_bgp_filter(self, **kwargs):
+        return self.render_template("global_bgp_routing_policies_template.yaml", **kwargs)

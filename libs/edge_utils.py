@@ -74,3 +74,23 @@ class EdgeUtils(PortalUtils):
             config_payload["interfaces"].get(kwargs["interface_name"]).get("interface").get("subinterfaces").update(delete_vlan_interface)
         else:
             self.delete_interfaces(config_payload, **kwargs)
+
+    def configure_global_prefix_set(self, config_payload, **kwargs):
+        LOG.debug(f"configure_global_prefix_set : Configuring Global prefix set {kwargs.get("name")}")
+        global_prefix_set = self.template._global_prefix_set(**kwargs)
+        config_payload['global_prefix_sets'].update(global_prefix_set)
+
+    def deconfigure_global_prefix_set(self, config_payload, **kwargs):
+        LOG.debug(f"configure_global_prefix_set : Configuring Global prefix set {kwargs.get("name")}")
+        global_prefix_set = self.template._global_prefix_set(action="delete", **kwargs)
+        config_payload['global_prefix_sets'].update(global_prefix_set)
+
+    def configure_global_bgp_filters(self, config_payload, **kwargs):
+        LOG.debug(f"configure_global_bgp_filters : Configuring Global BGP filters {kwargs.get("name")}")
+        global_bgp_filter = self.template._global_bgp_filter(**kwargs)
+        config_payload['routing_policies'].update(global_bgp_filter)
+
+    def deconfigure_global_bgp_filters(self, config_payload, **kwargs):
+        LOG.debug(f"deconfigure_global_bgp_filters : Deconfiguring Global BGP filters {kwargs.get("name")}")
+        global_bgp_filter = self.template._global_bgp_filter(action="delete", **kwargs)
+        config_payload['routing_policies'].update(global_bgp_filter)

@@ -59,3 +59,59 @@ class Edge(EdgeUtils):
                         self.delete_vlan_interfaces(shut_interfaces_config, **config)
             final_config_payload[device_id] = {"device_id": device_id, "edge": shut_interfaces_config}
         self.concurrent_task_execution(self.gcsdk.put_device_config, final_config_payload)
+
+    def configure_global_prefix(self, yaml_file):
+        input_file_path = self.config_path + yaml_file
+        with open(input_file_path, "r") as file:
+            config_data = yaml.safe_load(file)
+        final_config_payload = {"global_config": {}}
+        config_payload = {}
+        if 'global_prefix_sets' in config_data:
+            config_payload.update({'global_prefix_sets': {}})
+            for prefix_config in config_data.get('global_prefix_sets'):
+                self.configure_global_prefix_set(config_payload, **prefix_config)
+            final_config_payload["global_config"].update(config_payload)
+        LOG.debug(f"configure_routing_prefixes: final_config_payload {final_config_payload}")
+        self.concurrent_task_execution(self.gcsdk.patch_global_config, final_config_payload)
+    
+    def deconfigure_global_prefix(self, yaml_file):
+        input_file_path = self.config_path + yaml_file
+        with open(input_file_path, "r") as file:
+            config_data = yaml.safe_load(file)
+        final_config_payload = {"global_config": {}}
+        config_payload = {}
+        if 'global_prefix_sets' in config_data:
+            config_payload.update({'global_prefix_sets': {}})
+            for prefix_config in config_data.get('global_prefix_sets'):
+                self.deconfigure_global_prefix_set(config_payload, **prefix_config)
+            final_config_payload["global_config"].update(config_payload)
+        LOG.debug(f"configure_routing_prefixes: final_config_payload {final_config_payload}")
+        self.concurrent_task_execution(self.gcsdk.patch_global_config, final_config_payload)
+
+    def configure_global_bgp_routing_policies(self, yaml_file):
+        input_file_path = self.config_path + yaml_file
+        with open(input_file_path, "r") as file:
+            config_data = yaml.safe_load(file)
+        final_config_payload = {"global_config": {}}
+        config_payload = {}
+        if 'routing_policies' in config_data:
+            config_payload.update({'routing_policies': {}})
+            for policy_config in config_data.get('routing_policies'):
+                self.configure_global_bgp_filters(config_payload, **policy_config)
+            final_config_payload["global_config"].update(config_payload)
+        LOG.debug(f"configure_global_bgp_routing_policies: final_config_payload {final_config_payload}")
+        self.concurrent_task_execution(self.gcsdk.patch_global_config, final_config_payload)
+
+    def deconfigure_global_bgp_routing_policies(self, yaml_file):
+        input_file_path = self.config_path + yaml_file
+        with open(input_file_path, "r") as file:
+            config_data = yaml.safe_load(file)
+        final_config_payload = {"global_config": {}}
+        config_payload = {}
+        if 'routing_policies' in config_data:
+            config_payload.update({'routing_policies': {}})
+            for policy_config in config_data.get('routing_policies'):
+                self.deconfigure_global_bgp_filters(config_payload, **policy_config)
+            final_config_payload["global_config"].update(config_payload)
+        LOG.debug(f"configure_global_bgp_routing_policies: final_config_payload {final_config_payload}")
+        self.concurrent_task_execution(self.gcsdk.patch_global_config, final_config_payload)

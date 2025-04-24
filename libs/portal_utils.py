@@ -24,8 +24,8 @@ class PortalUtils(object):
     def concurrent_task_execution(self, function, config_dict):
         output_dict = {}
         with ThreadPoolExecutor(max_workers=150) as executor:
-            for device_id, device_config in config_dict.items():
-                output_dict[device_id] = executor.submit(function, **device_config)
+            for key, value in config_dict.items():
+                output_dict[key] = executor.submit(function, **value)
             self.wait_checked(list(future for future in output_dict.values()))
         return output_dict
 
