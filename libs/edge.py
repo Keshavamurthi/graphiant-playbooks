@@ -1,5 +1,4 @@
 from .edge_utils import EdgeUtils
-import yaml
 from .logger import setup_logger
 
 LOG = setup_logger()
@@ -66,6 +65,19 @@ class Edge(EdgeUtils):
                     device_id = self.get_device_id(device_name=device_name)
                     config_payload = {}
                     self.edge_bgp_peering(config_payload, **config)
+                    final_config_payload[device_id] = {"device_id": device_id, "edge": config_payload}
+        LOG.debug(f"configure_bgp_peers: final_config_payload {final_config_payload}")
+        self.concurrent_task_execution(self.gcsdk.put_device_config, final_config_payload)
+
+    def unlink_bgp_peers(self, yaml_file):
+        config_data = self.render_config_file(yaml_file=yaml_file)
+        final_config_payload = {}
+        if 'bgp_peering' in config_data:
+            for device_config in config_data.get('bgp_peering'):
+                for device_name, config in device_config.items():
+                    device_id = self.get_device_id(device_name=device_name)
+                    config_payload = {}
+                    self.edge_bgp_peering(config_payload, action="unlink", **config)
                     final_config_payload[device_id] = {"device_id": device_id, "edge": config_payload}
         LOG.debug(f"configure_bgp_peers: final_config_payload {final_config_payload}")
         self.concurrent_task_execution(self.gcsdk.put_device_config, final_config_payload)

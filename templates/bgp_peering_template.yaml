@@ -1,10 +1,10 @@
 {
-    {% if route_policies %}
+    {% if route_policies and action == "add" %}
         "routePolicies": {
             {% for policy_name in route_policies %}
                 "{{ policy_name }}": {
                     "policy": {
-                        #"globalId": 5635,
+                        "globalId": {{ global_ids.get(policy_name, 0) }},
                         "isGlobalSync": true
                     }
                 },
@@ -54,12 +54,20 @@
                                                 "addressFamily": "ipv4",
                                                 {% if neighbor.ipv4_inbound_filter %}
                                                     "inboundPolicy": {
-                                                        "policy": "{{ neighbor.ipv4_inbound_filter }}"
+                                                        {% if action == "unlink" %}
+                                                            "policy": null
+                                                        {% else %}
+                                                            "policy": "{{ neighbor.ipv4_inbound_filter }}"
+                                                        {% endif %}
                                                     },
                                                 {% endif %}
                                                 {% if neighbor.ipv4_outbound_filter %}
                                                     "outboundPolicy": {
-                                                        "policy": "{{ neighbor.ipv4_outbound_filter }}"
+                                                        {% if action == "unlink" %}
+                                                            "policy": null
+                                                        {% else %}
+                                                            "policy": "{{ neighbor.ipv4_outbound_filter }}"
+                                                        {% endif %}
                                                     }
                                                 {% endif %}
                                             }

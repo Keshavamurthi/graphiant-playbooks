@@ -1,8 +1,5 @@
 from .portal_utils import PortalUtils
 from .edge_templates import EdgeTemplates
-from time import sleep
-import copy
-import yaml
 from .logger import setup_logger
 
 LOG = setup_logger()
@@ -24,8 +21,14 @@ class EdgeUtils(PortalUtils):
         config_payload['routing_policies'].update(global_bgp_filter)
     
     def edge_bgp_peering(self, config_payload, action="add", **kwargs):
+        global_ids = {}
+        LOG.info(f"edge_bgp_peering : config_payload {config_payload}")
+        if kwargs.get("route_policies"):
+            for policy_name in kwargs.get("route_policies"):
+                global_ids[policy_name] = self.get_global_routing_policy_id(policy_name)
+                LOG.debug(f"edge_bgp_peering : Global ID for {policy_name} : {global_ids[policy_name]}")
         LOG.debug(f"edge_bgp_peering : {action.upper()} BGP Peering :\n {kwargs}")
-        bgp_peering = self.template._edge_bgp_peering(action=action, **kwargs)
+        bgp_peering = self.template._edge_bgp_peering(action=action, global_ids=global_ids, **kwargs)
         config_payload.update(bgp_peering)
     
     def edge_interface(self, config_payload, action="add", **kwargs):

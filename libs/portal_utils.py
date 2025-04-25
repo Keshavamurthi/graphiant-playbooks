@@ -89,4 +89,11 @@ class PortalUtils(object):
             return config_data
         except FileNotFoundError as e:
             LOG.warning(f"File not found : {input_file_path}")
-        
+    
+    def get_global_routing_policy_id(self, policy_name):
+        result = self.gcsdk.post_global_summary(routing_policy_type=True)
+        for key, value in result.to_dict().items():
+            for config in value:
+                if config['name'] == policy_name:    
+                    return config['id']
+        return None

@@ -5,7 +5,7 @@
                 "name": "{{ name }}",
                 "description": "{{ description | default(name) }}",
                 "mode": "{{ mode | default('ipv4') }}",
-                "globalId": {{ global_id | default(0) }},
+                #"globalId": {{ global_id | default(0) }},
                 "entries": {
                     {% for values in entries %}
                         "{{ values.idx }}": {

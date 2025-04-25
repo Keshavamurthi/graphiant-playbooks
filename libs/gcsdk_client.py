@@ -109,3 +109,19 @@ class GcsdkClient():
         except self.swagger_client.rest.ApiException as e:
             LOG.warning(f"patch_global_config : Exception While Global config patch {e}")
             assert False, f"patch_global_config : Retrying, Exception while Global config patch"
+    
+    @poller(retries=12, wait=10)
+    def post_global_summary(self, **kwargs):
+        """
+        Post Global Config
+        """
+        body = swagger_client.GlobalSummaryBody(**kwargs)
+        #LOG.info(f"patch_global_config : config to be pushed : \n{body}")
+        #return True
+        try:
+            LOG.info(f"patch_global_config : config to be pushed : \n{body}")
+            response = self.api.v1_global_summary_post(authorization=self.bearer_token, body=body)
+            return response
+        except self.swagger_client.rest.ApiException as e:
+            LOG.warning(f"patch_global_config : Exception While Global config patch {e}")
+            assert False, f"patch_global_config : Retrying, Exception while Global config patch"
