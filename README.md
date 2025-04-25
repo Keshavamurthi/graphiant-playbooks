@@ -1,13 +1,10 @@
 # Graphiant-Playbooks
 
-# Define all the Configurations under configs folder. Refer the below samples and create one based on the requirement.
+# Define all the Configurations under configs folder. 
 
+Refer the below samples and create one based on the requirement.
 
-For Example:
-
-# To define the BGP Peering refer sample_bgp_peering.yaml 
-sample_bgp_peering.yaml
-
+For Example : To define the BGP Peering refer sample_bgp_peering.yaml 
 
 # Import the Edge Class
 from libs.edge import Edge
