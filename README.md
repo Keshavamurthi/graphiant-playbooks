@@ -2,7 +2,7 @@
 
 # Define all the Configurations under configs folder. 
 
-Refer the below samples and create one based on the requirement.
+Refer the samples and create one based on the requirement.
 
 For Example : To define the BGP Peering refer sample_bgp_peering.yaml 
 
