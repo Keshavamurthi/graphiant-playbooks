@@ -1,3 +1,19 @@
+
+
+# Requirements:
+
+# Install GCSSK for the virtual environment
+
+# Clone git@gitlab.com:graphiant/oss/gcsdk.git
+git clone git@gitlab.com:graphiant/oss/gcsdk.git
+
+# Uninstall the previous swagger_client (if any) 
+pip uninstall swagger_client -y
+
+# create and Install GCSDK build
+python setup.py sdist bdist_wheel
+pip install dist/swagger_client-1.0.0-py3-none-any.whl --force-reinstall
+
 # Graphiant-Playbooks
 
 # Define all the Configurations under configs folder. 
@@ -10,7 +26,10 @@ For Example : To define the BGP Peering refer sample_bgp_peering.yaml
 from libs.edge import Edge
 
 # Instantiate the Object
-edge = Edge()
+host = "https://api.test.graphiant.io"
+username = 'username'
+password = 'password'
+edge = Edge(base_url=host, username=username, password=password)
 
 # To Configure the interfaces defined in sample_interface_config.yaml
 edge.configure_interfaces("sample_interface_config.yaml")

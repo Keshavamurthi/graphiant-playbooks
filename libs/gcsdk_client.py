@@ -11,9 +11,9 @@ class GcsdkClient():
     def __init__(self, base_url=None, username=None, password=None):
         self.swagger_client = swagger_client
         self.config = self.swagger_client.Configuration()
-        #if base_url is not None: self.config.host = base_url 
-        #if username is not None: self.config.username = username
-        #if password is not None: self.config.password = password
+        self.config.host = base_url
+        self.config.username = username
+        self.config.password = password
         self.api = self.swagger_client.DefaultApi(swagger_client.ApiClient(self.config))
         auth_login_body = self.swagger_client.AuthLoginBody(username=self.config.username, password=self.config.password)
         response = self.api.v1_auth_login_post(body=auth_login_body, _preload_content=False)
