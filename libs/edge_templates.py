@@ -1,4 +1,3 @@
-import os
 import yaml
 from jinja2 import Environment, FileSystemLoader
 from .logger import setup_logger

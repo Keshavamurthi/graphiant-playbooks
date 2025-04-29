@@ -1,7 +1,6 @@
 import yaml
 from concurrent.futures import Future, wait
 from concurrent.futures.thread import ThreadPoolExecutor
-from datetime import datetime
 from .logger import setup_logger
 from .gcsdk_client import GcsdkClient
 from pathlib import Path as path

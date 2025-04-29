@@ -19,7 +19,6 @@ class GcsdkClient():
         response = self.api.v1_auth_login_post(body=auth_login_body, _preload_content=False)
         self.token = json.loads(response.data).get("token")
         self.bearer_token = 'Bearer ' + self.token
-        #LOG.debug(f"GCSDKClient : {self.config.host}, {self.config.username}, {self.config.password}")
         LOG.debug(f"GCSDKClient : {self.bearer_token}")
 
     def get_all_enterprises(self):

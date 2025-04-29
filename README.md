@@ -30,17 +30,33 @@ input from the configs/ directory to produce finalized configuration artifacts.
 
 # Pre-requisites:
 
-# 1. Install Python 3.13+
+# 1. Install Python 3.12+
 
 # 2. Create and activate python virtual environment
 ```sh
-python3.13 -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate
 ```
 
 # 3. Install the GCSDK build from gcsdk_dist/
 ```sh
-pip install gcsdk_dist/swagger-client-1.0.0.tar.gz --force-reinstall
+pip3.12 install -r requirements.txt
+```
+
+# Testing virtual environment
+
+# 1. Enter the host URL and credentials under test.ini
+```sh
+[credentials]
+username = username
+password = password
+[host]
+url = https://api.graphiant.com
+```
+
+# 2. Run the sample test and verify the enterprise ID is fetched
+```sh
+python3.12 test.py
 ```
 
 # Getting Started
