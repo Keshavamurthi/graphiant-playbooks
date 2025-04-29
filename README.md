@@ -1,31 +1,57 @@
 
 
-# Requirements:
+graphiant-playbooks.zip has below repos,
 
-# Install GCSSK for the virtual environment
+graphiant-playbooks/
+├── configs/        # Input YAML configurations
+├── gcsdk_dist/     # GCSDK build
+├── libs/           # Python libraries and modules
+├── logs/           # Execution logs
+├── templates/      # Jinja2 config templates
 
-# Clone graphiant/oss/gcsdk.git (branch feature/TE-3590 with latest API Specs changes) 
-git clone --branch feature/TE-3590 git@gitlab.com:graphiant/oss/gcsdk.git
+# configs/
+Contains input configuration YAML files used to drive the execution of various playbooks.
 
-# Uninstall the previous swagger_client (if any) 
-pip uninstall swagger_client -y
+# gcsdk_dist/
+Contains the GCSDK build distributions(Pre-requiste for graphiant-playbooks)
 
-# create and Install GCSDK build
-python setup.py sdist bdist_wheel
-pip install dist/swagger_client-1.0.0-py3-none-any.whl --force-reinstall
+# libs/
+Includes all necessary Python libraries and helper modules required by the playbooks.
 
-# Graphiant-Playbooks
+# logs/
+Stores all log files generated during execution. Each run creates a timestamped log 
+for auditability and debugging purposes.
 
-# Define all the Configurations under configs folder. 
+# templates/
+Contains Jinja2 config templates. These templates are dynamically rendered using the 
+input from the configs/ directory to produce finalized configuration artifacts.
 
-Refer the sample configs and create a one based on your requirement.
+# Pre-requisites:
 
-For Example : To define the BGP Peering refer sample_bgp_peering.yaml 
+# 1. Install Python 3.13+
 
-# Import the Edge Class
+# 2. Create and activate python virtual environment
+python3.13 -m venv venv
+source venv/bin/activate
+
+# 3. Install the GCSDK build from gcsdk_dist/
+pip install gcsdk_dist/swagger-client-1.0.0.tar.gz --force-reinstall
+
+# Getting Started
+
+# Step 1 : Define Configurations
+
+All input configs should be placed in the configs/ folder.
+
+Refer to the sample files provided and create a one based on your requirement:
+
+sample_bgp_peering.yaml
+sample_interface_config.yaml
+sample_global_routing_policies.yaml 
+
+# Import and Use graphiant-playbooks
 from libs.edge import Edge
 
-# Instantiate the Object
 host = "https://api.test.graphiant.io"
 username = 'username'
 password = 'password'

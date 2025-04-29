@@ -101,11 +101,14 @@ class Edge(EdgeUtils):
         if 'interfaces' in config_data:
             for device_info in config_data.get("interfaces"):
                 for device_name, config_list in device_info.items():
-                    device_id = self.get_device_id(device_name=device_name)
-                    device_config = {"interfaces": {}, "circuits": {}}
-                    for config in config_list:
-                        self.edge_interface(device_config, action="add", **config)
-                    output_config[device_id] = {"device_id": device_id, "edge": device_config}
+                    if device_id := self.get_device_id(device_name=device_name):
+                        device_config = {"interfaces": {}, "circuits": {}}
+                        for config in config_list:
+                            self.edge_interface(device_config, action="add", **config)
+                        output_config[device_id] = {"device_id": device_id, "edge": device_config}
+                    else:
+                        LOG.error(f"configure_interfaces : {device_name} unable to fetch device-id")
+                        return
         self.concurrent_task_execution(self.gcsdk.put_device_config, output_config)
 
     def deconfigure_interfaces(self, yaml_file):
@@ -115,12 +118,15 @@ class Edge(EdgeUtils):
         if 'interfaces' in config_data:
             for device_info in config_data.get("interfaces"):
                 for device_name, config_list in device_info.items():
-                    device_id = self.get_device_id(device_name=device_name)
-                    device_config = {"interfaces": {}, "circuits": {}}
-                    for config in config_list:
-                        self.edge_interface(device_config, action="default_lan", 
-                                            default_lan=default_lan, **config)
-                    output_config[device_id] = {"device_id": device_id, "edge": device_config}
+                    if device_id := self.get_device_id(device_name=device_name):
+                        device_config = {"interfaces": {}, "circuits": {}}
+                        for config in config_list:
+                            self.edge_interface(device_config, action="default_lan",
+                                                default_lan=default_lan, **config)
+                        output_config[device_id] = {"device_id": device_id, "edge": device_config}
+                    else:
+                        LOG.error(f"deconfigure_interfaces : {device_name} unable to fetch device-id")
+                        return
         self.concurrent_task_execution(self.gcsdk.put_device_config, output_config)
 
     def delete_interfaces(self, yaml_file):
@@ -130,10 +136,13 @@ class Edge(EdgeUtils):
         if 'interfaces' in config_data:
             for device_info in config_data.get("interfaces"):
                 for device_name, config_list in device_info.items():
-                    device_id = self.get_device_id(device_name=device_name)
-                    device_config = {"interfaces": {}, "circuits": {}}
-                    for config in config_list:
-                        self.edge_interface(device_config, action="delete", 
-                                            default_lan=default_lan, **config)
-                    output_config[device_id] = {"device_id": device_id, "edge": device_config}
+                    if device_id := self.get_device_id(device_name=device_name):
+                        device_config = {"interfaces": {}, "circuits": {}}
+                        for config in config_list:
+                            self.edge_interface(device_config, action="delete",
+                                                default_lan=default_lan, **config)
+                        output_config[device_id] = {"device_id": device_id, "edge": device_config}
+                    else:
+                        LOG.error(f"delete_interfaces : {device_name} unable to fetch device-id")
+                        return
         self.concurrent_task_execution(self.gcsdk.put_device_config, output_config)
