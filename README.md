@@ -3,11 +3,13 @@
 graphiant-playbooks.zip has below repos,
 
 graphiant-playbooks/
+```sh
 - configs/        # Input YAML configurations
 - gcsdk_dist/     # GCSDK build
 - libs/           # Python libraries and modules
 - logs/           # Execution logs
 - templates/      # Jinja2 config templates
+```
 
 # configs/
 Contains input configuration YAML files used to drive the execution of various playbooks.
