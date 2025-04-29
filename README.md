@@ -59,7 +59,7 @@ Refer to the sample files provided and create a one based on your requirement:
 ```sh
 from libs.edge import Edge
 
-host = "https://api.test.graphiant.io"
+host = "https://api.graphiant.com"
 username = 'username'
 password = 'password'
 edge = Edge(base_url=host, username=username, password=password)
