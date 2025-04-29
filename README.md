@@ -4,8 +4,8 @@
 
 # Install GCSSK for the virtual environment
 
-# Clone git@gitlab.com:graphiant/oss/gcsdk.git
-git clone git@gitlab.com:graphiant/oss/gcsdk.git
+# Clone graphiant/oss/gcsdk.git (branch feature/TE-3590 with latest API Specs changes) 
+git clone --branch feature/TE-3590 git@gitlab.com:graphiant/oss/gcsdk.git
 
 # Uninstall the previous swagger_client (if any) 
 pip uninstall swagger_client -y
@@ -18,7 +18,7 @@ pip install dist/swagger_client-1.0.0-py3-none-any.whl --force-reinstall
 
 # Define all the Configurations under configs folder. 
 
-Refer the samples and create one based on the requirement.
+Refer the sample configs and create a one based on your requirement.
 
 For Example : To define the BGP Peering refer sample_bgp_peering.yaml 
 
