@@ -1,9 +1,7 @@
 
-
-graphiant-playbooks.zip has below repos,
-
-graphiant-playbooks/
 ```sh
+graphiant-playbooks/
+
 - configs/        # Input YAML configurations
 - gcsdk_dist/     # GCSDK build
 - libs/           # Python libraries and modules
@@ -61,7 +59,7 @@ python3.12 test.py
 
 # Getting Started
 
-# Step 1 : Define Configurations
+# Step 1: Define Configurations
 
 All input configs should be placed in the configs/ folder.
 
@@ -71,7 +69,7 @@ Refer to the sample files provided and create a one based on your requirement:
 - sample_interface_config.yaml
 - sample_global_routing_policies.yaml 
 
-# Import and Use graphiant-playbooks
+# Step 2: Import and Use graphiant-playbooks
 ```sh
 from libs.edge import Edge
 
@@ -80,32 +78,25 @@ username = 'username'
 password = 'password'
 edge = Edge(base_url=host, username=username, password=password)
 ```
+# Step 3: 
 # To Configure the interfaces defined in sample_interface_config.yaml
 ```sh
-edge.configure_interfaces("sample_interface_config.yaml")
+Configure Interfaces: edge.configure_interfaces("sample_interface_config.yaml")
 ```
 
-# To deconfigure all the interfaces defined in sample_interface_config.yaml
+# To Deconfigure the interfaces defined in sample_interface_config.yaml
 ```sh
-edge.deconfigure_interfaces("sample_interface_config.yaml")
+Deconfigure Interfaces: edge.deconfigure_interfaces("sample_interface_config.yaml")
 ```
 
-# To configure the Global Prefixes defined in sample_global_routing_policies.yaml
+# To configure the Global Prefixes, Routing Policies and BGP Peering
 ```sh
-edge.configure_global_prefix("sample_global_routing_policies.yaml")
+Configure Global Prefixes: edge.configure_global_prefix("sample_global_routing_policies.yaml")
+Configure Global Routing Policies: edge.configure_global_bgp_routing_policies("sample_global_routing_policies.yaml")
+Configure BGP Peering: edge.configure_bgp_peers("sample_bgp_peering.yaml")
 ```
 
-# To Configure the Global Prefixes defined in sample_global_routing_policies.yaml
-```sh
-edge.configure_global_bgp_routing_policies("sample_global_routing_policies.yaml")
-```
-
-# To Configure the BGP Peers defined in sample_bgp_peering.yaml
-```sh
-edge.configure_bgp_peers("sample_bgp_peering.yaml")
-```
-
-# To Unlink and deconfigure the BGP Peers defined in sample_global_routing_policies.yaml
+# To unlink and deconfigure the BGP Peers
 ```sh
 edge.unlink_bgp_peers("sample_bgp_peering.yaml")
 edge.deconfigure_bgp_peers("sample_bgp_peering.yaml")
@@ -114,9 +105,13 @@ edge.deconfigure_bgp_peers("sample_bgp_peering.yaml")
 # To Deconfigure the Global BGP Routing Policies
 ```sh
 edge.deconfigure_global_bgp_routing_policies("sample_global_routing_policies.yaml")
+
+Note: Make sure the routing policies are not attached to any BGP peering configs before deconfigure
 ```
 
 # To Deconfigure the Global Prefixes
 ```sh
 edge.deconfigure_global_prefix("sample_global_routing_policies.yaml")
+
+Note: Make sure the Global Prefixes are not attached before deconfigure
 ```
