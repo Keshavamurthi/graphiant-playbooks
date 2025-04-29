@@ -23,7 +23,10 @@ class GcsdkClient():
 
     def get_all_enterprises(self):
         """
-        Get All Enterprises On GCS
+        Get all enterprises on GCS.
+
+        Returns:
+            list: A list of enterprise information if successful, otherwise an empty list.
         """
         enterprises = self.api.v1_enterprises_get(authorization=self.bearer_token)
         LOG.debug(f"get_all_enterprises : {enterprises}")
@@ -31,7 +34,13 @@ class GcsdkClient():
 
     def get_edges_summary(self, device_id=None):
         """
-        Get All Edges Summary On GCS
+        Get all edges summary from GCS. If a device_id is provided, returns details of the specific edge.
+
+        Args:
+            device_id (int, optional): The device ID to filter edges. If not provided, returns all edges.
+
+        Returns:
+            list or dict: A list of all edges info if no device_id is provided, or a single edge's information if a device_id is provided.
         """
         response = self.api.v1_edges_summary_get(authorization=self.bearer_token)
         if device_id:
@@ -43,11 +52,21 @@ class GcsdkClient():
     @poller(retries=12, wait=10)
     def put_device_config(self, device_id: int, core=None, edge=None):
         """
-        Put Devices Config On GCS
+        Put Devices Config On GCS for Core or Edge
+
+        Args:
+            device_id (int): The device ID to push the config for.
+            core (dict, optional): Core configuration data.
+            edge (dict, optional): Edge configuration data.
+
+        Returns:
+            response: The response from the API call to push the device config.
+
+        Raises:
+            AssertionError: If the device portal status is not 'Ready' till the retry
+            ApiException/AssertionError: If there is an API exception during the config push till the retry
         """
         body = swagger_client.DeviceIdConfigBody(core=core, edge=edge)
-        # LOG.info(f"put_device_config : config to be pushed for {device_id}: \n{body}")
-        # return True
         try:
             edge_summary = self.get_edges_summary(device_id=device_id)
             if edge_summary.portal_status == "Ready":
@@ -65,6 +84,12 @@ class GcsdkClient():
     def post_devices_bringup(self, device_ids):
         """
         Post Devices Bringup On GCS
+
+        Args:
+            device_ids (list): List of device IDs to bring up.
+
+        Returns:
+            response: The response from the API call to bring up the devices.
         """
         data = {'deviceIds': device_ids}
         LOG.debug(f"post_devices_bringup : {data}")
@@ -72,6 +97,21 @@ class GcsdkClient():
         return response
 
     def put_devices_bringup(self, device_ids, status):
+        """
+        Update the bringup status of the devices specified by their device IDs.
+
+        Args:
+            device_ids (list): A list of device IDs whose status needs to be updated.
+            status (str): The desired status to be set for the devices:
+                        - 'allowed', 'active', 'activate' → 'Allowed'
+                        - 'denied', 'deactivate' → 'Denied'
+                        - 'removed', 'decommission' → 'Removed'
+                        - 'pending', 'staging', 'stage' → 'Pending'
+                        - 'maintenance' → 'Maintenance'
+
+        Returns:
+            bool: True if the status update was successful, False if ApiException occurs.
+        """
         data = {'deviceIds': device_ids, 'status': ''}
         data['status'] = status
         if status.lower() in ['allowed', 'active', 'activate']:
@@ -95,12 +135,19 @@ class GcsdkClient():
     @poller(retries=12, wait=10)
     def patch_global_config(self, **kwargs):
         """
-        Patch Global Config
+        Patch the global configuration on the system.
+
+        Args:
+            **kwargs: The global configuration parameters to be patched. 
+
+        Returns:
+            The response from the API
+
+        Raises:
+            ApiException: If the API call fails.
+
         """
-        #import pdb; pdb.set_trace()
         body = swagger_client.GlobalConfigBody(**kwargs)
-        #LOG.info(f"patch_global_config : config to be pushed : \n{body}")
-        #return True
         try:
             LOG.info(f"patch_global_config : config to be pushed : \n{body}")
             response = self.api.v1_global_config_patch(authorization=self.bearer_token, body=body)
@@ -112,11 +159,17 @@ class GcsdkClient():
     @poller(retries=12, wait=10)
     def post_global_summary(self, **kwargs):
         """
-        Post Global Config
+        Posts a global summary configuration to the system.
+        Args:
+            **kwargs: The global summary configuration parameters to be posted. 
+
+        Returns:
+            The response from the API
+
+        Raises:
+            ApiException: If the API call fails.
         """
         body = swagger_client.GlobalSummaryBody(**kwargs)
-        #LOG.info(f"patch_global_config : config to be pushed : \n{body}")
-        #return True
         try:
             LOG.info(f"patch_global_config : config to be pushed : \n{body}")
             response = self.api.v1_global_summary_post(authorization=self.bearer_token, body=body)

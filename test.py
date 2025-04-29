@@ -12,7 +12,7 @@ def read_config():
 def main():
     base_url, username, password = read_config()
     edge = Edge(base_url=base_url, username=username, password=password)
-    print(edge.get_enterprise_id())
+    print(f"Enterprise ID : {edge.get_enterprise_id()}")
 
     # To Configure the interfaces defined in sample_interface_config.yaml
     # edge.configure_interfaces("sample_interface_config.yaml")

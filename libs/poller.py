@@ -13,44 +13,13 @@ def poller(timeout=60, wait=0.1, retries=None):
     Returns a decorator that adds polling to the decorated function or method
 
     e.g.
-    @poller(timeout=1, wait=0.2)
+    @poller(timeout=10, wait=1)
     def random_number_picker_max_timeout(number, numbers):
         assert number == random.choice(numbers)
 
-    2022-09-13 14:48:30,799.799 - test.lib.poller - INFO: Poller attempt: 1
-    2022-09-13 14:48:30,799.799 - test.lib.poller - INFO: Poller time remaining: 0.9998311996459961 seconds
-    2022-09-13 14:48:30,800.800 - test.lib.poller - INFO: Calling method random_number_picker_max_timeout()...
-    2022-09-13 14:48:30,800.800 - test.lib.poller - INFO: Exception caught while calling method
-    2022-09-13 14:48:30,800.800 - test.lib.poller - INFO: Sleeping for 0.2 seconds before poller re-attempt...
-    2022-09-13 14:48:31,005.005 - test.lib.poller - INFO: Poller attempt: 2
-    2022-09-13 14:48:31,005.005 - test.lib.poller - INFO: Poller time remaining: 0.7942500114440918 seconds
-    2022-09-13 14:48:31,005.005 - test.lib.poller - INFO: Calling method random_number_picker_max_timeout()...
-
-
-
-    @poller(retries=5, wait=0.2)
+    @poller(retries=5, wait=1)
     def random_number_picker_max_reties(number, numbers):
         assert number == random.choice(numbers)
-
-    test.random_number_picker_max_reties()
-    2022-09-13 14:46:30,981.981 - test.lib.poller - INFO: Poller attempt: 1/5
-    2022-09-13 14:46:30,981.981 - test.lib.poller - INFO: Calling method random_number_picker_max_reties()...
-    2022-09-13 14:46:30,981.981 - test.lib.poller - INFO: Exception caught while calling method
-    2022-09-13 14:46:30,982.982 - test.lib.poller - INFO: Sleeping for 0.2 seconds before retry...
-    2022-09-13 14:46:31,185.185 - test.lib.poller - INFO: Poller attempt: 2/5
-    2022-09-13 14:46:31,186.186 - test.lib.poller - INFO: Calling method random_number_picker_max_reties()...
-    2022-09-13 14:46:31,186.186 - test.lib.poller - INFO: Exception caught while calling method
-    2022-09-13 14:46:31,186.186 - test.lib.poller - INFO: Sleeping for 0.2 seconds before retry...
-    2022-09-13 14:46:31,387.387 - test.lib.poller - INFO: Poller attempt: 3/5
-    2022-09-13 14:46:31,388.388 - test.lib.poller - INFO: Calling method random_number_picker_max_reties()...
-    2022-09-13 14:46:31,388.388 - test.lib.poller - INFO: Exception caught while calling method
-    2022-09-13 14:46:31,388.388 - test.lib.poller - INFO: Sleeping for 0.2 seconds before retry...
-    2022-09-13 14:46:31,592.592 - test.lib.poller - INFO: Poller attempt: 4/5
-    2022-09-13 14:46:31,592.592 - test.lib.poller - INFO: Calling method random_number_picker_max_reties()...
-    2022-09-13 14:46:31,592.592 - test.lib.poller - INFO: Exception caught while calling method
-    2022-09-13 14:46:31,592.592 - test.lib.poller - INFO: Sleeping for 0.2 seconds before retry...
-    2022-09-13 14:46:31,796.796 - test.lib.poller - INFO: Poller attempt: 5/5
-    2022-09-13 14:46:31,796.796 - test.lib.poller - INFO: Calling method random_number_picker_max_reties()...
     """
 
     def poller_decorator(fun):

@@ -21,6 +21,14 @@ class PortalUtils(object):
         self.gcsdk = GcsdkClient(base_url=base_url, username=username, password=password)
 
     def concurrent_task_execution(self, function, config_dict):
+        """
+        Executes a function concurrently using ThreadPoolExecutor for each key-value in config_dict.
+        The value must be a dict of kwargs to pass to the function.
+
+        :param function: Callable function to be executed concurrently
+        :param config_dict: Dict with keys as identifiers and values as kwargs for the function
+        :return: Dict with keys as original keys and values as Future objects
+        """
         output_dict = {}
         with ThreadPoolExecutor(max_workers=150) as executor:
             for key, value in config_dict.items():
@@ -29,15 +37,16 @@ class PortalUtils(object):
         return output_dict
 
     @staticmethod
-    def wait_checked(posible_futures: Sequence[Future | None]) -> None:
-        """ Wait for a set of futures to complete, and log an error for
-        each future that failed """
-        # Remove None from list. It got None in list due to ssh failures.
+    def wait_checked(posible_futures):
+        """
+        Waits for a set of futures to complete, logging errors for those that fail.
+
+        :param possible_futures: List of futures (may include None)
+        """
         futures = [item for item in posible_futures if item is not None]
-        print(f"Waiting for futures {futures} to complete")
+        LOG.debug(f"Waiting for futures {futures} to complete")
         (_done, not_done) = wait(futures)
-        # If called with default arguments, `wait` should only return when
-        # all the futures completed
+
         if not_done:
             LOG.warning(f"{len(not_done)} futures did not finish running")
 
@@ -49,6 +58,13 @@ class PortalUtils(object):
                 LOG.error(f"future failed: {e}")
 
     def update_device_bringup_status(self, device_id, status):
+        """
+        Update the device bringup status via GCSDK.
+
+        :param device_id: str - The ID of the device to update
+        :param status: str - New status to set
+        :return: Response from GCSDK
+        """
         result = self.gcsdk.put_devices_bringup(device_ids=[device_id], status=status)
         return result
 
@@ -63,6 +79,13 @@ class PortalUtils(object):
             self.concurrent_task_execution(self.update_device_bringup_status, input_dict)
 
     def get_device_id(self, device_name):
+        """
+        Retrieve the device ID(s) based on the device name.
+
+        If a single match is found, returns the device ID.
+        If multiple matches are found, returns a dictionary of {hostname: device_id}.
+        If no match is found, returns an empty dict.
+        """
         output = self.gcsdk.get_edges_summary()
         output_dict = {}
         for device_info in output:
@@ -75,12 +98,35 @@ class PortalUtils(object):
         return output_dict
     
     def get_enterprise_id(self):
+        """
+        Retrieve the enterprise ID from the first available device in the edges summary.
+
+        Returns:
+            str or None: The enterprise ID, or None if no devices are found.
+        """
         output = self.gcsdk.get_edges_summary()
-        for device_info in output:
-            LOG.debug(f"get_enterprise_id : {device_info.enterprise_id}")
-            return device_info.enterprise_id
+        if not output:
+            return None
+        try:
+            for device_info in output:
+                LOG.debug(f"get_enterprise_id : {device_info.enterprise_id}")
+                return device_info.enterprise_id
+        except Exception as e:
+            return None
 
     def render_config_file(self, yaml_file):
+        """
+        Load a YAML configuration file from the config path.
+
+        Args:
+            yaml_file (str): The filename of the YAML config.
+
+        Returns:
+            dict: Parsed configuration data.
+
+        Raises:
+            FileNotFoundError: If the file doesn't exist.
+        """
         input_file_path = self.config_path + yaml_file
         try:
             with open(input_file_path, "r") as file:
@@ -90,6 +136,15 @@ class PortalUtils(object):
             LOG.warning(f"File not found : {input_file_path}")
     
     def get_global_routing_policy_id(self, policy_name):
+        """
+        Retrieve the global routing policy ID based on the policy name.
+
+        Args:
+            policy_name (str): The name of the routing policy.
+
+        Returns:
+            str or None: The ID of the routing policy if found, otherwise None.
+        """
         result = self.gcsdk.post_global_summary(routing_policy_type=True)
         for key, value in result.to_dict().items():
             for config in value:
