@@ -72,7 +72,7 @@ All input configs should be placed in the configs/ folder.
 - sample_interface_config.yaml
 - sample_global_routing_policies.yaml
 
-Note : Refer the templates under templates/ dir for more details on the supported arguments.
+Note : Also refer the templates under templates/ dir for more details on the supported arguments.
 
 ### Step 2: Import and Use graphiant-playbooks
 ```sh

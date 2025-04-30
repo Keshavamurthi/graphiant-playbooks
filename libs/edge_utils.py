@@ -18,10 +18,10 @@ class EdgeUtils(PortalUtils):
         Args:
             config_payload (dict): The main configuration payload dict to be updated.
             action (str, optional): Action to perform, either "add" or "delete". Defaults to "add".
-            **kwargs: Additional key-value pairs required for rendering the global prefix set template.
+            **kwargs: Additional key-value pairs required for rendering the template.
 
         Returns:
-            None: The config_payload dict is modified.
+            None: The global_prefix_sets section in config_payload dict is updated.
         """
         LOG.debug(f"global_prefix_set : {action.upper()} Global Prefix Set {kwargs.get("name")}")
         global_prefix_set = self.template._global_prefix_set(action=action, **kwargs)
@@ -35,10 +35,10 @@ class EdgeUtils(PortalUtils):
         Args:
             config_payload (dict): The configuration dictionary that holds routing policies.
             action (str, optional): Action to perform, either "add" or "delete". Defaults to "add".
-            **kwargs: Additional parameters used for rendering the BGP filter template.
+            **kwargs: Additional parameters used for rendering the template.
 
         Returns:
-            None: The config_payload is updated in-place.
+            None: The routing_policies section in config_payload is updated in-place.
         """
         LOG.debug(f"global_bgp_filter : {action.upper()} Global BGP Filter {kwargs.get("name")}")
         global_bgp_filter = self.template._global_bgp_filter(action=action, **kwargs)
@@ -55,7 +55,7 @@ class EdgeUtils(PortalUtils):
             **kwargs: Additional parameters used for rendering the BGP peering configuration.
 
         Returns:
-            None: The config_payload is modified in-place.
+            None: The edge_bgp_peering section in config_payload is modified in-place.
         """
         global_ids = {}
         LOG.info(f"edge_bgp_peering : config_payload {config_payload}")
@@ -69,16 +69,17 @@ class EdgeUtils(PortalUtils):
     
     def edge_interface(self, config_payload, action="add", **kwargs):
         """
-        Updates the edge interface/circuits section of the configuration payload(config_payload)
+        Updates the edge interfaces/circuits section of the configuration payload(config_payload)
         using a rendered template.
 
         Args:
             config_payload (dict): Dictionary to be updated with interface and circuit data.
-            action (str, optional): Action to perform, either "add" or "default_lan" or "delete". Defaults to "add".
+            action (str, optional): Action to perform, either "add" or "default_lan" or "delete". 
+            Defaults to "add".
             **kwargs: Additional parameters passed to the template renderer.
 
         Returns:
-            None: The config_payload is modified in-place with updated interfaces and circuits data.
+            None: The interfaces and circuits section in config_payload is modified in-place.
         """
         LOG.debug(f"edge_interfaces : {action.upper()} Edge Interfaces :\n {kwargs}")
         interface = self.template._edge_interface(action=action, **kwargs)
