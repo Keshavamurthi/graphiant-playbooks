@@ -31,24 +31,24 @@ Contains Jinja2 config templates. These templates are dynamically rendered using
 input from the configs/ directory to produce finalized configuration artifacts.
 ```
 
-## Pre-requisites:
+## Pre-requisites
 
-# 1. Install Python 3.12+
+### 1. Install Python 3.12+
 
-# 2. Create and activate python virtual environment
+### 2. Create and activate python virtual environment
 ```sh
 python3.12 -m venv venv
 source venv/bin/activate
 ```
 
-# 3. Install the GCSDK build from gcsdk_dist/
+### 3. Install the GCSDK build from gcsdk_dist/
 ```sh
 pip3 install -r requirements.txt
 ```
 
 ## Testing virtual environment
 
-# 1. Enter the host URL and credentials under test.ini
+### 1. Enter the host URL and credentials under test.ini
 ```sh
 [credentials]
 username = username
@@ -57,14 +57,14 @@ password = password
 url = https://api.graphiant.com
 ```
 
-# 2. Run the sample test and verify the enterprise ID is fetched
+### 2. Run the sample test and verify the enterprise ID is fetched
 ```sh
 python3.12 test.py
 ```
 
 ## Getting Started
 
-# Step 1: Define Configurations
+### Step 1: Define Configurations
 
 All input configs should be placed in the configs/ folder.
 
@@ -74,7 +74,7 @@ All input configs should be placed in the configs/ folder.
 
 Note : Refer the templates under templates/ dir for more details on the supported arguments.
 
-# Step 2: Import and Use graphiant-playbooks
+### Step 2: Import and Use graphiant-playbooks
 ```sh
 from libs.edge import Edge
 
@@ -83,44 +83,44 @@ username = 'username'
 password = 'password'
 edge = Edge(base_url=host, username=username, password=password)
 ```
-# Step 3: 
-# To Configure the interfaces defined in sample_interface_config.yaml
+### Step 3: 
+### To Configure the interfaces defined in sample_interface_config.yaml
 ```sh
 Configure Interfaces: edge.configure_interfaces("sample_interface_config.yaml")
 ```
 
-# To Deconfigure the interfaces defined in sample_interface_config.yaml
+### To Deconfigure the interfaces defined in sample_interface_config.yaml
 ```sh
 Deconfigure Interfaces: edge.deconfigure_interfaces("sample_interface_config.yaml")
 ```
 
-# To configure the Global Prefixes, Routing Policies and BGP Peering
+### To configure the Global Prefixes, Routing Policies and BGP Peering
 ```sh
 Configure Global Prefixes: edge.configure_global_prefix("sample_global_routing_policies.yaml")
 Configure Global Routing Policies: edge.configure_global_bgp_routing_policies("sample_global_routing_policies.yaml")
 Configure BGP Peering: edge.configure_bgp_peers("sample_bgp_peering.yaml")
 ```
 
-# To unlink and deconfigure the BGP Peers
+### To unlink and deconfigure the BGP Peers
 ```sh
 edge.unlink_bgp_peers("sample_bgp_peering.yaml")
 edge.deconfigure_bgp_peers("sample_bgp_peering.yaml")
 ```
 
-# To Deconfigure the Global BGP Routing Policies
+### To Deconfigure the Global BGP Routing Policies
 ```sh
 edge.deconfigure_global_bgp_routing_policies("sample_global_routing_policies.yaml")
 
 Note: Make sure the routing policies are not attached to any BGP peering configs before deconfigure
 ```
 
-# To Deconfigure the Global Prefixes
+### To Deconfigure the Global Prefixes
 ```sh
 edge.deconfigure_global_prefix("sample_global_routing_policies.yaml")
 
 Note: Make sure the Global Prefixes are not attached before deconfigure
 ```
 
-# Release Notes:
+### Release Notes:
 - Double Deletion Not Supported: Attempting to delete a configuration that does not exist is not supported.
 - IPv6 BGP Peers : Only IPv4 BGP peer configurations are currently validated.
