@@ -44,7 +44,7 @@ python3.12 -m venv venv
 source venv/bin/activate
 ```
 
-### 3. Install the GCSDK build from gcsdk_dist/
+### 3. Install the requirement packages
 ```sh
 pip3 install -r requirements.txt
 ```
@@ -106,7 +106,7 @@ Configure BGP Peering: edge.configure_bgp_peers("sample_bgp_peering.yaml")
 
 ### To unlink and deconfigure the BGP Peers
 ```sh
-edge.unlink_bgp_peers("sample_bgp_peering.yaml")
+edge.detach_policies_from_bgp_peers("sample_bgp_peering.yaml")
 edge.deconfigure_bgp_peers("sample_bgp_peering.yaml")
 ```
 

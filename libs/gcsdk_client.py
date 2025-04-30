@@ -1,8 +1,8 @@
 import swagger_client
 import json
-from .poller import poller
+from libs.poller import poller
 import time
-from .logger import setup_logger
+from libs.logger import setup_logger
 
 LOG = setup_logger()
 
@@ -162,7 +162,7 @@ class GcsdkClient():
             return response
         except self.swagger_client.rest.ApiException as e:
             LOG.warning(f"patch_global_config : Exception While Global config patch {e}")
-            assert False, f"patch_global_config : Retrying, Exception while Global config patch"
+            assert False, "patch_global_config : Retrying, Exception while Global config patch"
     
     @poller(retries=12, wait=10)
     def post_global_summary(self, **kwargs):
@@ -184,4 +184,4 @@ class GcsdkClient():
             return response
         except self.swagger_client.rest.ApiException as e:
             LOG.warning(f"patch_global_config : Exception While Global config patch {e}")
-            assert False, f"patch_global_config : Retrying, Exception while Global config patch"
+            assert False, "patch_global_config : Retrying, Exception while Global config patch"

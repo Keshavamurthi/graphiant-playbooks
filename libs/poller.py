@@ -3,7 +3,7 @@ import sys
 import time
 import traceback
 from future.utils import raise_
-from .logger import setup_logger
+from libs.logger import setup_logger
 
 LOG = setup_logger()
 

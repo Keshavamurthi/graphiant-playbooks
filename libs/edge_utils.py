@@ -1,6 +1,6 @@
-from .portal_utils import PortalUtils
-from .edge_templates import EdgeTemplates
-from .logger import setup_logger
+from libs.portal_utils import PortalUtils
+from libs.edge_templates import EdgeTemplates
+from libs.logger import setup_logger
 
 LOG = setup_logger()
 
@@ -23,7 +23,7 @@ class EdgeUtils(PortalUtils):
         Returns:
             None: The global_prefix_sets section in config_payload dict is updated.
         """
-        LOG.debug(f"global_prefix_set : {action.upper()} Global Prefix Set {kwargs.get("name")}")
+        LOG.debug(f"global_prefix_set : {action.upper()} Global Prefix Set {kwargs.get('name')}")
         global_prefix_set = self.template._global_prefix_set(action=action, **kwargs)
         config_payload['global_prefix_sets'].update(global_prefix_set)
 
@@ -40,7 +40,7 @@ class EdgeUtils(PortalUtils):
         Returns:
             None: The routing_policies section in config_payload is updated in-place.
         """
-        LOG.debug(f"global_bgp_filter : {action.upper()} Global BGP Filter {kwargs.get("name")}")
+        LOG.debug(f"global_bgp_filter : {action.upper()} Global BGP Filter {kwargs.get('name')}")
         global_bgp_filter = self.template._global_bgp_filter(action=action, **kwargs)
         config_payload['routing_policies'].update(global_bgp_filter)
     
