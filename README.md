@@ -7,11 +7,14 @@ concurrently using GCSDK API.
 
 ```sh
 graphiant-playbooks/
-├── configs/        # Input YAML configuration files
-├── gcsdk_dist/     # GCSDK build (the distribution package for Graphiant Cloud SDK)
-├── libs/           # Python libraries and modules required by the playbooks
-├── logs/           # Execution logs directory
-└── templates/      # Jinja2 configuration templates used for rendering YAML
+├── README.md             # Project overview/documentation
+├── requirements.txt      # Python dependencies
+├── test.ini              # Sample Config file for test.py
+├── test.py               # Sample Python test script
+├── configs/              # Input YAML configuration files
+├── gcsdk_dist/           # GCSDK build (the package for Graphiant Cloud SDK)
+├── libs/                 # Python libraries and modules required by the playbooks
+└── templates/            # Jinja2 configuration Templates
 
 # configs/
 Contains input configuration YAML files used to drive the execution of various playbooks.
