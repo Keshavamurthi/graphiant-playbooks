@@ -44,7 +44,7 @@ python3.12 -m venv venv
 source venv/bin/activate
 ```
 
-### 3. Install the GCSDK build from gcsdk_dist/
+### 3. Install the requirement packages
 ```sh
 pip3 install -r requirements.txt
 ```
