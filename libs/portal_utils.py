@@ -1,10 +1,9 @@
 import yaml
-from concurrent.futures import Future, wait
+from concurrent.futures import wait
 from concurrent.futures.thread import ThreadPoolExecutor
-from .logger import setup_logger
-from .gcsdk_client import GcsdkClient
+from libs.logger import setup_logger
+from libs.gcsdk_client import GcsdkClient
 from pathlib import Path as path
-from typing import Sequence
 
 LOG = setup_logger()
 
@@ -117,7 +116,7 @@ class PortalUtils(object):
             for device_info in output:
                 LOG.debug(f"get_enterprise_id : {device_info.enterprise_id}")
                 return device_info.enterprise_id
-        except Exception as e:
+        except Exception:
             return None
 
     def render_config_file(self, yaml_file):
@@ -138,7 +137,7 @@ class PortalUtils(object):
             with open(input_file_path, "r") as file:
                 config_data = yaml.safe_load(file)
             return config_data
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             LOG.warning(f"File not found : {input_file_path}")
     
     def get_global_routing_policy_id(self, policy_name):

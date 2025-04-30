@@ -1,5 +1,5 @@
-from .edge_utils import EdgeUtils
-from .logger import setup_logger
+from libs.edge_utils import EdgeUtils
+from libs.logger import setup_logger
 
 LOG = setup_logger()
 

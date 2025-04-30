@@ -1,6 +1,6 @@
 import yaml
 from jinja2 import Environment, FileSystemLoader
-from .logger import setup_logger
+from libs.logger import setup_logger
 
 LOG = setup_logger()
 
