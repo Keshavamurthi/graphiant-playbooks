@@ -34,6 +34,7 @@ class PortalUtils(object):
             for key, value in config_dict.items():
                 output_dict[key] = executor.submit(function, **value)
             self.wait_checked(list(future for future in output_dict.values()))
+        LOG.info(f"")
         return output_dict
 
     @staticmethod

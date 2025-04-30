@@ -1,13 +1,17 @@
+## Graphiant Playbooks
+
+Graphiant Playbooks are a collection of automated scripts that are designed to streamline 
+and manage network infrastructure and policies. These playbooks are built using Python and 
+Jinja2 templates to create and apply configurations for multiple Graphiant Edge Devices 
+concurrently using GCSDK API. 
 
 ```sh
 graphiant-playbooks/
-
-- configs/        # Input YAML configurations
-- gcsdk_dist/     # GCSDK build
-- libs/           # Python libraries and modules
-- logs/           # Execution logs
-- templates/      # Jinja2 config templates
-```
+├── configs/        # Input YAML configuration files
+├── gcsdk_dist/     # GCSDK build (the distribution package for Graphiant Cloud SDK)
+├── libs/           # Python libraries and modules required by the playbooks
+├── logs/           # Execution logs directory
+└── templates/      # Jinja2 configuration templates used for rendering YAML
 
 # configs/
 Contains input configuration YAML files used to drive the execution of various playbooks.
@@ -25,8 +29,9 @@ for auditability and debugging purposes.
 # templates/
 Contains Jinja2 config templates. These templates are dynamically rendered using the 
 input from the configs/ directory to produce finalized configuration artifacts.
+```
 
-# Pre-requisites:
+## Pre-requisites:
 
 # 1. Install Python 3.12+
 
@@ -38,10 +43,10 @@ source venv/bin/activate
 
 # 3. Install the GCSDK build from gcsdk_dist/
 ```sh
-pip3.12 install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
-# Testing virtual environment
+## Testing virtual environment
 
 # 1. Enter the host URL and credentials under test.ini
 ```sh
@@ -57,17 +62,17 @@ url = https://api.graphiant.com
 python3.12 test.py
 ```
 
-# Getting Started
+## Getting Started
 
 # Step 1: Define Configurations
 
 All input configs should be placed in the configs/ folder.
 
-Refer to the sample files provided and create a one based on your requirement:
-
 - sample_bgp_peering.yaml
 - sample_interface_config.yaml
-- sample_global_routing_policies.yaml 
+- sample_global_routing_policies.yaml
+
+Note : Refer the templates under templates/ dir for more details on the supported arguments.
 
 # Step 2: Import and Use graphiant-playbooks
 ```sh
@@ -115,3 +120,7 @@ edge.deconfigure_global_prefix("sample_global_routing_policies.yaml")
 
 Note: Make sure the Global Prefixes are not attached before deconfigure
 ```
+
+# Release Notes:
+- Double Deletion Not Supported: Attempting to delete a configuration that does not exist is not supported.
+- IPv6 BGP Peers : Only IPv4 BGP peer configurations are currently validated.

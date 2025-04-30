@@ -3,6 +3,16 @@ from datetime import datetime
 from pathlib import Path as path
 
 def setup_logger(level=logging.INFO):
+    """
+    Sets up a logger for the Graphiant Playbook with both file and console logging.
+
+    Args:
+        level (int): The logging level. Default is logging.INFO.
+
+    Returns:
+        logging.Logger: Configured logger instance.
+    """
+
     logger = logging.getLogger("Graphiant_playbook")
     logger.setLevel(level)
 
@@ -20,7 +30,7 @@ def setup_logger(level=logging.INFO):
         
         # Console handler
         ch = logging.StreamHandler()
-        ch.setLevel(logging.ERROR)  # Only errors to console
+        ch.setLevel(level) 
         
         # Formatter
         formatter = logging.Formatter(
