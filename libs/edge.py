@@ -13,8 +13,8 @@ class Edge(EdgeUtils):
         Configures Global prefix sets based on the provided YAML configuration file.
 
         This method reads the configuration file, parses the global prefix set entries,
-        and constructs the payload using the Jinja2 templates required for configuring 
-        the global prefixes using the GCSDK API.
+        and constructs the payload using the Jinja2 templates and configure
+        the global prefixes using the GCSDK APIs.
 
         Args:
             yaml_file (str): Path to the YAML file containing the global prefix set definitions.
@@ -39,7 +39,7 @@ class Edge(EdgeUtils):
 
         This method reads the YAML file, extracts global prefix set configurations, and
         constructs a payload using the Jinja2 templates to delete them from the system 
-        using the GCSDK API.
+        using the GCSDK APIs.
 
         Args:
             yaml_file (str): Path to the YAML file containing the global 
@@ -61,11 +61,11 @@ class Edge(EdgeUtils):
 
     def configure_global_bgp_routing_policies(self, yaml_file):
         """
-        Configures Global BGP routing policies using the provided YAML configuration file.
+        Configures Global BGP routing filter policies using the provided YAML configuration file.
 
-        This method parses the input YAML file to extract BGP routing policy definitions,
+        This method parses the input YAML file to extract BGP routing filter policy definitions,
         builds the appropriate payload using the templates, and applies the configuration 
-        via the GCSDK API.
+        via the GCSDK APIs.
 
         Args:
             yaml_file (str): Path to the YAML file containing routing policy definitions.
@@ -87,11 +87,11 @@ class Edge(EdgeUtils):
 
     def deconfigure_global_bgp_routing_policies(self, yaml_file):
         """
-        Removes Global BGP routing policies using the provided YAML configuration file.
+        Removes Global BGP routing filter policies using the provided YAML configuration file.
 
         This method parses the input YAML file to extract BGP routing policy definitions
         and constructs the payload using the templates to remove the specified policies 
-        using the GCSDK API.
+        using the GCSDK APIs.
 
         Args:
             yaml_file (str): Path to the YAML file containing routing policy definitions.
@@ -116,6 +116,10 @@ class Edge(EdgeUtils):
         Configures BGP peers based on the provided YAML configuration file 
         concurrently across multiple devices
 
+        This method parses the input YAML file to extract BGP Peers definition
+        and constructs the payload using the templates and apply the configurations 
+        concurrently across multiple devices using the GCSDK APIs.
+
         Args:
             yaml_file (str): Path to the YAML file containing the BGP peering configurations.
 
@@ -137,8 +141,13 @@ class Edge(EdgeUtils):
 
     def detach_policies_from_bgp_peers(self, yaml_file):
         """
-        Detach the routing policies from BGP peers based on the provided YAML configuration file.
+        Detach routing filter policies from BGP peers based on the provided YAML configuration 
+        file.
 
+        This method parses the input YAML file to extract BGP Peers and policy definition
+        and constructs the payload using the templates to detach the policies and apply the 
+        configurations concurrently across multiple devices using the GCSDK APIs.
+        
         Args:
             yaml_file (str): Path to the YAML file containing the BGP peering configurations.
 
@@ -160,7 +169,8 @@ class Edge(EdgeUtils):
 
     def deconfigure_bgp_peers(self, yaml_file):
         """
-        Deconfigures BGP peers as per the provided configuration in the YAML file.
+        Deconfigures BGP peers provided in configuration YAML file and 
+        apply them concurrently using GCSDK APIs across multiple devices.
         
         Args:
             yaml_file (str): Path to the YAML configuration file containing BGP peer 

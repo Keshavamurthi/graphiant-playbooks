@@ -15,7 +15,8 @@ class GcsdkClient():
         self.config.username = username
         self.config.password = password
         self.api = self.swagger_client.DefaultApi(swagger_client.ApiClient(self.config))
-        auth_login_body = self.swagger_client.AuthLoginBody(username=self.config.username, password=self.config.password)
+        auth_login_body = self.swagger_client.AuthLoginBody(username=self.config.username, 
+                                                            password=self.config.password)
         response = self.api.v1_auth_login_post(body=auth_login_body, _preload_content=False)
         self.token = json.loads(response.data).get("token")
         self.bearer_token = 'Bearer ' + self.token
@@ -34,13 +35,15 @@ class GcsdkClient():
 
     def get_edges_summary(self, device_id=None):
         """
-        Get all edges summary from GCS. If a device_id is provided, returns details of the specific edge.
+        Get all edges summary from GCS.
 
         Args:
-            device_id (int, optional): The device ID to filter edges. If not provided, returns all edges.
+            device_id (int, optional): The device ID to filter edges. 
+            If not provided, returns all edges.
 
         Returns:
-            list or dict: A list of all edges info if no device_id is provided, or a single edge's information if a device_id is provided.
+            list or dict: A list of all edges info if no device_id is provided, 
+            or a single edge's information if a device_id is provided.
         """
         response = self.api.v1_edges_summary_get(authorization=self.bearer_token)
         if device_id:
@@ -52,10 +55,10 @@ class GcsdkClient():
     @poller(retries=12, wait=10)
     def put_device_config(self, device_id: int, core=None, edge=None):
         """
-        Put Devices Config On GCS for Core or Edge
+        Put Devices Config on GCS for Core or Edge
 
         Args:
-            device_id (int): The device ID to push the config for.
+            device_id (int): The device ID to push the config.
             core (dict, optional): Core configuration data.
             edge (dict, optional): Edge configuration data.
 
@@ -63,23 +66,28 @@ class GcsdkClient():
             response: The response from the API call to push the device config.
 
         Raises:
-            AssertionError: If the device portal status is not 'Ready' till the retry
-            ApiException/AssertionError: If there is an API exception during the config push till the retry
+            AssertionError: If the device portal status is not 'Ready' after retries
+            ApiException/AssertionError: If there is an API exception during the 
+            config push after retries
         """
         body = swagger_client.DeviceIdConfigBody(core=core, edge=edge)
         try:
             edge_summary = self.get_edges_summary(device_id=device_id)
             if edge_summary.portal_status == "Ready":
                 LOG.info(f"put_device_config : config to be pushed for {device_id}: \n{body}")
-                response = self.api.v1_devices_device_id_config_put(authorization=self.bearer_token, 
-                                                                    device_id=device_id, body=body)
+                response = \
+                self.api.v1_devices_device_id_config_put(authorization=self.bearer_token, 
+                                                         device_id=device_id, body=body)
                 return response
             else:
-                LOG.info(f"put_device_config : Retrying,  {device_id} Portal Status: {edge_summary.portal_status} (Expected Ready)")
-                assert False, f"put_device_config : Retrying,  {device_id} Portal Status: {edge_summary.portal_status} (Expected Ready)"
+                LOG.info(f"put_device_config : Retrying,  {device_id} \
+                         Portal Status: {edge_summary.portal_status} (Expected Ready)")
+                assert False, f"put_device_config : Retrying,  {device_id} \
+                    Portal Status: {edge_summary.portal_status} (Expected Ready)"
         except self.swagger_client.rest.ApiException as e:
             LOG.warning(f"put_device_config : Exception While config push {e}")
-            assert False, f"put_device_config : Retrying, Exception while config push to {device_id}"
+            assert False, f"put_device_config : \
+                Retrying, Exception while config push to {device_id}"
     
     def post_devices_bringup(self, device_ids):
         """
@@ -159,7 +167,7 @@ class GcsdkClient():
     @poller(retries=12, wait=10)
     def post_global_summary(self, **kwargs):
         """
-        Posts a global summary configuration to the system.
+        Posts global summary configuration to the system.
         Args:
             **kwargs: The global summary configuration parameters to be posted. 
 

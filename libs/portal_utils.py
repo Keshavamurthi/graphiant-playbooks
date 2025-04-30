@@ -34,7 +34,6 @@ class PortalUtils(object):
             for key, value in config_dict.items():
                 output_dict[key] = executor.submit(function, **value)
             self.wait_checked(list(future for future in output_dict.values()))
-        LOG.info(f"")
         return output_dict
 
     @staticmethod
@@ -60,7 +59,7 @@ class PortalUtils(object):
 
     def update_device_bringup_status(self, device_id, status):
         """
-        Update the device bringup status via GCSDK.
+        Update the device bringup status via GCSDK APIs.
 
         :param device_id: str - The ID of the device to update
         :param status: str - New status to set
@@ -70,6 +69,12 @@ class PortalUtils(object):
         return result
 
     def update_multiple_devices_bringup_status(self, yaml_file):
+        """
+        Update the multiple device bringup status concurrently via GCSDK APIs.
+
+        :param yaml_file: Contains list of devices and expected device status
+        :return: None
+        """
         input_file_path = self.config_path + yaml_file
         input_dict = {}
         with open(input_file_path, "r") as file:
@@ -125,7 +130,7 @@ class PortalUtils(object):
         Returns:
             dict: Parsed configuration data.
 
-        Raises:
+        Logs Warning:
             FileNotFoundError: If the file doesn't exist.
         """
         input_file_path = self.config_path + yaml_file
