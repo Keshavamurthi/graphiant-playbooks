@@ -1,4 +1,8 @@
-## Graphiant Playbooks
+# Graphiant-Playbooks
+
+Playbooks for [Graphiant NaaS](https://www.graphiant.com). 
+
+Refer [Graphiant Documentation](https://docs.graphiant.com/) to get started with our services.
 
 Graphiant Playbooks are a collection of automated scripts that are designed to streamline 
 and manage network infrastructure and policies. These playbooks are built using Python and 
