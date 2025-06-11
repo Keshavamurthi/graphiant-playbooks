@@ -33,6 +33,7 @@ chmod +x generate-cloud-init.sh
 ./generate-cloud-init.sh
 
 ## ▶️ Example Run
+```commandline
 ./generate-cloud-init.sh 
 
 === Cloud-Init local management and ztp Configurator ===
@@ -61,5 +62,4 @@ Path table size(bytes): 10
 Max brk space used 0
 183 extents written (0 MB)
 ✅ Cloud-init image created: ccccloud.iso
-
-
+```
