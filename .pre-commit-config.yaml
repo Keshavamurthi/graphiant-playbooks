@@ -1,0 +1,13 @@
+default_language_version:
+  python: python3.11
+repos:
+  - repo: https://github.com/pycqa/flake8
+    rev: '6.1.0'
+    hooks:
+      - id: flake8
+  - repo: https://github.com/pylint-dev/pylint
+    rev: 'v3.0.1'
+    hooks:
+      - id: pylint
+        args: ["--errors-only"]
+        language: system # So that local venv is used containing dependencies

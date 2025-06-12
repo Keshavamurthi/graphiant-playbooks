@@ -143,3 +143,38 @@ Note: Make sure the Global Prefixes are not attached before deconfigure
 ### Release Notes:
 - Double Deletion Not Supported: Attempting to delete a configuration that does not exist is not supported.
 - IPv6 BGP Peers : Only IPv4 BGP peer configurations are currently validated.
+
+## Source code linter checks
+Error linters point out syntax errors or other code that will result in unhandled exceptions and crashes. (pylint, flake8)
+Style linters point out issues that don't cause bugs but make the code less readable or are not in line with style guides such as Python's PEP 8. (pylint, flake8)
+
+flake8
+```
+flake8 ./libs
+flake8 ./test
+```
+
+pylint
+```
+pylint --errors-only ./libs
+```
+
+jinjalint
+```
+djlint configs -e yaml
+djlint templates -e yaml
+```
+
+Most modern IDE also have excellent support for python linting tools. For example:
+
+- https://plugins.jetbrains.com/plugin/11084-pylint
+- https://plugins.jetbrains.com/plugin/11563-flake8-support
+
+- https://marketplace.visualstudio.com/items?itemName=ms-python.flake8
+- https://marketplace.visualstudio.com/items?itemName=ms-python.pylint
+
+## Pre-commit checks
+[pre-commit](https://pre-commit.com/) can be used to install/manage git hooks that will run these linting checks before committing.
+``` shell
+pre-commit install
+```

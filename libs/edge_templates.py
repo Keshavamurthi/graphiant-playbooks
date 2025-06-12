@@ -4,6 +4,7 @@ from libs.logger import setup_logger
 
 LOG = setup_logger()
 
+
 class EdgeTemplates(object):
 
     def __init__(self, config_template_path):
@@ -11,7 +12,7 @@ class EdgeTemplates(object):
 
     def render_template(self, config_template_file, **kwargs):
         """
-        Renders config_template_file(Jinja2 template) with the provided variables 
+        Renders config_template_file(Jinja2 template) with the provided variables
         and returns the parsed YAML.
 
         Args:
@@ -51,10 +52,10 @@ class EdgeTemplates(object):
             dict: Parsed YAML configuration.
         """
         return self.render_template("global_prefix_set_template.yaml", **kwargs)
-    
+
     def _global_bgp_filter(self, **kwargs):
         """
-        Renders the global_bgp_routing_policies_template.yaml(Jinja2 template) 
+        Renders the global_bgp_routing_policies_template.yaml(Jinja2 template)
         with the provided variables.
 
         Args:
@@ -64,7 +65,7 @@ class EdgeTemplates(object):
             dict: Parsed YAML configuration.
         """
         return self.render_template("global_bgp_routing_policies_template.yaml", **kwargs)
-    
+
     def _edge_bgp_peering(self, **kwargs):
         """
         Renders the bgp_peering_template.yaml(Jinja2 template) with the provided variables.
