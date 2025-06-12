@@ -7,6 +7,7 @@ from pathlib import Path as path
 
 LOG = setup_logger()
 
+
 class PortalUtils(object):
 
     def __init__(self, base_url=None, username=None, password=None):
@@ -101,7 +102,7 @@ class PortalUtils(object):
             for device_id in output_dict.values():
                 return device_id
         return output_dict
-    
+
     def get_enterprise_id(self):
         """
         Retrieve the enterprise ID from the first available device in the edges summary.
@@ -139,7 +140,7 @@ class PortalUtils(object):
             return config_data
         except FileNotFoundError:
             LOG.warning(f"File not found : {input_file_path}")
-    
+
     def get_global_routing_policy_id(self, policy_name):
         """
         Retrieve the global routing policy ID based on the policy name.
@@ -153,6 +154,6 @@ class PortalUtils(object):
         result = self.gcsdk.post_global_summary(routing_policy_type=True)
         for key, value in result.to_dict().items():
             for config in value:
-                if config['name'] == policy_name:    
+                if config['name'] == policy_name:
                     return config['id']
         return None

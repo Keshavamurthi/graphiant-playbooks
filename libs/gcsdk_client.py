@@ -6,6 +6,7 @@ from libs.logger import setup_logger
 
 LOG = setup_logger()
 
+
 class GcsdkClient():
 
     def __init__(self, base_url=None, username=None, password=None):
@@ -38,11 +39,11 @@ class GcsdkClient():
         Get all edges summary from GCS.
 
         Args:
-            device_id (int, optional): The device ID to filter edges. 
+            device_id (int, optional): The device ID to filter edges.
             If not provided, returns all edges.
 
         Returns:
-            list or dict: A list of all edges info if no device_id is provided, 
+            list or dict: A list of all edges info if no device_id is provided,
             or a single edge's information if a device_id is provided.
         """
         response = self.api.v1_edges_summary_get(authorization=self.bearer_token)
@@ -67,7 +68,7 @@ class GcsdkClient():
 
         Raises:
             AssertionError: If the device portal status is not 'Ready' after retries
-            ApiException/AssertionError: If there is an API exception during the 
+            ApiException/AssertionError: If there is an API exception during the
             config push after retries
         """
         body = graphiant_sdk.DeviceIdConfigBody(core=core, edge=edge)
@@ -75,9 +76,8 @@ class GcsdkClient():
             edge_summary = self.get_edges_summary(device_id=device_id)
             if edge_summary.portal_status == "Ready":
                 LOG.info(f"put_device_config : config to be pushed for {device_id}: \n{body}")
-                response = \
-                self.api.v1_devices_device_id_config_put(authorization=self.bearer_token, 
-                                                         device_id=device_id, body=body)
+                response = self.api.v1_devices_device_id_config_put(authorization=self.bearer_token,
+                                                                    device_id=device_id, body=body)
                 return response
             else:
                 LOG.info(f"put_device_config : Retrying,  {device_id} \
@@ -88,7 +88,7 @@ class GcsdkClient():
             LOG.warning(f"put_device_config : Exception While config push {e}")
             assert False, f"put_device_config : \
                 Retrying, Exception while config push to {device_id}"
-    
+
     def post_devices_bringup(self, device_ids):
         """
         Post Devices Bringup On GCS
@@ -146,7 +146,7 @@ class GcsdkClient():
         Patch the global configuration on the system.
 
         Args:
-            **kwargs: The global configuration parameters to be patched. 
+            **kwargs: The global configuration parameters to be patched.
 
         Returns:
             The response from the API
@@ -163,13 +163,13 @@ class GcsdkClient():
         except self.graphiant_sdk.rest.ApiException as e:
             LOG.warning(f"patch_global_config : Exception While Global config patch {e}")
             assert False, "patch_global_config : Retrying, Exception while Global config patch"
-    
+
     @poller(retries=12, wait=10)
     def post_global_summary(self, **kwargs):
         """
         Posts global summary configuration to the system.
         Args:
-            **kwargs: The global summary configuration parameters to be posted. 
+            **kwargs: The global summary configuration parameters to be posted.
 
         Returns:
             The response from the API

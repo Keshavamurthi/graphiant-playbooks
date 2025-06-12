@@ -4,6 +4,7 @@ from libs.logger import setup_logger
 
 LOG = setup_logger()
 
+
 class EdgeUtils(PortalUtils):
 
     def __init__(self, base_url=None, username=None, password=None, **kwargs):
@@ -12,7 +13,7 @@ class EdgeUtils(PortalUtils):
 
     def global_prefix_set(self, config_payload, action="add", **kwargs):
         """
-        Updates the global_prefix_sets section of configuration payload(config_payload) 
+        Updates the global_prefix_sets section of configuration payload(config_payload)
         using a rendered template.
 
         Args:
@@ -29,7 +30,7 @@ class EdgeUtils(PortalUtils):
 
     def global_bgp_filter(self, config_payload, action="add", **kwargs):
         """
-        Updates the routing_policies section of the configuration payload(config_payload) 
+        Updates the routing_policies section of the configuration payload(config_payload)
         using the rendered template.
 
         Args:
@@ -43,10 +44,10 @@ class EdgeUtils(PortalUtils):
         LOG.debug(f"global_bgp_filter : {action.upper()} Global BGP Filter {kwargs.get('name')}")
         global_bgp_filter = self.template._global_bgp_filter(action=action, **kwargs)
         config_payload['routing_policies'].update(global_bgp_filter)
-    
+
     def edge_bgp_peering(self, config_payload, action="add", **kwargs):
         """
-        Updates the edge_bgp_peering section of configuration payload(config_payload) 
+        Updates the edge_bgp_peering section of configuration payload(config_payload)
         using a rendered template.
 
         Args:
@@ -66,7 +67,7 @@ class EdgeUtils(PortalUtils):
         LOG.debug(f"edge_bgp_peering : {action.upper()} BGP Peering :\n {kwargs}")
         bgp_peering = self.template._edge_bgp_peering(action=action, global_ids=global_ids, **kwargs)
         config_payload.update(bgp_peering)
-    
+
     def edge_interface(self, config_payload, action="add", **kwargs):
         """
         Updates the edge interfaces/circuits section of the configuration payload(config_payload)
@@ -74,7 +75,7 @@ class EdgeUtils(PortalUtils):
 
         Args:
             config_payload (dict): Dictionary to be updated with interface and circuit data.
-            action (str, optional): Action to perform, either "add" or "default_lan" or "delete". 
+            action (str, optional): Action to perform, either "add" or "default_lan" or "delete".
             Defaults to "add".
             **kwargs: Additional parameters passed to the template renderer.
 
@@ -86,4 +87,3 @@ class EdgeUtils(PortalUtils):
         config_payload["interfaces"].update(interface.get("interfaces"))
         if interface.get('circuits'):
             config_payload['circuits'].update(interface.get("circuits"))
-    

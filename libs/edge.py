@@ -3,6 +3,7 @@ from libs.logger import setup_logger
 
 LOG = setup_logger()
 
+
 class Edge(EdgeUtils):
 
     def __init__(self, base_url=None, username=None, password=None, **kwargs):
@@ -32,17 +33,17 @@ class Edge(EdgeUtils):
             final_config_payload["global_config"].update(config_payload)
         LOG.debug(f"configure_routing_prefixes: final_config_payload {final_config_payload}")
         self.concurrent_task_execution(self.gcsdk.patch_global_config, final_config_payload)
-    
+
     def deconfigure_global_prefix(self, yaml_file):
         """
         Removes Global prefix sets based on the provided YAML configuration file.
 
         This method reads the YAML file, extracts global prefix set configurations, and
-        constructs a payload using the Jinja2 templates to delete them from the system 
+        constructs a payload using the Jinja2 templates to delete them from the system
         using the GCSDK APIs.
 
         Args:
-            yaml_file (str): Path to the YAML file containing the global 
+            yaml_file (str): Path to the YAML file containing the global
             prefix set definitions to be removed.
 
         Returns:
@@ -64,7 +65,7 @@ class Edge(EdgeUtils):
         Configures Global BGP routing filter policies using the provided YAML configuration file.
 
         This method parses the input YAML file to extract BGP routing filter policy definitions,
-        builds the appropriate payload using the templates, and applies the configuration 
+        builds the appropriate payload using the templates, and applies the configuration
         via the GCSDK APIs.
 
         Args:
@@ -90,7 +91,7 @@ class Edge(EdgeUtils):
         Removes Global BGP routing filter policies using the provided YAML configuration file.
 
         This method parses the input YAML file to extract BGP routing policy definitions
-        and constructs the payload using the templates to remove the specified policies 
+        and constructs the payload using the templates to remove the specified policies
         using the GCSDK APIs.
 
         Args:
@@ -113,11 +114,11 @@ class Edge(EdgeUtils):
 
     def configure_bgp_peers(self, yaml_file):
         """
-        Configures BGP peers based on the provided YAML configuration file 
+        Configures BGP peers based on the provided YAML configuration file
         concurrently across multiple devices
 
         This method parses the input YAML file to extract BGP Peers definition
-        and constructs the payload using the templates and apply the configurations 
+        and constructs the payload using the templates and apply the configurations
         concurrently across multiple devices using the GCSDK APIs.
 
         Args:
@@ -134,20 +135,20 @@ class Edge(EdgeUtils):
                     device_id = self.get_device_id(device_name=device_name)
                     config_payload = {}
                     self.edge_bgp_peering(config_payload, **config)
-                    final_config_payload[device_id] = {"device_id": device_id, 
+                    final_config_payload[device_id] = {"device_id": device_id,
                                                        "edge": config_payload}
         LOG.debug(f"configure_bgp_peers: final_config_payload {final_config_payload}")
         self.concurrent_task_execution(self.gcsdk.put_device_config, final_config_payload)
 
     def detach_policies_from_bgp_peers(self, yaml_file):
         """
-        Detach routing filter policies from BGP peers based on the provided YAML configuration 
+        Detach routing filter policies from BGP peers based on the provided YAML configuration
         file.
 
         This method parses the input YAML file to extract BGP Peers and policy definition
-        and constructs the payload using the templates to detach the policies and apply the 
+        and constructs the payload using the templates to detach the policies and apply the
         configurations concurrently across multiple devices using the GCSDK APIs.
-        
+
         Args:
             yaml_file (str): Path to the YAML file containing the BGP peering configurations.
 
@@ -162,20 +163,20 @@ class Edge(EdgeUtils):
                     device_id = self.get_device_id(device_name=device_name)
                     config_payload = {}
                     self.edge_bgp_peering(config_payload, action="unlink", **config)
-                    final_config_payload[device_id] = {"device_id": device_id, 
+                    final_config_payload[device_id] = {"device_id": device_id,
                                                        "edge": config_payload}
         LOG.debug(f"detach_policies_from_bgp_peers: final_config_payload {final_config_payload}")
         self.concurrent_task_execution(self.gcsdk.put_device_config, final_config_payload)
 
     def deconfigure_bgp_peers(self, yaml_file):
         """
-        Deconfigures BGP peers provided in configuration YAML file and 
+        Deconfigures BGP peers provided in configuration YAML file and
         apply them concurrently using GCSDK APIs across multiple devices.
-        
+
         Args:
-            yaml_file (str): Path to the YAML configuration file containing BGP peer 
+            yaml_file (str): Path to the YAML configuration file containing BGP peer
             configurations to be removed.
-        
+
         Returns:
             None
         """
@@ -187,19 +188,19 @@ class Edge(EdgeUtils):
                     device_id = self.get_device_id(device_name=device_name)
                     config_payload = {}
                     self.edge_bgp_peering(config_payload, action="delete", **config)
-                    final_config_payload[device_id] = {"device_id": device_id, 
+                    final_config_payload[device_id] = {"device_id": device_id,
                                                        "edge": config_payload}
         LOG.debug(f"deconfigure_bgp_peers: final_config_payload {final_config_payload}")
         self.concurrent_task_execution(self.gcsdk.put_device_config, final_config_payload)
 
     def configure_interfaces(self, yaml_file):
         """
-        Configures the interfaces/sub-interfaces for multiple devices concurrently 
+        Configures the interfaces/sub-interfaces for multiple devices concurrently
         as specified in the provided YAML file.
-        
+
         Args:
             yaml_file (str): Path to the YAML file containing interface configurations.
-        
+
         Returns:
             None
         """
@@ -212,7 +213,7 @@ class Edge(EdgeUtils):
                         device_config = {"interfaces": {}, "circuits": {}}
                         for config in config_list:
                             self.edge_interface(device_config, action="add", **config)
-                        output_config[device_id] = {"device_id": device_id, 
+                        output_config[device_id] = {"device_id": device_id,
                                                     "edge": device_config}
                     else:
                         LOG.error(f"configure_interfaces : \
@@ -222,12 +223,12 @@ class Edge(EdgeUtils):
 
     def deconfigure_interfaces(self, yaml_file):
         """
-        Configures the interfaces/sub-interfaces into default_lan for multiple devices 
+        Configures the interfaces/sub-interfaces into default_lan for multiple devices
         concurrently as specified in the provided YAML file.
-        
+
         Args:
             yaml_file (str): Path to the YAML file containing interface configurations.
-        
+
         Returns:
             None
         """
@@ -242,7 +243,7 @@ class Edge(EdgeUtils):
                         for config in config_list:
                             self.edge_interface(device_config, action="default_lan",
                                                 default_lan=default_lan, **config)
-                        output_config[device_id] = {"device_id": device_id, 
+                        output_config[device_id] = {"device_id": device_id,
                                                     "edge": device_config}
                     else:
                         LOG.error(f"deconfigure_interfaces : \

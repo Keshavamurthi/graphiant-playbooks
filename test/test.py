@@ -5,6 +5,7 @@ from libs.logger import setup_logger
 
 LOG = setup_logger()
 
+
 def read_config():
     config = configparser.ConfigParser()
     config.read('test/test.ini')
@@ -12,6 +13,7 @@ def read_config():
     password = config['credentials']['password']
     host = config['host']['url']
     return host, username, password
+
 
 class TestGraphiantPlaybooks(unittest.TestCase):
 
@@ -23,6 +25,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
             LOG.info(f"Enterprise ID: {enterprise_id}")
         except Exception as e:
             self.fail(f"test_get_enterprise_id failed with exception: {e}")
+
 
 if __name__ == '__main__':
     unittest.main()
