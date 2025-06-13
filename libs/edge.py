@@ -1,3 +1,5 @@
+import graphiant_sdk
+from graphiant_sdk import V1DevicesDeviceIdConfigPutRequestEdge
 from libs.edge_utils import EdgeUtils
 from libs.logger import setup_logger
 
@@ -219,7 +221,27 @@ class Edge(EdgeUtils):
                         LOG.error(f"configure_interfaces : \
                                   {device_name} unable to fetch device-id")
                         return
-        self.concurrent_task_execution(self.gcsdk.put_device_config, output_config)
+        edge_config = {}
+        for device_id in output_config.keys():
+            edge_config[device_id] = {}
+            edge_config[device_id]['device_id'] = device_id
+                            
+            # Edge circuits config from the rendered config.
+            circuits = output_config[device_id]['edge']['circuits']
+            LOG.debug(f'{device_id} circuits {circuits}')
+
+            # Edge interfaces from the rendered config.
+            interfaces = output_config[device_id]['edge']['interfaces']
+            LOG.debug(f'{device_id} interfaces {interfaces}')
+
+            # Set the circuits and interfaces of the config in the Edge config push request
+            device_config_put_request_edge = V1DevicesDeviceIdConfigPutRequestEdge(circuits=circuits,
+                                                                                   interfaces=interfaces)
+            LOG.debug(f'{device_id} V1DevicesDeviceIdConfigPutRequestEdge object: {device_config_put_request_edge}')
+
+            edge_config[device_id]['edge'] = device_config_put_request_edge
+
+        self.concurrent_task_execution(self.gcsdk.put_device_config, edge_config)
 
     def deconfigure_interfaces(self, yaml_file):
         """
@@ -249,4 +271,24 @@ class Edge(EdgeUtils):
                         LOG.error(f"deconfigure_interfaces : \
                                   {device_name} unable to fetch device-id")
                         return
-        self.concurrent_task_execution(self.gcsdk.put_device_config, output_config)
+
+        edge_config = {}
+        for device_id in output_config.keys():
+            edge_config[device_id] = {}
+            edge_config[device_id]['device_id'] = device_id
+                            
+            # circuits from the rendered config
+            circuits = output_config[device_id]['edge']['circuits']
+            LOG.debug(f'{device_id} circuits {circuits}')
+
+            # interfaces from the rendered config
+            interfaces = output_config[device_id]['edge']['interfaces']
+            LOG.debug(f'{device_id} interfaces {interfaces}')
+
+            # Set the circuits and interfaces of the config in the Edge config push request
+            device_config_put_request_edge = V1DevicesDeviceIdConfigPutRequestEdge(circuits=circuits,
+                                                                                   interfaces=interfaces)
+            LOG.debug(f'{device_id} V1DevicesDeviceIdConfigPutRequestEdge object: {device_config_put_request_edge}')
+
+            edge_config[device_id]['edge'] = device_config_put_request_edge
+        self.concurrent_task_execution(self.gcsdk.put_device_config, edge_config)

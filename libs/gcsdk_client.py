@@ -1,4 +1,6 @@
 import graphiant_sdk
+from graphiant_sdk import (V1DevicesDeviceIdConfigPutRequest, V1DevicesDeviceIdConfigPutRequestEdge,
+                           V1DevicesDeviceIdConfigPutRequestCore, V1DevicesDeviceIdConfigPut202Response)
 import json
 from libs.poller import poller
 import time
@@ -16,11 +18,10 @@ class GcsdkClient():
         self.config.username = username
         self.config.password = password
         self.api = self.graphiant_sdk.DefaultApi(graphiant_sdk.ApiClient(self.config))
-        auth_login_body = self.graphiant_sdk.AuthLoginBody(username=self.config.username,
-                                                           password=self.config.password)
-        response = self.api.v1_auth_login_post(body=auth_login_body, _preload_content=False)
-        self.token = json.loads(response.data).get("token")
-        self.bearer_token = 'Bearer ' + self.token
+        v1_auth_login_post_request = self.graphiant_sdk.V1AuthLoginPostRequest(username=self.config.username,
+                                                                               password=self.config.password)
+        response = self.api.v1_auth_login_post(v1_auth_login_post_request=v1_auth_login_post_request)
+        self.bearer_token = 'Bearer ' + response.token
         LOG.debug(f"GCSDKClient : {self.bearer_token}")
 
     def get_all_enterprises(self):
@@ -49,12 +50,14 @@ class GcsdkClient():
         response = self.api.v1_edges_summary_get(authorization=self.bearer_token)
         if device_id:
             for edge_info in response.edges_summary:
-                if edge_info.device_id == str(device_id):
+                if edge_info.device_id == device_id:
                     return edge_info
         return response.edges_summary
 
     @poller(retries=12, wait=10)
-    def put_device_config(self, device_id: int, core=None, edge=None):
+    def put_device_config(self, device_id: int, 
+                          core: V1DevicesDeviceIdConfigPutRequestCore = None,
+                          edge: V1DevicesDeviceIdConfigPutRequestEdge = None) -> V1DevicesDeviceIdConfigPut202Response:
         """
         Put Devices Config on GCS for Core or Edge
 
@@ -64,20 +67,21 @@ class GcsdkClient():
             edge (dict, optional): Edge configuration data.
 
         Returns:
-            response: The response from the API call to push the device config.
+            response (V1DevicesDeviceIdConfigPut202Response): The response from the API call to push the device config.
 
         Raises:
             AssertionError: If the device portal status is not 'Ready' after retries
             ApiException/AssertionError: If there is an API exception during the
             config push after retries
         """
-        body = graphiant_sdk.DeviceIdConfigBody(core=core, edge=edge)
+        device_config_put_request = V1DevicesDeviceIdConfigPutRequest(core=core, edge=edge)
         try:
             edge_summary = self.get_edges_summary(device_id=device_id)
             if edge_summary.portal_status == "Ready":
-                LOG.info(f"put_device_config : config to be pushed for {device_id}: \n{body}")
+                LOG.info(f"put_device_config : config to be pushed for {device_id}: \n{device_config_put_request}")
                 response = self.api.v1_devices_device_id_config_put(authorization=self.bearer_token,
-                                                                    device_id=device_id, body=body)
+                                                                    device_id=device_id,
+                                                                    v1_devices_device_id_config_put_request=device_config_put_request)
                 return response
             else:
                 LOG.info(f"put_device_config : Retrying,  {device_id} \

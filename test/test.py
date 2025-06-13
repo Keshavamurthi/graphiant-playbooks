@@ -20,6 +20,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
     def test_get_enterprise_id(self):
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
+        edge.configure_interfaces("sample_interface_config.yaml")
         try:
             enterprise_id = edge.get_enterprise_id()
             LOG.info(f"Enterprise ID: {enterprise_id}")
