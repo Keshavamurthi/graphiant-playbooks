@@ -4,19 +4,16 @@
             "{{ circuit }}": {
                 "name": "{{ circuit }}",
                 "description": "{{ circuit_description | default(circuit) }}",
-                "linkUpSpeedMbps": "{{ circuit_upload_bandwidth | default(50) }}",
-                "linkDownSpeedMbps": "{{ circuit_download_bandwidth | default(100) }}",
+                "linkUpSpeedMbps": {{ circuit_upload_bandwidth | default(50) }},
+                "linkDownSpeedMbps": {{ circuit_download_bandwidth | default(100) }},
                 "connectionType": "{{ circuit_connection_type | default('internet_dia') }}",
                 "label": "{{ circuit_label | default('internet_dia_4') }}",
                 "qosProfile": "{{ circuit_qos_profile | default('gold25') }}",
                 "qosProfileType": "{{ circuit_qos_profile_type | default('balanced') }}",
                 "diaEnabled": {{ circuit_dia | default(False) }},
-                "patAddresses": [],
-                "interfaceName": "",
-                "snmpIndex": 0,
-                "coreLogicalInterfaces": [],
-                "staticRoutes": [],
-                "diaSnmpIndex": 0
+                "lastResort": {{ circuit_lr | default(False) }},
+                "patAddresses": {},
+                "staticRoutes": {},
             }
         },
     {% endif %}
@@ -50,7 +47,7 @@
                                 }
                             {% else %}
                                 "dhcp": {
-                                    "dhcpClient": "{{ ipv4_dhcp | default('true') }}"
+                                    "dhcpClient": {{ ipv4_dhcp | default(true) }}
                                 }
                             {% endif %}
                         },
@@ -61,7 +58,7 @@
                                 }
                             {% else %}
                                 "dhcp": {
-                                    "dhcpClient": "{{ ipv6_dhcp | default('true') }}"
+                                    "dhcpClient": {{ ipv6_dhcp | default(true) }}
                                 }
                             {% endif %}
                         }

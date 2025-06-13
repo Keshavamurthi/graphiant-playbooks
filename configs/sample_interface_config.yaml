@@ -1,5 +1,5 @@
 interfaces:
-  - edge-1-test:
+  - edge-1-sdktest:
     # WAN Interface with IPv4/IPv6 DHCP enabled
     - interface_name: GigabitEthernet5/0/0
       circuit: c-gigabitethernet5-0-0
@@ -14,7 +14,7 @@ interfaces:
           ipv6_address: 2001:10:2:7::1/64
           description: lan-7
           alias: non_production
-  - edge-2-test:
+  - edge-2-sdktest:
     # WAN Interface with Static IPv4 and DHCP IPv6 assignment and not enabling it
     - interface_name: GigabitEthernet5/0/0
       circuit: c-gigabitethernet5-0-0
@@ -35,7 +35,7 @@ interfaces:
           ipv6_address: 2001:10:2:8::2/64
           description: lan-8
           alias: production
-  - edge-3-test:
+  - edge-3-sdktest:
     # WAN Interface with Static IPv4 and DHCP IPv6 assignment and not enabling it
     - interface_name: GigabitEthernet5/0/0
       circuit: c-gigabitethernet5-0-0
