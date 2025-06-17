@@ -2,7 +2,8 @@ import yaml
 from concurrent.futures import wait
 from concurrent.futures.thread import ThreadPoolExecutor
 from libs.logger import setup_logger
-from libs.gcsdk_client import GcsdkClient
+from libs.gcsdk_client import GraphiantPortalClient
+
 from pathlib import Path as path
 
 LOG = setup_logger()
@@ -18,7 +19,8 @@ class PortalUtils(object):
         LOG.info(f"PortalUtils : templates_path : {self.config_path}")
         LOG.info(f"PortalUtils : config_templates : {self.templates}")
         LOG.info(f"PortalUtils : logs_path : {self.logs_path}")
-        self.gcsdk = GcsdkClient(base_url=base_url, username=username, password=password)
+        self.gsdk = GraphiantPortalClient(base_url=base_url, username=username, password=password)
+        self.gsdk.set_bearer_token()
 
     def concurrent_task_execution(self, function, config_dict):
         """
@@ -65,7 +67,7 @@ class PortalUtils(object):
         :param status: str - New status to set
         :return: Response from GCSDK
         """
-        result = self.gcsdk.put_devices_bringup(device_ids=[device_id], status=status)
+        result = self.gsdk.put_devices_bringup(device_ids=[device_id], status=status)
         return result
 
     def update_multiple_devices_bringup_status(self, yaml_file):
@@ -92,7 +94,7 @@ class PortalUtils(object):
         If multiple matches are found, returns a dictionary of {hostname: device_id}.
         If no match is found, returns an empty dict.
         """
-        output = self.gcsdk.get_edges_summary()
+        output = self.gsdk.get_edges_summary()
         output_dict = {}
         for device_info in output:
             if device_name in device_info.hostname:
@@ -110,15 +112,12 @@ class PortalUtils(object):
         Returns:
             str or None: The enterprise ID, or None if no devices are found.
         """
-        output = self.gcsdk.get_edges_summary()
+        output = self.gsdk.get_edges_summary()
         if not output:
             return None
-        try:
-            for device_info in output:
-                LOG.debug(f"get_enterprise_id : {device_info.enterprise_id}")
-                return device_info.enterprise_id
-        except Exception:
-            return None
+        for device_info in output:
+            LOG.debug(f"get_enterprise_id : {device_info.enterprise_id}")
+            return device_info.enterprise_id
 
     def render_config_file(self, yaml_file):
         """
@@ -151,7 +150,7 @@ class PortalUtils(object):
         Returns:
             str or None: The ID of the routing policy if found, otherwise None.
         """
-        result = self.gcsdk.post_global_summary(routing_policy_type=True)
+        result = self.gsdk.post_global_summary(routing_policy_type=True)
         for key, value in result.to_dict().items():
             for config in value:
                 if config['name'] == policy_name:

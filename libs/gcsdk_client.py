@@ -1,7 +1,10 @@
 import graphiant_sdk
 from graphiant_sdk import (V1DevicesDeviceIdConfigPutRequest, V1DevicesDeviceIdConfigPutRequestEdge,
-                           V1DevicesDeviceIdConfigPutRequestCore, V1DevicesDeviceIdConfigPut202Response)
-import json
+                           V1DevicesDeviceIdConfigPutRequestCore, V1DevicesDeviceIdConfigPut202Response,
+                           V1GlobalConfigPatchRequest)
+from graphiant_sdk.exceptions import (ApiException, BadRequestException,
+                                      UnauthorizedException, ForbiddenException,
+                                      NotFoundException, ServiceException)
 from libs.poller import poller
 import time
 from libs.logger import setup_logger
@@ -9,20 +12,29 @@ from libs.logger import setup_logger
 LOG = setup_logger()
 
 
-class GcsdkClient():
-
+class GraphiantPortalClient():
     def __init__(self, base_url=None, username=None, password=None):
-        self.graphiant_sdk = graphiant_sdk
-        self.config = self.graphiant_sdk.Configuration()
-        self.config.host = base_url
-        self.config.username = username
-        self.config.password = password
-        self.api = self.graphiant_sdk.DefaultApi(graphiant_sdk.ApiClient(self.config))
-        v1_auth_login_post_request = self.graphiant_sdk.V1AuthLoginPostRequest(username=self.config.username,
-                                                                               password=self.config.password)
-        response = self.api.v1_auth_login_post(v1_auth_login_post_request=v1_auth_login_post_request)
-        self.bearer_token = 'Bearer ' + response.token
-        LOG.debug(f"GCSDKClient : {self.bearer_token}")
+        self.config = graphiant_sdk.Configuration(host=base_url,
+                                                  username=username, password=password)
+        self.api_client = graphiant_sdk.ApiClient(self.config)
+        self.api = graphiant_sdk.DefaultApi(self.api_client)
+        self.bearer_token = None
+
+    def set_bearer_token(self):
+        v1_auth_login_post_request = graphiant_sdk.V1AuthLoginPostRequest(username=self.config.username,
+                                                                          password=self.config.password)
+        v1_auth_login_post_response = None
+        try:
+            v1_auth_login_post_response = self.api.v1_auth_login_post(
+                v1_auth_login_post_request=v1_auth_login_post_request)
+        except BadRequestException as e:
+            LOG.error(f"v1_auth_login_post: Got BadRequestException. Please verify payload is correct. {e}")
+        except (UnauthorizedException, ServiceException) as e:
+            LOG.error(f"v1_auth_login_post: Got Exception. Please verify crendentials are correct. {e}")
+        assert v1_auth_login_post_response, 'v1_auth_login_post_response is None'
+        assert v1_auth_login_post_response.token, 'bearer_token is not retrieved'
+        LOG.debug(f"GraphiantPortalClient Bearer token : {v1_auth_login_post_response.token}")
+        self.bearer_token = f'Bearer {v1_auth_login_post_response.token}'
 
     def get_all_enterprises(self):
         """
@@ -54,8 +66,29 @@ class GcsdkClient():
                     return edge_info
         return response.edges_summary
 
-    @poller(retries=12, wait=10)
-    def put_device_config(self, device_id: int, 
+    @poller(timeout=90, wait=5)
+    def verify_device_portal_status(self, device_id: int):
+        """
+        Verifies device portal sync Ready status (InSync) and
+         also verifies device connections to tunnel terminators status.
+        """
+        edge_summary = self.get_edges_summary(device_id=device_id)
+        if edge_summary.portal_status == "Ready":
+            if edge_summary.tt_conn_count and edge_summary.tt_conn_count == 2:
+                return
+            else:
+                LOG.info(f"verify_device_portal_status: {device_id} tunnel terminitor conn count: "
+                         f"{edge_summary.tt_conn_count} Expected: tt_conn_count=2. Retrying..")
+                assert False, (f"verify_device_portal_status: {device_id} tunnel terminitor conn count: "
+                               f"{edge_summary.tt_conn_count} Expected: tt_conn_count=2. Retry")
+
+        else:
+            LOG.info(f"verify_device_portal_status: {device_id} Portal Status: "
+                     f"{edge_summary.portal_status} Expected: Ready. Retrying..")
+            assert False, (f"verify_device_portal_status: {device_id} Portal Status: "
+                           f"{edge_summary.portal_status} Expected: Ready. Retrying..")
+
+    def put_device_config(self, device_id: int,
                           core: V1DevicesDeviceIdConfigPutRequestCore = None,
                           edge: V1DevicesDeviceIdConfigPutRequestEdge = None) -> V1DevicesDeviceIdConfigPut202Response:
         """
@@ -76,20 +109,20 @@ class GcsdkClient():
         """
         device_config_put_request = V1DevicesDeviceIdConfigPutRequest(core=core, edge=edge)
         try:
-            edge_summary = self.get_edges_summary(device_id=device_id)
-            if edge_summary.portal_status == "Ready":
-                LOG.info(f"put_device_config : config to be pushed for {device_id}: \n{device_config_put_request}")
-                response = self.api.v1_devices_device_id_config_put(authorization=self.bearer_token,
-                                                                    device_id=device_id,
-                                                                    v1_devices_device_id_config_put_request=device_config_put_request)
-                return response
-            else:
-                LOG.info(f"put_device_config : Retrying,  {device_id} \
-                         Portal Status: {edge_summary.portal_status} (Expected Ready)")
-                assert False, f"put_device_config : Retrying,  {device_id} \
-                    Portal Status: {edge_summary.portal_status} (Expected Ready)"
-        except self.graphiant_sdk.rest.ApiException as e:
-            LOG.warning(f"put_device_config : Exception While config push {e}")
+            # Verify device portal status and connection status.
+            self.verify_device_portal_status(device_id=device_id)
+            LOG.info(f"put_device_config : config to be pushed for {device_id}: \n{device_config_put_request}")
+            response = self.api.v1_devices_device_id_config_put(
+                authorization=self.bearer_token, device_id=device_id,
+                v1_devices_device_id_config_put_request=device_config_put_request)
+            return response
+        except ForbiddenException as e:
+            LOG.error(f"put_device_config: Got ForbiddenException while config push {e}")
+            assert False, (f"put_device_config : Retrying, Got ForbiddenException while config push to {device_id}. "
+                           f"User {self.config.username} does not have permissions to perform the requested operation "
+                           f"(v1_devices_device_id_config_put).")
+        except ApiException as e:
+            LOG.warning(f"put_device_config : Exception while config push {e}")
             assert False, f"put_device_config : \
                 Retrying, Exception while config push to {device_id}"
 
@@ -105,7 +138,8 @@ class GcsdkClient():
         """
         data = {'deviceIds': device_ids}
         LOG.debug(f"post_devices_bringup : {data}")
-        response = self.api.v1_devices_bringup_post(authorization=self.bearer_token, body=data)
+        response = self.api.v1_devices_bringup_post(authorization=self.bearer_token,
+                                                    v1_devices_bringup_post_request=data)
         return response
 
     def put_devices_bringup(self, device_ids, status):
@@ -138,14 +172,14 @@ class GcsdkClient():
             data['status'] = 'Maintenance'
         try:
             LOG.debug(f"put_devices_bringup : {data}")
-            self.api.v1_devices_bringup_put(authorization=self.bearer_token, body=data)
+            self.api.v1_devices_bringup_put(authorization=self.bearer_token,
+                                            v1_devices_bringup_put_request=data)
             time.sleep(15)
             return True
-        except self.graphiant_sdk.rest.ApiException:
+        except ApiException:
             return False
 
-    @poller(retries=12, wait=10)
-    def patch_global_config(self, **kwargs):
+    def patch_global_config(self, v1_global_config_patch_request: V1GlobalConfigPatchRequest):
         """
         Patch the global configuration on the system.
 
@@ -159,16 +193,21 @@ class GcsdkClient():
             ApiException: If the API call fails.
 
         """
-        body = graphiant_sdk.GlobalConfigBody(**kwargs)
         try:
-            LOG.info(f"patch_global_config : config to be pushed : \n{body}")
-            response = self.api.v1_global_config_patch(authorization=self.bearer_token, body=body)
+            LOG.info(f"patch_global_config : config to be pushed : \n{v1_global_config_patch_request}")
+            response = self.api.v1_global_config_patch(authorization=self.bearer_token,
+                                                       v1_global_config_patch_request=v1_global_config_patch_request)
             return response
-        except self.graphiant_sdk.rest.ApiException as e:
+        except (NotFoundException, ServiceException) as e:
+            LOG.error("patch_global_config: Got Exception while v1_global_config_patch request. "
+                      "Global object(s) might not exist.")
+            assert False, (f"patch_global_config : Got Exception {e} while v1_global_config_patch request. "
+                           f"Global object(s) in the request might not exist.")
+        except ApiException as e:
             LOG.warning(f"patch_global_config : Exception While Global config patch {e}")
             assert False, "patch_global_config : Retrying, Exception while Global config patch"
 
-    @poller(retries=12, wait=10)
+    @poller(retries=3, wait=10)
     def post_global_summary(self, **kwargs):
         """
         Posts global summary configuration to the system.
@@ -181,11 +220,12 @@ class GcsdkClient():
         Raises:
             ApiException: If the API call fails.
         """
-        body = graphiant_sdk.GlobalSummaryBody(**kwargs)
+        body = graphiant_sdk.V1GlobalSummaryPostRequest(**kwargs)
         try:
             LOG.info(f"patch_global_config : config to be pushed : \n{body}")
-            response = self.api.v1_global_summary_post(authorization=self.bearer_token, body=body)
+            response = self.api.v1_global_summary_post(authorization=self.bearer_token,
+                                                       v1_global_summary_post_request=body)
             return response
-        except self.graphiant_sdk.rest.ApiException as e:
+        except ApiException as e:
             LOG.warning(f"patch_global_config : Exception While Global config patch {e}")
             assert False, "patch_global_config : Retrying, Exception while Global config patch"

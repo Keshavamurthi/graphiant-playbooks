@@ -23,11 +23,9 @@
                 {% if not sub_interfaces %}
                     {% if action == "default_lan" %}
                         "lan": "{{ default_lan }}",
-                    {% elif action == "delete" %}
-                        "adminStatus": False,
+                        "circuit": null,
                         "description": "",
-                        "alias": "",
-                        "maxTransmissionUnit": 1500,
+                        "alias": "{{ interface_name }}"
                     {% else %}
                         "adminStatus": {{ admin_status | default('true') }},
                         "maxTransmissionUnit": {{ mtu | default(1500) }},
@@ -64,13 +62,20 @@
                         }
                     {% endif %}
                 {% else %}
-                    {% if action == "default_lan" or action == "add" %}
+                    {% if action == "default_lan" or action == "add" or action == "delete" %}
                         "subinterfaces": {
                             {% for sub_interface in sub_interfaces %}
                                 "{{ sub_interface.vlan }}": {
                                     {% if action == "default_lan" %}
-                                        "lan": "{{ default_lan }}",
-                                        "vlan": {{ sub_interface.vlan }}
+                                        "interface": {
+                                            "lan": "{{ default_lan }}",
+                                            "vlan": {{ sub_interface.vlan }},
+                                            "circuit": null,
+                                            "description": "",
+                                            "alias": "{{ interface_name ~ '.' ~ sub_interface.vlan }}",
+                                        }
+                                    {% elif action == "delete" %}
+                                        "interface": null
                                     {% elif action == "add" %}
                                         "interface": {
                                             "lan": "{{ sub_interface.lan }}",
