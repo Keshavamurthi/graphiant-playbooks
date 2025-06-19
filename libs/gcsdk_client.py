@@ -1,13 +1,17 @@
-import graphiant_sdk
-from graphiant_sdk import (V1DevicesDeviceIdConfigPutRequest, V1DevicesDeviceIdConfigPutRequestEdge,
-                           V1DevicesDeviceIdConfigPutRequestCore, V1DevicesDeviceIdConfigPut202Response,
-                           V1GlobalConfigPatchRequest)
-from graphiant_sdk.exceptions import (ApiException, BadRequestException,
-                                      UnauthorizedException, ForbiddenException,
-                                      NotFoundException, ServiceException)
-from libs.poller import poller
+import json
 import time
+import graphiant_sdk
+from graphiant_sdk.exceptions import (
+    ApiException,
+    BadRequestException,
+    UnauthorizedException,
+    ForbiddenException,
+    NotFoundException,
+    ServiceException,
+)
+
 from libs.logger import setup_logger
+from libs.poller import poller
 
 LOG = setup_logger()
 
@@ -21,19 +25,23 @@ class GraphiantPortalClient():
         self.bearer_token = None
 
     def set_bearer_token(self):
-        v1_auth_login_post_request = graphiant_sdk.V1AuthLoginPostRequest(username=self.config.username,
-                                                                          password=self.config.password)
+        v1_auth_login_post_request = \
+            graphiant_sdk.V1AuthLoginPostRequest(username=self.config.username,
+                                                 password=self.config.password)
         v1_auth_login_post_response = None
         try:
             v1_auth_login_post_response = self.api.v1_auth_login_post(
                 v1_auth_login_post_request=v1_auth_login_post_request)
         except BadRequestException as e:
-            LOG.error(f"v1_auth_login_post: Got BadRequestException. Please verify payload is correct. {e}")
+            LOG.error(f"v1_auth_login_post: Got BadRequestException. "
+                      f"Please verify payload is correct. {e}")
         except (UnauthorizedException, ServiceException) as e:
-            LOG.error(f"v1_auth_login_post: Got Exception. Please verify crendentials are correct. {e}")
+            LOG.error(f"v1_auth_login_post: Got Exception. "
+                      f"Please verify crendentials are correct. {e}")
         assert v1_auth_login_post_response, 'v1_auth_login_post_response is None'
         assert v1_auth_login_post_response.token, 'bearer_token is not retrieved'
         LOG.debug(f"GraphiantPortalClient Bearer token : {v1_auth_login_post_response.token}")
+        LOG.info("Graphiant Portal Bearer token retrieved successfully !!! ")
         self.bearer_token = f'Bearer {v1_auth_login_post_response.token}'
 
     def get_all_enterprises(self):
@@ -79,7 +87,8 @@ class GraphiantPortalClient():
             else:
                 LOG.info(f"verify_device_portal_status: {device_id} tunnel terminitor conn count: "
                          f"{edge_summary.tt_conn_count} Expected: tt_conn_count=2. Retrying..")
-                assert False, (f"verify_device_portal_status: {device_id} tunnel terminitor conn count: "
+                assert False, (f"verify_device_portal_status: "
+                               f"{device_id} tunnel terminitor conn count: "
                                f"{edge_summary.tt_conn_count} Expected: tt_conn_count=2. Retry")
 
         else:
@@ -88,43 +97,44 @@ class GraphiantPortalClient():
             assert False, (f"verify_device_portal_status: {device_id} Portal Status: "
                            f"{edge_summary.portal_status} Expected: Ready. Retrying..")
 
-    def put_device_config(self, device_id: int,
-                          core: V1DevicesDeviceIdConfigPutRequestCore = None,
-                          edge: V1DevicesDeviceIdConfigPutRequestEdge = None) -> V1DevicesDeviceIdConfigPut202Response:
+    def put_device_config(self, device_id: int, core=None, edge=None):
         """
         Put Devices Config on GCS for Core or Edge
 
         Args:
             device_id (int): The device ID to push the config.
-            core (dict, optional): Core configuration data.
-            edge (dict, optional): Edge configuration data.
+            core (dict, V1DevicesDeviceIdConfigPutRequestCore, optional): Core configuration data.
+            edge (dict, V1DevicesDeviceIdConfigPutRequestEdge, optional): Edge configuration data.
 
         Returns:
-            response (V1DevicesDeviceIdConfigPut202Response): The response from the API call to push the device config.
+            response (V1DevicesDeviceIdConfigPut202Response):
+            The response from the API call to push the device config.
 
         Raises:
             AssertionError: If the device portal status is not 'Ready' after retries
             ApiException/AssertionError: If there is an API exception during the
             config push after retries
         """
-        device_config_put_request = V1DevicesDeviceIdConfigPutRequest(core=core, edge=edge)
+        device_config_put_request = \
+            graphiant_sdk.V1DevicesDeviceIdConfigPutRequest(core=core, edge=edge)
         try:
             # Verify device portal status and connection status.
             self.verify_device_portal_status(device_id=device_id)
-            LOG.info(f"put_device_config : config to be pushed for {device_id}: \n{device_config_put_request}")
+            LOG.info(f"put_device_config : config to be pushed for {device_id}: \
+                     \n{json.dumps(device_config_put_request.to_dict(), indent=2)}")
             response = self.api.v1_devices_device_id_config_put(
                 authorization=self.bearer_token, device_id=device_id,
                 v1_devices_device_id_config_put_request=device_config_put_request)
             return response
         except ForbiddenException as e:
             LOG.error(f"put_device_config: Got ForbiddenException while config push {e}")
-            assert False, (f"put_device_config : Retrying, Got ForbiddenException while config push to {device_id}. "
-                           f"User {self.config.username} does not have permissions to perform the requested operation "
+            assert False, (f"put_device_config : Retrying, Got ForbiddenException "
+                           f"while config push to {device_id}. "
+                           f"User {self.config.username} does not have permissions "
+                           f"to perform the requested operation "
                            f"(v1_devices_device_id_config_put).")
         except ApiException as e:
             LOG.warning(f"put_device_config : Exception while config push {e}")
-            assert False, f"put_device_config : \
-                Retrying, Exception while config push to {device_id}"
 
     def post_devices_bringup(self, device_ids):
         """
@@ -179,7 +189,7 @@ class GraphiantPortalClient():
         except ApiException:
             return False
 
-    def patch_global_config(self, v1_global_config_patch_request: V1GlobalConfigPatchRequest):
+    def patch_global_config(self, **kwargs):
         """
         Patch the global configuration on the system.
 
@@ -194,14 +204,27 @@ class GraphiantPortalClient():
 
         """
         try:
-            LOG.info(f"patch_global_config : config to be pushed : \n{v1_global_config_patch_request}")
-            response = self.api.v1_global_config_patch(authorization=self.bearer_token,
-                                                       v1_global_config_patch_request=v1_global_config_patch_request)
+            patch_global_config_request = graphiant_sdk.V1GlobalConfigPatchRequest(
+                global_prefix_sets=kwargs.get('global_prefix_sets'),
+                ipfix_exporters=kwargs.get('ipfix_exporters'),
+                prefix_sets=kwargs.get('prefix_sets'),
+                routing_policies=kwargs.get('routing_policies'),
+                snmps=kwargs.get('snmps'),
+                syslog_servers=kwargs.get('syslog_servers'),
+                traffic_policies=kwargs.get('traffic_policies'),
+                vpn_profiles=kwargs.get('vpn_profiles'))
+            LOG.info(f"patch_global_config : config to be pushed : \
+                     \n{json.dumps(patch_global_config_request.to_dict(), indent=2)}")
+            response = self.api.v1_global_config_patch(
+                authorization=self.bearer_token,
+                v1_global_config_patch_request=patch_global_config_request
+            )
             return response
         except (NotFoundException, ServiceException) as e:
             LOG.error("patch_global_config: Got Exception while v1_global_config_patch request. "
                       "Global object(s) might not exist.")
-            assert False, (f"patch_global_config : Got Exception {e} while v1_global_config_patch request. "
+            assert False, (f"patch_global_config : Got Exception {e} while "
+                           f"v1_global_config_patch request. "
                            f"Global object(s) in the request might not exist.")
         except ApiException as e:
             LOG.warning(f"patch_global_config : Exception While Global config patch {e}")
@@ -222,10 +245,10 @@ class GraphiantPortalClient():
         """
         body = graphiant_sdk.V1GlobalSummaryPostRequest(**kwargs)
         try:
-            LOG.info(f"patch_global_config : config to be pushed : \n{body}")
+            LOG.info(f"post_global_summary : config to be pushed : \n{body}")
             response = self.api.v1_global_summary_post(authorization=self.bearer_token,
                                                        v1_global_summary_post_request=body)
             return response
         except ApiException as e:
-            LOG.warning(f"patch_global_config : Exception While Global config patch {e}")
-            assert False, "patch_global_config : Retrying, Exception while Global config patch"
+            LOG.warning(f"post_global_summary : Exception While Global config patch {e}")
+            assert False, "post_global_summary : Retrying, Exception while Global config patch"

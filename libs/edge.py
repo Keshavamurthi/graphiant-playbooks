@@ -1,4 +1,3 @@
-from graphiant_sdk import V1DevicesDeviceIdConfigPutRequestEdge, V1GlobalConfigPatchRequest
 from libs.edge_utils import EdgeUtils
 from libs.logger import setup_logger
 
@@ -19,28 +18,23 @@ class Edge(EdgeUtils):
         the global prefixes using the GCSDK APIs.
 
         Args:
-            config_yaml_file (str): Path to the YAML file containing the global prefix set definitions.
+            config_yaml_file (str): Path to the YAML file containing the
+            global prefix set definitions.
 
         Returns:
             None
         """
         config_data = self.render_config_file(yaml_file=config_yaml_file)
-        final_config_payload = {"global_config": {}}
+        final_config_payload = {"global_prefix_sets": {}}
         config_payload = {}
         if 'global_prefix_sets' in config_data:
             config_payload.update({'global_prefix_sets': {}})
             for prefix_config in config_data.get('global_prefix_sets'):
                 self.global_prefix_set(config_payload, action="add", **prefix_config)
-            final_config_payload["global_config"].update(config_payload)
-
-        # global_prefix_sets from the rendered config
-        LOG.debug(f"Rendered config of global_prefix_sets: {config_payload}")
-
-        v1_global_config_patch_request = V1GlobalConfigPatchRequest(
-            global_prefix_sets=config_payload['global_prefix_sets'])
-        LOG.debug(f'V1GlobalConfigPatchRequest object: {v1_global_config_patch_request}')
-
-        self.gsdk.patch_global_config(v1_global_config_patch_request)
+            final_config_payload["global_prefix_sets"].update(config_payload)
+        LOG.debug(f"configure_global_config_prefix_lists: \
+                  final_config_payload {final_config_payload}")
+        self.concurrent_task_execution(self.gsdk.patch_global_config, final_config_payload)
 
     def deconfigure_global_config_prefix_lists(self, config_yaml_file):
         """
@@ -65,17 +59,11 @@ class Edge(EdgeUtils):
             for prefix_config in config_data.get('global_prefix_sets'):
                 self.global_prefix_set(config_payload, action="delete", **prefix_config)
             final_config_payload["global_config"].update(config_payload)
+        LOG.debug(f"deconfigure_global_config_prefix_lists: \
+                  final_config_payload {final_config_payload}")
+        self.concurrent_task_execution(self.gsdk.patch_global_config, final_config_payload)
 
-        # global_prefix_sets from the rendered config
-        LOG.info(f"Rendered config of global_prefix_sets: {config_payload}")
-
-        v1_global_config_patch_request = V1GlobalConfigPatchRequest(
-            global_prefix_sets=config_payload['global_prefix_sets'])
-        LOG.debug(f'V1GlobalConfigPatchRequest object: {v1_global_config_patch_request}')
-
-        self.gsdk.patch_global_config(v1_global_config_patch_request)
-
-    def configure_global_bgp_routing_policies(self, config_yaml_file):
+    def configure_global_config_routing_policies(self, config_yaml_file):
         """
         Configures Global BGP routing filter policies using the provided YAML configuration file.
 
@@ -97,11 +85,11 @@ class Edge(EdgeUtils):
             for policy_config in config_data.get('routing_policies'):
                 self.global_bgp_filter(config_payload, action="add", **policy_config)
             final_config_payload["global_config"].update(config_payload)
-        LOG.debug(f"configure_global_bgp_routing_policies: \
+        LOG.debug(f"configure_global_config_routing_policies: \
                   final_config_payload {final_config_payload}")
         self.concurrent_task_execution(self.gsdk.patch_global_config, final_config_payload)
 
-    def deconfigure_global_bgp_routing_policies(self, config_yaml_file):
+    def deconfigure_global_config_routing_policies(self, config_yaml_file):
         """
         Removes Global BGP routing filter policies using the provided YAML configuration file.
 
@@ -123,7 +111,7 @@ class Edge(EdgeUtils):
             for policy_config in config_data.get('routing_policies'):
                 self.global_bgp_filter(config_payload, action="delete", **policy_config)
             final_config_payload["global_config"].update(config_payload)
-        LOG.debug(f"configure_global_bgp_routing_policies: \
+        LOG.debug(f"deconfigure_global_config_routing_policies: \
                   final_config_payload {final_config_payload}")
         self.concurrent_task_execution(self.gsdk.patch_global_config, final_config_payload)
 
@@ -234,27 +222,7 @@ class Edge(EdgeUtils):
                         LOG.error(f"configure_interfaces : \
                                   {device_name} unable to fetch device-id")
                         return
-        edge_config = {}
-        for device_id in output_config.keys():
-            edge_config[device_id] = {}
-            edge_config[device_id]['device_id'] = device_id
-
-            # Edge circuits config from the rendered config.
-            circuits = output_config[device_id]['edge']['circuits']
-            LOG.debug(f'Rendered circuits config of {device_id}: {circuits}')
-
-            # Edge interfaces from the rendered config.
-            interfaces = output_config[device_id]['edge']['interfaces']
-            LOG.info(f'Rendered interfaces config of {device_id}: {interfaces}')
-
-            # Set the circuits and interfaces of the config in the Edge config push request
-            device_config_put_request_edge = V1DevicesDeviceIdConfigPutRequestEdge(circuits=circuits,
-                                                                                   interfaces=interfaces)
-            LOG.debug(f'{device_id} V1DevicesDeviceIdConfigPutRequestEdge object: {device_config_put_request_edge}')
-
-            edge_config[device_id]['edge'] = device_config_put_request_edge
-
-        self.concurrent_task_execution(self.gsdk.put_device_config, edge_config)
+        self.concurrent_task_execution(self.gsdk.put_device_config, output_config)
 
     def deconfigure_interfaces(self, config_yaml_file):
         """
@@ -276,7 +244,7 @@ class Edge(EdgeUtils):
                     if device_id := self.get_device_id(device_name=device_name):
                         device_config = {"interfaces": {}, "circuits": {}}
                         for config in config_list:
-                            self.edge_interface(device_config, action="default_lan",
+                            self.edge_interface(device_config, action="delete",
                                                 default_lan=default_lan, **config)
                         output_config[device_id] = {"device_id": device_id,
                                                     "edge": device_config}
@@ -284,24 +252,4 @@ class Edge(EdgeUtils):
                         LOG.error(f"deconfigure_interfaces : \
                                   {device_name} unable to fetch device-id")
                         return
-
-        edge_config = {}
-        for device_id in output_config.keys():
-            edge_config[device_id] = {}
-            edge_config[device_id]['device_id'] = device_id
-
-            # Edge circuits config from the rendered config.
-            circuits = output_config[device_id]['edge']['circuits']
-            LOG.debug(f'Rendered circuits config of {device_id}: {circuits}')
-
-            # Edge interfaces from the rendered config.
-            interfaces = output_config[device_id]['edge']['interfaces']
-            LOG.info(f'Rendered interfaces config of {device_id}: {interfaces}')
-
-            # Set the circuits and interfaces of the config in the Edge config push request
-            device_config_put_request_edge = V1DevicesDeviceIdConfigPutRequestEdge(circuits=circuits,
-                                                                                   interfaces=interfaces)
-            LOG.debug(f'{device_id} V1DevicesDeviceIdConfigPutRequestEdge object: {device_config_put_request_edge}')
-
-            edge_config[device_id]['edge'] = device_config_put_request_edge
-        self.concurrent_task_execution(self.gsdk.put_device_config, edge_config)
+        self.concurrent_task_execution(self.gsdk.put_device_config, output_config)

@@ -17,6 +17,13 @@ def read_config():
 
 class TestGraphiantPlaybooks(unittest.TestCase):
 
+    def test_get_login_token(self):
+        """
+        Test login and fetch token.
+        """
+        base_url, username, password = read_config()
+        Edge(base_url=base_url, username=username, password=password)
+
     def test_get_enterprise_id(self):
         """
         Test login and fetch enterprise id.
@@ -44,7 +51,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
 
     def test_configure_global_config_prefix_lists(self):
         """
-        Deconfigure Interfaces (i.e Reset to default lan)
+        Configure Global Config Prefix Lists.
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
@@ -52,20 +59,69 @@ class TestGraphiantPlaybooks(unittest.TestCase):
 
     def test_deconfigure_global_config_prefix_lists(self):
         """
-        Deconfigure Interfaces (i.e Reset to default lan)
+        Deconfigure Global Config Prefix Lists.
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
         edge.deconfigure_global_config_prefix_lists("sample_global_routing_policies.yaml")
 
+    def test_configure_global_config_routing_policies(self):
+        """
+        Configure Global Routing Policies.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.configure_global_config_routing_policies("sample_global_routing_policies.yaml")
+
+    def test_deconfigure_global_config_routing_policies(self):
+        """
+        Deconfigure Global Config Routing Policies.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.deconfigure_global_config_routing_policies("sample_global_routing_policies.yaml")
+
+    def test_configure_bgp_peering(self):
+        """
+        Configure BGP Peering.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.configure_bgp_peers("sample_bgp_peering.yaml")
+
+    def test_deconfigure_bgp_peering(self):
+        """
+        Deconfigure BGP Peering.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.deconfigure_bgp_peers("sample_bgp_peering.yaml")
+
+    def test_detach_policies_from_bgp_peers(self):
+        """
+        Detach policies from BGP peers.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.detach_policies_from_bgp_peers("sample_bgp_peering.yaml")
+
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(TestGraphiantPlaybooks('test_get_enterprise_id'))
-    '''
-    suite.addTest(TestGraphiantPlaybooks('test_configure_interfaces'))
-    suite.addTest(TestGraphiantPlaybooks('test_deconfigure_interfaces'))
-    suite.addTest(TestGraphiantPlaybooks('test_configure_global_config_prefix_lists'))
-    suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_config_prefix_lists'))
-    '''
+
+    suite.addTest(TestGraphiantPlaybooks('test_get_login_token'))
+
+    # suite.addTest(TestGraphiantPlaybooks('test_get_enterprise_id'))
+
+    # suite.addTest(TestGraphiantPlaybooks('test_configure_interfaces'))
+    # suite.addTest(TestGraphiantPlaybooks('test_configure_global_config_prefix_lists'))
+    # suite.addTest(TestGraphiantPlaybooks('test_configure_global_config_routing_policies'))
+    # suite.addTest(TestGraphiantPlaybooks('test_configure_bgp_peering'))
+
+    # suite.addTest(TestGraphiantPlaybooks('test_detach_policies_from_bgp_peers'))
+    # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_bgp_peering'))
+    # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_config_routing_policies'))
+    # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_config_prefix_lists'))
+    # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_interfaces'))
+
     runner = unittest.TextTestRunner(verbosity=2).run(suite)

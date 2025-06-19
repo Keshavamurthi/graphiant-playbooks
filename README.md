@@ -76,7 +76,12 @@ password = password
 url = https://api.graphiant.com
 ```
 
-### 3. Run the sample test and verify the enterprise ID is fetched
+### 3. Enable the sanity test under test/test.py to fetch the enterprise ID
+```sh
+suite.addTest(TestGraphiantPlaybooks('test_get_enterprise_id'))
+```
+
+### 4. Run the sanity test and verify the enterprise ID is fetched
 ```sh
 python3 test/test.py
 ```

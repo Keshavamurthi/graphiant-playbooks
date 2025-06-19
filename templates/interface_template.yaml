@@ -21,7 +21,7 @@
         "{{ interface_name }}": {
             "interface": {
                 {% if not sub_interfaces %}
-                    {% if action == "default_lan" %}
+                    {% if action == "default_lan" or action == "delete" %}
                         "lan": "{{ default_lan }}",
                         "circuit": null,
                         "description": "",
