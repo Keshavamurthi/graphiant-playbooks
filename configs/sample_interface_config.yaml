@@ -35,15 +35,3 @@ interfaces:
           ipv6_address: 2001:10:2:8::2/64
           description: lan-8
           alias: production
-  - edge-3-sdktest:
-    # WAN Interface with Static IPv4 and DHCP IPv6 assignment and not enabling it
-    - interface_name: GigabitEthernet5/0/0
-      circuit: c-gigabitethernet5-0-0
-      ipv4_address: 100.200.2.1/24
-      admin_status: False
-    # LAN Interface with Static IPv4/IPv6 assignment
-    - interface_name: GigabitEthernet8/0/0
-      ipv4_address: 10.2.7.3/24
-      ipv6_address: 2001:10:2:7::3/64
-      lan: lan-7-test
-
