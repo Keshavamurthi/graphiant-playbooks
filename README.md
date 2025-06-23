@@ -2,7 +2,7 @@
 
 Playbooks for [Graphiant NaaS](https://www.graphiant.com). 
 
-Refer [Graphiant Documentation](https://docs.graphiant.com/) to get started with our services.
+Refer [Graphiant-Playbooks User Guide](https://docs.graphiant.com/docs/graphiant-playbooks) under [Automation Section](https://docs.graphiant.com/docs/automation) in [Graphiant Documentation](https://docs.graphiant.com/) for getting started instructions.
 
 Graphiant Playbooks are a collection of automated scripts that are designed to streamline 
 and manage network infrastructure and policies. These playbooks are built using Python and 
@@ -144,10 +144,6 @@ edge.deconfigure_global_prefix("sample_global_routing_policies.yaml")
 
 Note: Make sure the Global Prefixes are not attached before deconfigure
 ```
-
-### Release Notes:
-- Double Deletion Not Supported: Attempting to delete a configuration that does not exist is not supported.
-- IPv6 BGP Peers : Only IPv4 BGP peer configurations are currently validated.
 
 ## Source code linter checks
 Error linters point out syntax errors or other code that will result in unhandled exceptions and crashes. (pylint, flake8)
