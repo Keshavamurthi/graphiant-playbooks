@@ -77,3 +77,15 @@ class EdgeTemplates(object):
             dict: Parsed YAML configuration.
         """
         return self.render_template("bgp_peering_template.yaml", **kwargs)
+
+    def _global_snmps_service(self, **kwargs):
+        """
+        Renders the global_snmp_service.yaml(Jinja2 template) with the provided variables.
+
+        Args:
+            **kwargs: Key-value pairs used to populate the template.
+
+        Returns:
+            dict: Parsed YAML configuration.
+        """
+        return self.render_template("global_snmps_template.yaml", **kwargs)
