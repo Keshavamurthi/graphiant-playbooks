@@ -319,20 +319,6 @@ az account set --subscription "your-subscription-id"
 az account show
 ```
 
-#### AWS Authentication
-```bash
-# Configure AWS credentials
-aws configure
-
-# Enter your:
-# - AWS Access Key ID
-# - AWS Secret Access Key  
-# - Default region
-# - Default output format
-
-# Verify authentication
-aws sts get-caller-identity
-```
 
 ### Verification
 
@@ -341,7 +327,6 @@ aws sts get-caller-identity
 python3 --version    # Should show Python 3.12+
 terraform version    # Should show Terraform 1.1.0+
 az version          # Should show Azure CLI
-aws --version       # Should show AWS CLI
 ```
 
 ## 🐳 Docker Support
@@ -896,14 +881,6 @@ Graphiant Playbooks includes production-ready Terraform modules for deploying cl
 - **BGP Peering**: Border Gateway Protocol configuration
 - **ExpressRoute Connection**: Connection between Gateway and Circuit
 
-#### AWS Direct Connect Infrastructure
-- **VPC**: Virtual Private Cloud with public and private subnets
-- **Direct Connect Connection**: Dedicated network connection to AWS
-- **Direct Connect Gateway**: Gateway for routing between VPCs
-- **VPN Gateway**: Backup connectivity option
-- **NAT Gateway**: Network Address Translation for private subnets
-- **Security Groups**: Network security rules
-- **Route Tables**: Network routing configuration
 
 ### 📁 Terraform Directory Structure
 
@@ -914,15 +891,9 @@ terraform/
 │   ├── variables.tf              # Variable definitions
 │   ├── outputs.tf                # Output values
 │   └── README.md                 # Azure-specific documentation
-└── aws-directconnect/            # AWS Direct Connect modules
-    ├── main.tf                   # Main Terraform configuration
-    ├── variables.tf              # Variable definitions
-    ├── outputs.tf                # Output values
-    └── README.md                 # AWS-specific documentation
 
 configs/terraform/
 ├── azure_config.tfvars           # Azure variable configuration
-└── aws_config.tfvars             # AWS variable configuration
 ```
 
 ### 🔧 Prerequisites
@@ -931,8 +902,7 @@ configs/terraform/
 |-------------|---------|---------|
 | **Terraform CLI** | >= 1.1.0 | Infrastructure provisioning |
 | **Azure CLI** | Latest | Azure authentication and management |
-| **AWS CLI** | Latest | AWS authentication and management |
-| **Cloud Account** | Active | Azure subscription or AWS account |
+| **Cloud Account** | Active | Azure subscription |
 | **Permissions** | Required | Resource creation and management rights |
 
 ### Quick Start with Terraform
@@ -971,39 +941,6 @@ terraform plan -var-file="../../configs/terraform/azure_config.tfvars" -out=tfpl
 terraform apply tfplan
 ```
 
-#### AWS Direct Connect Setup
-
-##### 1. Authenticate with AWS
-```bash
-aws configure
-# Enter your AWS Access Key ID, Secret Access Key, region, and output format
-```
-
-##### 2. Configure Variables
-```bash
-# Edit the configuration file
-nano configs/terraform/aws_config.tfvars
-
-# Or copy and modify if needed
-cp configs/terraform/aws_config.tfvars configs/terraform/my-aws-config.tfvars
-```
-
-##### 3. Deploy Infrastructure
-```bash
-cd terraform/aws-directconnect
-
-# Initialize Terraform
-terraform init
-
-# Validate configuration
-terraform validate
-
-# Create and review plan
-terraform plan -var-file="../../configs/terraform/aws_config.tfvars" -out=tfplan
-
-# Apply the configuration
-terraform apply tfplan
-```
 
 ### What Terraform Creates
 
@@ -1020,18 +957,6 @@ The Azure Terraform configuration deploys:
 
 **Note**: The ExpressRoute Connection is only created after the service provider provisions the physical circuit. This prevents deployment failures while waiting for service provider provisioning.
 
-#### AWS Direct Connect Infrastructure
-The AWS Terraform configuration deploys:
-
-- **VPC** - Virtual Private Cloud with public and private subnets
-- **Direct Connect Connection** - Dedicated network connection to AWS
-- **Direct Connect Gateway** - Gateway for routing between VPCs
-- **VPN Gateway** - Backup connectivity option
-- **NAT Gateway** - Network Address Translation for private subnets
-- **Security Groups** - Network security rules
-- **Route Tables** - Network routing configuration
-
-**Note**: The physical Direct Connect connection requires coordination with a Direct Connect partner (e.g., Equinix) to provision the actual network link.
 
 ### Integration with Graphiant Playbooks
 
@@ -1073,28 +998,6 @@ terraform output
 terraform destroy -var-file="../../configs/terraform/azure_config.tfvars"
 ```
 
-#### AWS Direct Connect
-```bash
-cd terraform/aws-directconnect
-
-# Initialize
-terraform init
-
-# Validate
-terraform validate
-
-# Plan
-terraform plan -var-file="../../configs/terraform/aws_config.tfvars" -out=tfplan
-
-# Apply
-terraform apply tfplan
-
-# Show outputs
-terraform output
-
-# Destroy (cleanup)
-terraform destroy -var-file="../../configs/terraform/aws_config.tfvars"
-```
 
 ### Key Configuration Variables
 
@@ -1109,15 +1012,6 @@ Update these in `configs/terraform/azure_config.tfvars`:
 - **`expressroute_shared_key`** - BGP shared key
 - **`expressroute_peer_asn`** - Your ASN
 
-#### AWS Direct Connect
-Update these in `configs/terraform/aws_config.tfvars`:
-
-- **`project_name`** - Your project name for resource naming
-- **`aws_region`** - AWS region for deployment
-- **`dx_location`** - Direct Connect location (e.g., EqDC2 for Equinix DC2)
-- **`dx_bandwidth`** - Connection bandwidth (1Gbps, 10Gbps)
-- **`dx_gateway_asn`** - ASN for Direct Connect Gateway
-- **`customer_asn`** - Your ASN for BGP peering
 
 ### Security and Best Practices
 
@@ -1136,11 +1030,6 @@ Update these in `configs/terraform/aws_config.tfvars`:
 3. **Resource Quotas**: Check Azure subscription limits
 4. **Network Conflicts**: Verify IP address ranges
 
-**AWS Direct Connect:**
-1. **Authentication Error**: Run `aws configure` and verify credentials
-2. **Provider Version**: Ensure correct AWS provider version
-3. **Resource Limits**: Check AWS account limits
-4. **Location Availability**: Verify Direct Connect location availability
 
 #### Useful Commands
 
@@ -1159,20 +1048,6 @@ az network express-route list-service-providers
 az role assignment list --assignee $(az account show --query user.name -o tsv)
 ```
 
-**AWS:**
-```bash
-# Check Terraform version
-terraform version
-
-# Check AWS CLI authentication
-aws sts get-caller-identity
-
-# List available Direct Connect locations
-aws directconnect describe-locations
-
-# Check Direct Connect connections
-aws directconnect describe-connections
-```
 
 ### Cleanup
 
@@ -1183,14 +1058,9 @@ cd terraform/azure-expressroute
 terraform destroy -var-file="../../configs/terraform/azure_config.tfvars"
 ```
 
-#### AWS Direct Connect
-To destroy all AWS Terraform-managed resources:
-```bash
-cd terraform/aws-directconnect
-terraform destroy -var-file="../../configs/terraform/aws_config.tfvars"
-```
 
 **⚠️ Warning**: These commands will permanently delete all created resources!
+
 
 ## Source code linter checks
 Error linters point out syntax errors or other code that will result in unhandled exceptions and crashes. (pylint, flake8)

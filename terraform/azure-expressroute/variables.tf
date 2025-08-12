@@ -157,3 +157,34 @@ variable "route_table_default_route" {
   type        = string
   default     = "0.0.0.0/0"
 }
+
+# VM Configuration Variables for E2E Testing
+variable "deploy_test_vm" {
+  description = "Whether to deploy a test VM for ExpressRoute connectivity testing"
+  type        = bool
+  default     = false
+}
+
+variable "vm_size" {
+  description = "Size of the test VM"
+  type        = string
+  default     = "Standard_B1s"
+}
+
+variable "vm_admin_username" {
+  description = "Admin username for the test VM"
+  type        = string
+  default     = "azureuser"
+}
+
+variable "vm_ssh_public_key" {
+  description = "SSH public key for the test VM"
+  type        = string
+  default     = ""
+}
+
+variable "vm_subnet_prefix" {
+  description = "Address prefix for VM subnet"
+  type        = string
+  default     = "10.0.3.0/24"
+}

@@ -98,3 +98,19 @@ output "route_table_default_route" {
   description = "Configured default route destination"
   value       = var.enable_expressroute ? var.route_table_default_route : "ExpressRoute not enabled"
 }
+
+# VM Outputs for E2E Testing
+output "test_vm_public_ip" {
+  description = "Public IP address of the test VM for SSH access"
+  value       = var.deploy_test_vm ? azurerm_public_ip.vm_public_ip[0].ip_address : "Test VM not deployed"
+}
+
+output "test_vm_private_ip" {
+  description = "Private IP address of the test VM"
+  value       = var.deploy_test_vm ? azurerm_network_interface.vm_nic[0].private_ip_address : "Test VM not deployed"
+}
+
+output "test_vm_ssh_command" {
+  description = "SSH command to connect to the test VM"
+  value       = var.deploy_test_vm ? "ssh ${var.vm_admin_username}@${azurerm_public_ip.vm_public_ip[0].ip_address}" : "Test VM not deployed"
+}

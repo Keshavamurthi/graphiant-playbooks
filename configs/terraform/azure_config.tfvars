@@ -31,15 +31,22 @@ expressroute_secondary_service_provider = "PacketFabric"
 
 # ExpressRoute Peering Configuration
 expressroute_shared_key = ""
-expressroute_peer_asn = 100
-expressroute_primary_peer_address_prefix = "192.168.1.0/30"
-expressroute_secondary_peer_address_prefix = "192.168.2.0/30"
-expressroute_vlan_id = 10
+expressroute_peer_asn = 30656
+expressroute_primary_peer_address_prefix = "169.254.50.0/30"
+expressroute_secondary_peer_address_prefix = "169.254.60.0/30"
+expressroute_vlan_id = 11
 expressroute_advertised_public_prefixes = ["168.62.0.0/16"]
 
 # ExpressRoute Connection (set to true after service provider provisions the circuit)
-create_expressroute_connection = false
+create_expressroute_connection = true
 
 # Route Table Configuration
 route_table_disable_bgp_propagation = false
 route_table_default_route = "0.0.0.0/0"
+
+# VM Configuration for E2E Testing
+deploy_test_vm = true
+vm_size = "Standard_B1s"
+vm_admin_username = "azureuser"
+vm_ssh_public_key = ""  # Replace with your SSH public key
+vm_subnet_prefix = "10.0.3.0/24"
