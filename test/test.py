@@ -105,6 +105,22 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         edge = Edge(base_url=base_url, username=username, password=password)
         edge.detach_policies_from_bgp_peers("sample_bgp_peering.yaml")
 
+    def test_configure_snmp_service(self):
+        """
+        Configure Global SNMP Service.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.configure_global_snmp_service("sample_global_system_services.yaml")
+
+    def test_deconfigure_snmp_service(self):
+        """
+        Deconfigure Global SNMP Service.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.deconfigure_global_snmp_service("sample_global_system_services.yaml")
+
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
@@ -123,5 +139,7 @@ if __name__ == '__main__':
     # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_config_routing_policies'))
     # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_config_prefix_lists'))
     # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_interfaces'))
+    # suite.addTest(TestGraphiantPlaybooks('test_configure_snmp_service'))
+    # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_snmp_service'))
 
     runner = unittest.TextTestRunner(verbosity=2).run(suite)

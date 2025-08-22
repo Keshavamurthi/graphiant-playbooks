@@ -253,3 +253,62 @@ class Edge(EdgeUtils):
                                   {device_name} unable to fetch device-id")
                         return
         self.concurrent_task_execution(self.gsdk.put_device_config, output_config)
+
+    def configure_global_snmp_service(self, config_yaml_file):
+        """
+        Configures Global SNMP based on the provided YAML configuration file.
+
+        This method reads the configuration file, parses the global SNMP entries,
+        and constructs the payload using the Jinja2 templates and configure
+        the global SNMP using the GCSDK APIs.
+
+        Args:
+            config_yaml_file (str): Path to the YAML file containing the
+            global SNMP definitions.
+
+        Returns:
+            None
+       """
+        config_data = self.render_config_file(yaml_file=config_yaml_file)
+        if config_data is None:
+            LOG.error(f"Failed to load configuration file: {config_yaml_file}")
+            return
+        final_config_payload = {"snmps": {}}
+        config_payload = {}
+        if 'snmps' in config_data:
+            config_payload.update({'snmps': {}})
+            for snmp_config in config_data.get('snmps'):
+                self.global_snmp(config_payload, action="add", **snmp_config)
+            final_config_payload["snmps"].update(config_payload)
+        LOG.debug(f"configure_global_snmp_service: \
+                         final_config_payload {final_config_payload}")
+        self.concurrent_task_execution(self.gsdk.patch_global_config, final_config_payload)
+
+    def deconfigure_global_snmp_service(self, config_yaml_file):
+        """
+        Removes Global SNMP services using the provided YAML configuration file.
+
+        This method parses the input YAML file to extract SNMP service definitions
+        and constructs the payload using the templates to remove the specified services
+        using the GCSDK APIs.
+
+        Args:
+            config_yaml_file (str): Path to the YAML file containing SNMP service definitions.
+
+        Returns:
+            None
+        """
+        config_data = self.render_config_file(yaml_file=config_yaml_file)
+        if config_data is None:
+            LOG.error(f"Failed to load configuration file: {config_yaml_file}")
+            return
+        final_config_payload = {"snmps": {}}
+        config_payload = {}
+        if 'snmps' in config_data:
+            config_payload.update({'snmps': {}})
+            for snmp_config in config_data.get('snmps'):
+                self.global_snmp(config_payload, action="delete", **snmp_config)
+            final_config_payload["snmps"].update(config_payload)
+        LOG.debug(f"deconfigure_global_snmp_service: \
+                  final_config_payload {final_config_payload}")
+        self.concurrent_task_execution(self.gsdk.patch_global_config, final_config_payload)

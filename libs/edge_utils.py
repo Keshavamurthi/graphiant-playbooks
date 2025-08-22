@@ -87,3 +87,23 @@ class EdgeUtils(PortalUtils):
         config_payload["interfaces"].update(interface.get("interfaces"))
         if interface.get('circuits'):
             config_payload['circuits'].update(interface.get("circuits"))
+
+    def global_snmp(self, config_payload, action="add", **kwargs):
+        """
+        Updates the global_snmp_service section of configuration payload(config_payload)
+        using a rendered template.
+
+        Args:
+            config_payload (dict): The main configuration payload dict to be updated.
+            action (str, optional): Action to perform, either "add" or "delete". Defaults to "add".
+            **kwargs: Additional key-value pairs required for rendering the template.
+
+        Returns:
+            None: The gobal_snmp_service section in config_payload dict is updated.
+        """
+        LOG.debug(f"global_snmp_service : {action.upper()} Global SNMP Service {kwargs.get('name')}")
+        global_snmp_service = self.template._global_snmps_service(action=action, **kwargs)
+        if action == "add":
+            config_payload['snmps'].update(global_snmp_service)
+        else:  # delete
+            config_payload['snmps'][kwargs.get('name')] = {}
