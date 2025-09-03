@@ -89,3 +89,46 @@ class EdgeTemplates(object):
             dict: Parsed YAML configuration.
         """
         return self.render_template("global_snmps_template.yaml", **kwargs)
+
+    def _global_syslog_service(self, **kwargs):
+        """
+        Renders the global_syslog_template.yaml(Jinja2 template) with the provided variables.
+
+        Args:
+            **kwargs: Key-value pairs used to populate the template.
+
+        Returns:
+            dict: Parsed YAML configuration.
+        """
+        return self.render_template("global_syslog_template.yaml", **kwargs)
+
+    def _global_ipfix_service(self, **kwargs):
+        """
+        Renders the global_ipfix_template.yaml(Jinja2 template) with the provided variables.
+
+        Args:
+            **kwargs: Key-value pairs used to populate the template.
+
+        Returns:
+            dict: Parsed YAML configuration.
+        """
+        return self.render_template("global_ipfix_template.yaml", **kwargs)
+
+    def _global_vpn_profile_service(self, **kwargs):
+        """
+        Renders the global_vpn_profile_template.yaml(Jinja2 template) with the provided variables.
+        Applies VPN algorithm mapping at the template creation level.
+
+        Args:
+            **kwargs: Key-value pairs used to populate the template.
+
+        Returns:
+            dict: Parsed YAML configuration.
+        """
+        from libs.vpn_mappings import map_vpn_profiles
+
+        # Map VPN profiles if they exist in kwargs
+        if 'vpnProfiles' in kwargs:
+            kwargs['vpnProfiles'] = map_vpn_profiles(kwargs['vpnProfiles'])
+
+        return self.render_template("global_vpn_profile_template.yaml", **kwargs)

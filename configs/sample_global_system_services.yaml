@@ -49,3 +49,43 @@ snmps:
     communities:
       - communityString: public
     vacmGroups:
+
+syslogServers:
+  # Global Syslog Server Configuration
+  - name: syslog-global-test
+    target:
+      host: 10.1.7.2
+      port: 443
+      transport: tcp
+      severity: alert
+      lanSegment: lan-7-test
+      serverStatus: true
+
+ipfixExporters:
+  # Global IPFIX Exporter Configuration
+  - name: ipfix-global-test
+    exporter:
+      destinationAddress: 10.1.7.2
+      destinationPort: 70
+      monitoredSegments:
+        - lan-7-test
+        - lan-8-test
+      lanSegment: lan-7-test
+      sampleMode: random
+      sampleRate: 100
+
+vpnProfiles:
+  # Global VPN Profile Configuration
+  - name: vpnprofile-global-test
+    vpnProfile:
+      ikeEncryptionAlg: AES 128 GCM
+      ikeDhGroup: Group 19
+      ikeIntegrity: SHA384
+      reauthInterval: 3600
+      ipsecEncryptionAlg: AES 256 CBC
+      perfectForwardSecrecy: Group 20
+      ipsecIntegrity: SHA256
+      rekeyInterval: 3600
+      antiReplayWindowSize: 64
+      esn: false
+      dpdInterval: 30

@@ -107,3 +107,96 @@ class EdgeUtils(PortalUtils):
             config_payload['snmps'].update(global_snmp_service)
         else:  # delete
             config_payload['snmps'][kwargs.get('name')] = {}
+
+    def global_syslog(self, config_payload, action="add", **kwargs):
+        """
+        Updates the syslogServers section of configuration payload(config_payload)
+        using a rendered template.
+
+        Args:
+            config_payload (dict): The main configuration payload dict to be updated.
+            action (str, optional): Action to perform, either "add" or "delete". Defaults to "add".
+            **kwargs: Additional key-value pairs required for rendering the template.
+
+        Returns:
+            None: The syslogServers section in config_payload dict is updated.
+        """
+        LOG.info(f"global_syslog_service : {action.upper()} Global Syslog Service {kwargs.get('name')}")
+        LOG.info(f"global_syslog_service : kwargs received: {kwargs}")
+
+        # Convert lanSegment to vrfId if present
+        if 'target' in kwargs and 'lanSegment' in kwargs['target']:
+            lan_segment = kwargs['target']['lanSegment']
+            vrf_id = self.get_lan_segment_id(lan_segment)
+            kwargs['target']['vrfId'] = vrf_id
+            del kwargs['target']['lanSegment']
+            LOG.info(f"global_syslog_service : converted lanSegment '{lan_segment}' to vrfId {vrf_id}")
+
+        global_syslog_service = self.template._global_syslog_service(action=action, **kwargs)
+        LOG.info(f"global_syslog_service : template result: {global_syslog_service}")
+        if action == "add":
+            config_payload['syslogServers'].update(global_syslog_service)
+            LOG.info(f"global_syslog_service : config_payload after update: {config_payload}")
+        else:  # delete
+            config_payload['syslogServers'][kwargs.get('name')] = {}
+
+    def global_ipfix(self, config_payload, action="add", **kwargs):
+        """
+        Updates the ipfixExporters section of configuration payload(config_payload)
+        using a rendered template.
+
+        Args:
+            config_payload (dict): The main configuration payload dict to be updated.
+            action (str, optional): Action to perform, either "add" or "delete". Defaults to "add".
+            **kwargs: Additional key-value pairs required for rendering the template.
+
+        Returns:
+            None: The ipfixExporters section in config_payload dict is updated.
+        """
+        LOG.info(f"global_ipfix_service : {action.upper()} Global IPFIX Service {kwargs.get('name')}")
+        LOG.info(f"global_ipfix_service : kwargs received: {kwargs}")
+
+        # Convert lanSegment to vrfId if present in exporter
+        if 'exporter' in kwargs and 'lanSegment' in kwargs['exporter']:
+            lan_segment = kwargs['exporter']['lanSegment']
+            vrf_id = self.get_lan_segment_id(lan_segment)
+            kwargs['exporter']['vrfId'] = vrf_id
+            del kwargs['exporter']['lanSegment']
+            LOG.info(f"global_ipfix_service : converted lanSegment '{lan_segment}' to vrfId {vrf_id}")
+
+        global_ipfix_service = self.template._global_ipfix_service(action=action, **kwargs)
+        LOG.info(f"global_ipfix_service : template result: {global_ipfix_service}")
+        if action == "add":
+            config_payload['ipfixExporters'].update(global_ipfix_service)
+            LOG.info(f"global_ipfix_service : config_payload after update: {config_payload}")
+        else:  # delete
+            config_payload['ipfixExporters'][kwargs.get('name')] = {}
+
+    def global_vpn_profile(self, config_payload, action="add", **kwargs):
+        """
+        Updates the vpnProfiles section of configuration payload(config_payload)
+        using a rendered template.
+
+        Args:
+            config_payload (dict): The main configuration payload dict to be updated.
+            action (str, optional): Action to perform, either "add" or "delete". Defaults to "add".
+            **kwargs: Additional key-value pairs required for rendering the template.
+
+        Returns:
+            None: The vpnProfiles section in config_payload dict is updated.
+        """
+        LOG.debug(f"global_vpn_profile_service : {action.upper()} Global VPN Profile Service {kwargs.get('name')}")
+
+        # Pass the VPN config as a list to match the template expectation
+        vpn_profiles_list = [kwargs]
+        global_vpn_profile_service = self.template._global_vpn_profile_service(vpnProfiles=vpn_profiles_list)
+
+        if action == "add":
+            # Extract the actual VPN profile data from the template result
+            if 'vpnProfiles' in global_vpn_profile_service:
+                vpn_profiles_data = global_vpn_profile_service['vpnProfiles']
+                config_payload['vpnProfiles'].update(vpn_profiles_data)
+            else:
+                LOG.error("global_vpn_profile_service : No vpnProfiles in template result")
+        else:  # delete
+            config_payload['vpnProfiles'][kwargs.get('name')] = {}

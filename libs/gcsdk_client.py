@@ -74,6 +74,21 @@ class GraphiantPortalClient():
                     return edge_info
         return response.edges_summary
 
+    def get_global_lan_segments(self):
+        """
+        Get all edges summary from GCS.
+
+        Args:
+            device_id (int, optional): The device ID to filter edges.
+            If not provided, returns all edges.
+
+        Returns:
+            list or dict: A list of all edges info if no device_id is provided,
+            or a single edge's information if a device_id is provided.
+        """
+        response = self.api.v1_global_lan_segments_get(authorization=self.bearer_token)
+        return response.entries
+
     @poller(timeout=90, wait=5)
     def verify_device_portal_status(self, device_id: int):
         """
@@ -252,3 +267,55 @@ class GraphiantPortalClient():
         except ApiException as e:
             LOG.warning(f"post_global_summary : Exception While Global config patch {e}")
             assert False, "post_global_summary : Retrying, Exception while Global config patch"
+
+    def post_site_config(self, site_id: int, site_config: dict):
+        """
+        Update site configuration for global system object attachments.
+
+        Args:
+            site_id (int): The site ID to update the configuration for.
+            site_config (dict): The site configuration payload containing global object operations.
+
+        Returns:
+            The response from the API
+
+        Raises:
+            ApiException: If the API call fails.
+        """
+        try:
+            LOG.info(f"post_site_config : config to be pushed for site {site_id}: \
+                     \n{json.dumps(site_config, indent=2)}")
+            response = self.api.v1_sites_site_id_post(
+                authorization=self.bearer_token,
+                site_id=site_id,
+                v1_sites_site_id_post_request=site_config
+            )
+            return response
+        except ApiException as e:
+            LOG.error(f"post_site_config: Got Exception while updating site {site_id} config: {e}")
+            raise e
+
+    def get_site_id(self, site_name: str):
+        """
+        Get site ID by site name.
+
+        Args:
+            site_name (str): The name of the site.
+
+        Returns:
+            int or None: The site ID if found, None otherwise.
+        """
+        try:
+            # Get all sites
+            response = self.api.v1_sites_get(authorization=self.bearer_token)
+            sites = response.sites
+            LOG.debug(f"get_site_id: Looking for site '{site_name}' in {len(sites)} sites")
+            for site in sites:
+                if site.name == site_name:
+                    LOG.debug(f"get_site_id: Found site '{site_name}' with ID {site.id}")
+                    return site.id
+            LOG.debug(f"get_site_id: Site '{site_name}' not found")
+            return None
+        except ApiException as e:
+            LOG.error(f"get_site_id: Got Exception while getting site ID for {site_name}: {e}")
+            return None
