@@ -312,3 +312,271 @@ class Edge(EdgeUtils):
         LOG.debug(f"deconfigure_global_snmp_service: \
                   final_config_payload {final_config_payload}")
         self.concurrent_task_execution(self.gsdk.patch_global_config, final_config_payload)
+
+    def configure_global_syslog_service(self, config_yaml_file):
+        """
+        Configures Global Syslog based on the provided YAML configuration file.
+
+        This method reads the configuration file, parses the global syslog entries,
+        and constructs the payload using the Jinja2 templates and configure
+        the global syslog using the GCSDK APIs.
+
+        Args:
+            config_yaml_file (str): Path to the YAML file containing the
+            global syslog definitions.
+
+        Returns:
+            None
+       """
+        config_data = self.render_config_file(yaml_file=config_yaml_file)
+        if config_data is None:
+            LOG.error(f"Failed to load configuration file: {config_yaml_file}")
+            return
+        final_config_payload = {"syslog_servers": {}}
+        config_payload = {}
+        if 'syslogServers' in config_data:
+            config_payload.update({'syslogServers': {}})
+            for syslog_config in config_data.get('syslogServers'):
+                self.global_syslog(config_payload, action="add", **syslog_config)
+            final_config_payload["syslog_servers"].update(config_payload.get('syslogServers', {}))
+        LOG.debug(f"configure_global_syslog_service: final_config_payload {final_config_payload}")
+        self.gsdk.patch_global_config(**final_config_payload)
+
+    def deconfigure_global_syslog_service(self, config_yaml_file):
+        """
+        Removes Global Syslog services using the provided YAML configuration file.
+
+        This method parses the input YAML file to extract syslog service definitions
+        and constructs the payload using the templates to remove the specified services
+        using the GCSDK APIs.
+
+        Args:
+            config_yaml_file (str): Path to the YAML file containing syslog service definitions.
+
+        Returns:
+            None
+        """
+        config_data = self.render_config_file(yaml_file=config_yaml_file)
+        if config_data is None:
+            LOG.error(f"Failed to load configuration file: {config_yaml_file}")
+            return
+        final_config_payload = {"syslog_servers": {}}
+        config_payload = {}
+        if 'syslogServers' in config_data:
+            config_payload.update({'syslogServers': {}})
+            for syslog_config in config_data.get('syslogServers'):
+                self.global_syslog(config_payload, action="delete", **syslog_config)
+            final_config_payload["syslog_servers"].update(config_payload.get('syslogServers', {}))
+        LOG.debug(f"deconfigure_global_syslog_service: \
+                  final_config_payload {final_config_payload}")
+        self.gsdk.patch_global_config(**final_config_payload)
+
+    def configure_global_ipfix_service(self, config_yaml_file):
+        """
+        Configures Global IPFIX based on the provided YAML configuration file.
+
+        This method reads the configuration file, parses the global IPFIX entries,
+        and constructs the payload using the Jinja2 templates and configure
+        the global IPFIX using the GCSDK APIs.
+
+        Args:
+            config_yaml_file (str): Path to the YAML file containing the
+            global IPFIX definitions.
+
+        Returns:
+            None
+       """
+        config_data = self.render_config_file(yaml_file=config_yaml_file)
+        if config_data is None:
+            LOG.error(f"Failed to load configuration file: {config_yaml_file}")
+            return
+        final_config_payload = {"ipfix_exporters": {}}
+        config_payload = {}
+        if 'ipfixExporters' in config_data:
+            config_payload.update({'ipfixExporters': {}})
+            for ipfix_config in config_data.get('ipfixExporters'):
+                self.global_ipfix(config_payload, action="add", **ipfix_config)
+            final_config_payload["ipfix_exporters"].update(config_payload.get('ipfixExporters', {}))
+        LOG.debug(f"configure_global_ipfix_service: \
+                         final_config_payload {final_config_payload}")
+        self.gsdk.patch_global_config(**final_config_payload)
+
+    def deconfigure_global_ipfix_service(self, config_yaml_file):
+        """
+        Removes Global IPFIX services using the provided YAML configuration file.
+
+        This method parses the input YAML file to extract IPFIX service definitions
+        and constructs the payload using the templates to remove the specified services
+        using the GCSDK APIs.
+
+        Args:
+            config_yaml_file (str): Path to the YAML file containing IPFIX service definitions.
+
+        Returns:
+            None
+        """
+        config_data = self.render_config_file(yaml_file=config_yaml_file)
+        if config_data is None:
+            LOG.error(f"Failed to load configuration file: {config_yaml_file}")
+            return
+        final_config_payload = {"ipfix_exporters": {}}
+        config_payload = {}
+        if 'ipfixExporters' in config_data:
+            config_payload.update({'ipfixExporters': {}})
+            for ipfix_config in config_data.get('ipfixExporters'):
+                self.global_ipfix(config_payload, action="delete", **ipfix_config)
+            final_config_payload["ipfix_exporters"].update(config_payload.get('ipfixExporters', {}))
+        LOG.debug(f"deconfigure_global_ipfix_service: \
+                  final_config_payload {final_config_payload}")
+        self.gsdk.patch_global_config(**final_config_payload)
+
+    def configure_global_vpn_profile_service(self, config_yaml_file):
+        """
+        Configures Global VPN Profile based on the provided YAML configuration file.
+
+        This method reads the configuration file, parses the global VPN profile entries,
+        and constructs the payload using the Jinja2 templates and configure
+        the global VPN profile using the GCSDK APIs.
+
+        Args:
+            config_yaml_file (str): Path to the YAML file containing the
+            global VPN profile definitions.
+
+        Returns:
+            None
+       """
+        config_data = self.render_config_file(yaml_file=config_yaml_file)
+        if config_data is None:
+            LOG.error(f"Failed to load configuration file: {config_yaml_file}")
+            return
+
+        final_config_payload = {"vpnProfiles": {}}
+        config_payload = {}
+        if 'vpnProfiles' in config_data:
+            config_payload.update({'vpnProfiles': {}})
+            for vpn_config in config_data.get('vpnProfiles'):
+                self.global_vpn_profile(config_payload, action="add", **vpn_config)
+            # Fix the nested structure and convert camelCase to snake_case for API
+            final_config_payload = {}
+            if 'vpnProfiles' in config_payload:
+                final_config_payload['vpn_profiles'] = config_payload['vpnProfiles']
+        LOG.debug(f"configure_global_vpn_profile_service: \
+                         final_config_payload {final_config_payload}")
+        self.gsdk.patch_global_config(**final_config_payload)
+
+    def deconfigure_global_vpn_profile_service(self, config_yaml_file):
+        """
+        Removes Global VPN Profile services using the provided YAML configuration file.
+
+        This method parses the input YAML file to extract VPN profile service definitions
+        and constructs the payload using the templates to remove the specified services
+        using the GCSDK APIs.
+
+        Args:
+            config_yaml_file (str): Path to the YAML file containing VPN profile service definitions.
+
+        Returns:
+            None
+        """
+        config_data = self.render_config_file(yaml_file=config_yaml_file)
+        if config_data is None:
+            LOG.error(f"Failed to load configuration file: {config_yaml_file}")
+            return
+        final_config_payload = {"vpnProfiles": {}}
+        config_payload = {}
+        if 'vpnProfiles' in config_data:
+            config_payload.update({'vpnProfiles': {}})
+            for vpn_config in config_data.get('vpnProfiles'):
+                self.global_vpn_profile(config_payload, action="delete", **vpn_config)
+            # Fix the nested structure and convert camelCase to snake_case for API
+            final_config_payload = {}
+            if 'vpnProfiles' in config_payload:
+                final_config_payload['vpn_profiles'] = config_payload['vpnProfiles']
+        LOG.debug(f"deconfigure_global_vpn_profile_service: \
+                  final_config_payload {final_config_payload}")
+        self.gsdk.patch_global_config(**final_config_payload)
+
+    def manage_global_system_objects_on_site(self, config_yaml_file, operation="attach"):
+        """
+        Manages global system objects (SNMP, Syslog, IPFIX, VPN profiles) on sites
+        based on the provided YAML configuration file. Supports both attach and detach operations.
+
+        This method reads the configuration file, parses the site management entries,
+        and constructs the payload to attach or detach global system objects to/from specific sites
+        using the GCSDK APIs.
+
+        Args:
+            config_yaml_file (str): Path to the YAML file containing site management definitions.
+            operation (str): Operation to perform - "attach" or "detach". Defaults to "attach".
+
+        Returns:
+            None
+        """
+        config_data = self.render_config_file(yaml_file=config_yaml_file)
+        if config_data is None:
+            LOG.error(f"Failed to load configuration file: {config_yaml_file}")
+            return
+
+        default_operation = 'Attach' if operation.lower() == "attach" else 'Detach'
+
+        if 'site_attachments' in config_data:
+            for site_config in config_data.get('site_attachments'):
+                # Get the site name from the first (and only) key in the site config
+                site_name = list(site_config.keys())[0]
+                site_data = site_config[site_name]
+                if site_id := self.get_site_id(site_name=site_name):
+                    site_payload = {"site": {"name": site_name}}
+
+                    # Handle SNMP operations
+                    if 'snmpServers' in site_data:
+                        site_payload['site']['snmpOps'] = {}
+                        for snmp_name in site_data.get('snmpServers'):
+                            site_payload['site']['snmpOps'][snmp_name] = default_operation
+
+                    # Handle Syslog operations
+                    if 'syslogServers' in site_data:
+                        site_payload['site']['syslogServerOpsV2'] = {}
+                        for syslog_config in site_data.get('syslogServers'):
+                            # Handle both string format (backward compatibility) and object format
+                            if isinstance(syslog_config, str):
+                                syslog_name = syslog_config
+                                site_payload['site']['syslogServerOpsV2'][syslog_name] = {
+                                    "operation": default_operation
+                                }
+                            else:
+                                syslog_name = syslog_config.get('name')
+                                interface = syslog_config.get('interface')
+                                site_payload['site']['syslogServerOpsV2'][syslog_name] = {
+                                    "operation": default_operation,
+                                    "interface": {
+                                        "interface": interface
+                                    }
+                                }
+
+                    # Handle IPFIX operations
+                    if 'ipfixExporters' in site_data:
+                        site_payload['site']['ipfixExporterOpsV2'] = {}
+                        for ipfix_config in site_data.get('ipfixExporters'):
+                            # Handle both string format (backward compatibility) and object format
+                            if isinstance(ipfix_config, str):
+                                ipfix_name = ipfix_config
+                                site_payload['site']['ipfixExporterOpsV2'][ipfix_name] = {
+                                    "operation": default_operation
+                                }
+                            else:
+                                ipfix_name = ipfix_config.get('name')
+                                interface = ipfix_config.get('interface')
+                                site_payload['site']['ipfixExporterOpsV2'][ipfix_name] = {
+                                    "operation": default_operation,
+                                    "interface": {
+                                        "interface": interface
+                                    }
+                                }
+
+                    # Use the sites API instead of device config API
+                    self.gsdk.post_site_config(site_id=site_id, site_config=site_payload)
+                else:
+                    LOG.error(f"manage_global_system_objects_on_site: {site_name} unable to fetch device-id")
+                    return
+
+        LOG.debug(f"manage_global_system_objects_on_site ({operation}): completed successfully")

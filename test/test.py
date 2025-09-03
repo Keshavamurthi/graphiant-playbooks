@@ -33,6 +33,15 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         enterprise_id = edge.get_enterprise_id()
         LOG.info(f"Enterprise ID: {enterprise_id}")
 
+    def test_get_lan_segments(self):
+        """
+        Test login and fetch Lan segments.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        lan_segment_id = edge.get_lan_segment_id("lan-7-test")
+        LOG.info(f"Lan Segment ID: {lan_segment_id}")
+
     def test_configure_interfaces(self):
         """
         Configure Interfaces.
@@ -121,6 +130,70 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         edge = Edge(base_url=base_url, username=username, password=password)
         edge.deconfigure_global_snmp_service("sample_global_system_services.yaml")
 
+    def test_configure_syslog_service(self):
+        """
+        Configure Global Syslog Service.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.configure_global_syslog_service("sample_global_system_services.yaml")
+
+    def test_deconfigure_syslog_service(self):
+        """
+        Deconfigure Global Syslog Service.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.deconfigure_global_syslog_service("sample_global_system_services.yaml")
+
+    def test_configure_ipfix_service(self):
+        """
+        Configure Global IPFIX Service.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.configure_global_ipfix_service("sample_global_system_services.yaml")
+
+    def test_deconfigure_ipfix_service(self):
+        """
+        Deconfigure Global IPFIX Service.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.deconfigure_global_ipfix_service("sample_global_system_services.yaml")
+
+    def test_configure_vpn_profile_service(self):
+        """
+        Configure Global VPN Profile Service.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.configure_global_vpn_profile_service("sample_global_system_services.yaml")
+
+    def test_deconfigure_vpn_profile_service(self):
+        """
+        Deconfigure Global VPN Profile Service.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.deconfigure_global_vpn_profile_service("sample_global_system_services.yaml")
+
+    def test_attach_global_system_objects_to_site(self):
+        """
+        Attach Global System Objects to Sites.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.manage_global_system_objects_on_site("sample_site_attachments.yaml", "attach")
+
+    def test_detach_global_system_objects_from_site(self):
+        """
+        Detach Global System Objects from Sites.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.manage_global_system_objects_on_site("sample_site_attachments.yaml", "detach")
+
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
@@ -128,7 +201,7 @@ if __name__ == '__main__':
     suite.addTest(TestGraphiantPlaybooks('test_get_login_token'))
 
     # suite.addTest(TestGraphiantPlaybooks('test_get_enterprise_id'))
-
+    # suite.addTest(TestGraphiantPlaybooks('test_get_lan_segments'))
     # suite.addTest(TestGraphiantPlaybooks('test_configure_interfaces'))
     # suite.addTest(TestGraphiantPlaybooks('test_configure_global_config_prefix_lists'))
     # suite.addTest(TestGraphiantPlaybooks('test_configure_global_config_routing_policies'))
@@ -140,6 +213,14 @@ if __name__ == '__main__':
     # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_config_prefix_lists'))
     # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_interfaces'))
     # suite.addTest(TestGraphiantPlaybooks('test_configure_snmp_service'))
+    # suite.addTest(TestGraphiantPlaybooks('test_configure_syslog_service'))
+    # suite.addTest(TestGraphiantPlaybooks('test_configure_ipfix_service'))
+    # suite.addTest(TestGraphiantPlaybooks('test_attach_global_system_objects_to_site'))
+    # suite.addTest(TestGraphiantPlaybooks('test_detach_global_system_objects_from_site'))
     # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_snmp_service'))
+    # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_syslog_service'))
+    # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_ipfix_service'))
+    # # suite.addTest(TestGraphiantPlaybooks('test_configure_vpn_profile_service'))
+    # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_vpn_profile_service'))
 
     runner = unittest.TextTestRunner(verbosity=2).run(suite)

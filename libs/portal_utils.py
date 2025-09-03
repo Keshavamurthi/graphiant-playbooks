@@ -119,6 +119,53 @@ class PortalUtils(object):
             LOG.debug(f"get_enterprise_id : {device_info.enterprise_id}")
             return device_info.enterprise_id
 
+    def get_lan_segment_id(self, lan_segment_name):
+        """
+        Retrieve the lan segment ID based on the lan segment name.
+
+        Args:
+            lan_segment_name (str): The name of the lan segment (e.g., 'lan-7-test')
+
+        Returns:
+            int: The ID of the lan segment if found.
+
+        Raises:
+            AssertionError: If the lan segment is not found.
+        """
+        output = self.gsdk.get_global_lan_segments()
+        lan_segment_id = None
+        for lan_segment_obj in output:
+            if lan_segment_obj.name == lan_segment_name:
+                lan_segment_id = lan_segment_obj.id
+                return lan_segment_id
+        assert lan_segment_id, f"Lan segment ID for lan segment '{lan_segment_name}' is {lan_segment_id}"
+        return lan_segment_id
+
+    def get_all_lan_segments(self):
+        """
+        Retrieve all lan segments from the system.
+
+        Returns:
+            dict: A dictionary mapping lan segment names to their IDs.
+        """
+        output = self.gsdk.get_global_lan_segments()
+        lan_segments = {}
+        for lan_segment_obj in output:
+            lan_segments[lan_segment_obj.name] = lan_segment_obj.id
+        return lan_segments
+
+    def get_site_id(self, site_name: str):
+        """
+        Get site ID by site name.
+
+        Args:
+            site_name (str): The name of the site.
+
+        Returns:
+            int or None: The site ID if found, None otherwise.
+        """
+        return self.gsdk.get_site_id(site_name)
+
     def render_config_file(self, yaml_file):
         """
         Load a YAML configuration file from the config path.

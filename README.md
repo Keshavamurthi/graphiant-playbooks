@@ -95,6 +95,8 @@ All input configs should be placed in the configs/ folder.
 - sample_bgp_peering.yaml
 - sample_interface_config.yaml
 - sample_global_routing_policies.yaml
+- sample_global_system_services.yaml
+- sample_site_attachments.yaml
 
 Note : Also refer the templates under templates/ dir for more details on the supported arguments.
 
@@ -144,6 +146,74 @@ edge.deconfigure_global_prefix("sample_global_routing_policies.yaml")
 
 Note: Make sure the Global Prefixes are not attached before deconfigure
 ```
+
+### To Configure Global SNMP Service
+```sh
+edge.configure_global_snmp_service("sample_global_system_services.yaml")
+```
+
+### To Deconfigure Global SNMP Service
+```sh
+edge.deconfigure_global_snmp_service("sample_global_system_services.yaml")
+```
+
+### To Configure Global Syslog Service
+```sh
+edge.configure_global_syslog_service("sample_global_system_services.yaml")
+```
+
+**Note:** The system automatically converts user-friendly `lanSegment` names to internal `vrfId` values for API calls.
+
+### To Deconfigure Global Syslog Service
+```sh
+edge.deconfigure_global_syslog_service("sample_global_system_services.yaml")
+```
+
+### To Configure Global IPFIX Service
+```sh
+edge.configure_global_ipfix_service("sample_global_system_services.yaml")
+```
+
+**Note:** The system automatically converts user-friendly `lanSegment` names to internal `vrfId` values for API calls.
+
+### To Deconfigure Global IPFIX Service
+```sh
+edge.deconfigure_global_ipfix_service("sample_global_system_services.yaml")
+```
+
+### To Configure Global VPN Profile Service
+```sh
+edge.configure_global_vpn_profile_service("sample_global_system_services.yaml")
+```
+
+### To Deconfigure Global VPN Profile Service
+```sh
+edge.deconfigure_global_vpn_profile_service("sample_global_system_services.yaml")
+```
+
+### To Manage Global System Objects on Sites (Attach/Detach)
+```sh
+# Attach global system objects to sites
+edge.manage_global_system_objects_on_site("sample_site_attachments.yaml", "attach")
+
+# Detach global system objects from sites
+edge.manage_global_system_objects_on_site("sample_site_attachments.yaml", "detach")
+```
+
+**Configuration Format:**
+The `sample_site_attachments.yaml` uses a simple, user-friendly format:
+```yaml
+site_attachments:
+  - San Jose-sdktest:
+      syslogServers:
+        - syslog-global-test
+      snmpServers:
+        - snmp-global-test-noauth
+      ipfixExporters:
+        - ipfix-global-test
+```
+
+**Note:** Just specify the object names in simple lists. The system automatically converts them to the proper API format with "Attach" or "Detach" operations based on the function parameter.
 
 ## Source code linter checks
 Error linters point out syntax errors or other code that will result in unhandled exceptions and crashes. (pylint, flake8)

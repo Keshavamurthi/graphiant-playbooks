@@ -1,0 +1,11 @@
+site_attachments:
+  # Site attachment configuration for global system objects
+  - San Jose-sdktest:
+      syslogServers:
+        - name: syslog-global-test
+          interface: GigabitEthernet8/0/0.18
+      snmpServers:
+        - snmp-global-test-noauth
+      ipfixExporters:
+        - name: ipfix-global-test
+          interface: GigabitEthernet8/0/0.18
