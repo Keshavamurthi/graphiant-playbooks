@@ -94,8 +94,11 @@ All input configs should be placed in the configs/ folder.
 
 - sample_bgp_peering.yaml
 - sample_interface_config.yaml
-- sample_global_routing_policies.yaml
-- sample_global_system_services.yaml
+- sample_global_bgp_filters.yaml
+- sample_global_snmp_services.yaml
+- sample_global_syslog_servers.yaml
+- sample_global_ipfix_exporters.yaml
+- sample_global_vpn_profiles.yaml
 - sample_site_attachments.yaml
 
 Note : Also refer the templates under templates/ dir for more details on the supported arguments.
@@ -109,95 +112,152 @@ username = 'username'
 password = 'password'
 edge = Edge(base_url=host, username=username, password=password)
 ```
-### Step 3: 
-### To Configure the interfaces defined in sample_interface_config.yaml
+### Step 3: Interface Configuration Methods
+
+#### 1. Configure/Deconfigure LAN Interfaces (Subinterfaces)
 ```sh
-Configure Interfaces: edge.configure_interfaces("sample_interface_config.yaml")
+# Configure LAN interfaces
+edge.interfaces.configure_lan_interfaces("sample_interface_config.yaml")
+
+# Deconfigure LAN interfaces
+edge.interfaces.deconfigure_lan_interfaces("sample_interface_config.yaml")
 ```
 
-### To Deconfigure the interfaces defined in sample_interface_config.yaml
+#### 2. Configure/Deconfigure WAN Interfaces (Subinterfaces)
 ```sh
-Deconfigure Interfaces: edge.deconfigure_interfaces("sample_interface_config.yaml")
+# Configure WAN circuits and interfaces
+edge.interfaces.configure_wan_circuits_interfaces(
+    circuit_config_file="sample_circuit_config.yaml",
+    interface_config_file="sample_interface_config.yaml"
+)
+
+# Configure circuits only (can be called separately after interface is configured)
+edge.interfaces.configure_circuits(
+    circuit_config_file="sample_circuit_config.yaml",
+    interface_config_file="sample_interface_config.yaml"
+)
+
+# Deconfigure circuits (removes static routes if any)
+edge.interfaces.deconfigure_circuits(
+    interface_config_file="sample_interface_config.yaml",
+    circuit_config_file="sample_circuit_config.yaml"
+)
+
+# Deconfigure WAN circuits and interfaces
+edge.interfaces.deconfigure_wan_circuits_interfaces(
+    interface_config_file="sample_interface_config.yaml",
+    circuit_config_file="sample_circuit_config.yaml"
+)
 ```
 
-### To configure the Global Prefixes, Routing Policies and BGP Peering
+**Note:** `configure_circuits` can be separately called after interface is configured already just to update circuits configuration (including static routes in the circuits).
+
+**Note:** `deconfigure_circuits` will remove static routes (if any) in the circuit. This is required before deconfiguring WAN interfaces.
+
+#### 3. Configure All Interfaces in One Single Config Push
 ```sh
-Configure Global Prefixes: edge.configure_global_prefix("sample_global_routing_policies.yaml")
-Configure Global Routing Policies: edge.configure_global_bgp_routing_policies("sample_global_routing_policies.yaml")
-Configure BGP Peering: edge.configure_bgp_peers("sample_bgp_peering.yaml")
+edge.interfaces.configure_interfaces(
+    interface_config_file="sample_interface_config.yaml",
+    circuit_config_file="sample_circuit_config.yaml"
+)
 ```
 
-### To unlink and deconfigure the BGP Peers
+#### 4. Deconfigure All Interfaces (Reset parent interface to default LAN and delete subinterfaces)
 ```sh
-edge.detach_policies_from_bgp_peers("sample_bgp_peering.yaml")
-edge.deconfigure_bgp_peers("sample_bgp_peering.yaml")
+edge.interfaces.deconfigure_interfaces(
+    interface_config_file="sample_interface_config.yaml",
+    circuit_config_file="sample_circuit_config.yaml"
+)
 ```
 
-### To Deconfigure the Global BGP Routing Policies
-```sh
-edge.deconfigure_global_bgp_routing_policies("sample_global_routing_policies.yaml")
+**Note:** `deconfigure_circuits` might be required before running `deconfigure_interfaces` so that static routes are deconfigured before deconfiguring WAN interfaces.
 
-Note: Make sure the routing policies are not attached to any BGP peering configs before deconfigure
+### Step 4: Global Object Configurations
+
+#### Global Config Prefix Lists
+```sh
+# Configure global prefix sets
+edge.global_config.configure("sample_global_prefix_lists.yaml")
+
+# Deconfigure global prefix sets
+edge.global_config.deconfigure("sample_global_prefix_lists.yaml")
 ```
 
-### To Deconfigure the Global Prefixes
+#### Global Config BGP Filters
 ```sh
-edge.deconfigure_global_prefix("sample_global_routing_policies.yaml")
+# Configure global BGP filters
+edge.global_config.configure("sample_global_bgp_filters.yaml")
 
-Note: Make sure the Global Prefixes are not attached before deconfigure
+# Deconfigure global BGP filters
+edge.global_config.deconfigure("sample_global_bgp_filters.yaml")
 ```
 
-### To Configure Global SNMP Service
+#### Global Config SNMP System Objects
 ```sh
-edge.configure_global_snmp_service("sample_global_system_services.yaml")
+# Configure global SNMP services
+edge.global_config.configure("sample_global_snmp_services.yaml")
+
+# Deconfigure global SNMP services
+edge.global_config.deconfigure("sample_global_snmp_services.yaml")
 ```
 
-### To Deconfigure Global SNMP Service
+#### Global Config Syslog System Objects
 ```sh
-edge.deconfigure_global_snmp_service("sample_global_system_services.yaml")
+# Configure global syslog services
+edge.global_config.configure("sample_global_syslog_servers.yaml")
+
+# Deconfigure global syslog services
+edge.global_config.deconfigure("sample_global_syslog_servers.yaml")
 ```
 
-### To Configure Global Syslog Service
+#### Global Config IPFIX System Objects
 ```sh
-edge.configure_global_syslog_service("sample_global_system_services.yaml")
+# Configure global IPFIX services
+edge.global_config.configure("sample_global_ipfix_exporters.yaml")
+
+# Deconfigure global IPFIX services
+edge.global_config.deconfigure("sample_global_ipfix_exporters.yaml")
 ```
 
-**Note:** The system automatically converts user-friendly `lanSegment` names to internal `vrfId` values for API calls.
-
-### To Deconfigure Global Syslog Service
+#### Global Config VPN Profiles
 ```sh
-edge.deconfigure_global_syslog_service("sample_global_system_services.yaml")
+# Configure global VPN profiles
+edge.global_config.configure("sample_global_vpn_profiles.yaml")
+
+# Deconfigure global VPN profiles
+edge.global_config.deconfigure("sample_global_vpn_profiles.yaml")
 ```
 
-### To Configure Global IPFIX Service
+### Step 5: BGP Peering Neighbors Configurations
+
+#### Configure BGP Peering and Attach Global Config BGP Filters
 ```sh
-edge.configure_global_ipfix_service("sample_global_system_services.yaml")
+# Configure BGP peering neighbors
+edge.bgp.configure("sample_bgp_peering.yaml")
 ```
 
-**Note:** The system automatically converts user-friendly `lanSegment` names to internal `vrfId` values for API calls.
-
-### To Deconfigure Global IPFIX Service
+#### Detach Global Config BGP Filters from BGP Peers
 ```sh
-edge.deconfigure_global_ipfix_service("sample_global_system_services.yaml")
+# Detach policies from BGP peers
+edge.bgp.detach_policies("sample_bgp_peering.yaml")
 ```
 
-### To Configure Global VPN Profile Service
+#### Deconfigure BGP Peering
 ```sh
-edge.configure_global_vpn_profile_service("sample_global_system_services.yaml")
+# Deconfigure BGP peering neighbors
+edge.bgp.deconfigure("sample_bgp_peering.yaml")
 ```
 
-### To Deconfigure Global VPN Profile Service
+### Step 6: Attaching System Objects to and from Sites
+
+#### Attach Global System Objects to Sites
 ```sh
-edge.deconfigure_global_vpn_profile_service("sample_global_system_services.yaml")
+edge.sites.manage_global_system_objects_on_site("sample_site_attachments.yaml", "attach")
 ```
 
-### To Manage Global System Objects on Sites (Attach/Detach)
+#### Detach Global System Objects from Sites
 ```sh
-# Attach global system objects to sites
-edge.manage_global_system_objects_on_site("sample_site_attachments.yaml", "attach")
-
-# Detach global system objects from sites
-edge.manage_global_system_objects_on_site("sample_site_attachments.yaml", "detach")
+edge.sites.manage_global_system_objects_on_site("sample_site_attachments.yaml", "detach")
 ```
 
 **Configuration Format:**

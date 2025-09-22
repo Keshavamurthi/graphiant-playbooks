@@ -1,22 +1,3 @@
-global_prefix_sets:
-  # Multiple IPv4 Global Prefix set configuration with exact match
-  - name: demo_prefix_list_1
-    description: For_testing_prefix_list_1
-    mode: ipv4
-    entries:
-      - idx: 1
-        ip_prefix: 1.1.1.0/24
-        rule: exact
-        prefix_length: 24
-  - name: demo_prefix_list_2
-    description: For_testing_prefix_list_2
-    mode: ipv4
-    entries:
-      - idx: 1
-        ip_prefix: 10.1.1.0/24
-        rule: exact
-        prefix_length: 24
-
 routing_policies:
   # Global BGP Routing Inbound and Outbound IPv4 filters configuration with Global prefix set
   - name: demo_bgp_inbound_filter
