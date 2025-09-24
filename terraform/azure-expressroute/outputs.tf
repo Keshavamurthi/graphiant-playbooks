@@ -1,0 +1,100 @@
+# Outputs for Express.js Terraform configuration on Azure
+
+output "resource_group_name" {
+  description = "Name of the resource group"
+  value       = azurerm_resource_group.rg.name
+}
+
+#Virtual Network output
+output "vnet_id" {
+  description = "ID of the Virtual Network"
+  value       = azurerm_virtual_network.virtual_network.id
+}
+
+output "vnet_name" {
+  description = "Name of the Virtual Network"
+  value       = azurerm_virtual_network.virtual_network.name
+}
+
+# ExpressRoute Circuit Outputs
+output "expressroute_circuit_id" {
+  description = "ID of the ExpressRoute Circuit"
+  value       = var.enable_expressroute ? azurerm_express_route_circuit.express_route[0].id : "ExpressRoute not enabled"
+}
+
+output "expressroute_circuit_name" {
+  description = "Name of the ExpressRoute Circuit"
+  value       = var.enable_expressroute ? azurerm_express_route_circuit.express_route[0].name : "ExpressRoute not enabled"
+}
+
+output "expressroute_circuit_service_key" {
+  description = "Service key of the ExpressRoute Circuit"
+  value       = var.enable_expressroute ? azurerm_express_route_circuit.express_route[0].service_key : "ExpressRoute not enabled"
+  sensitive   = true
+}
+
+output "expressroute_circuit_bandwidth" {
+  description = "Bandwidth of the ExpressRoute Circuit"
+  value       = var.enable_expressroute ? azurerm_express_route_circuit.express_route[0].bandwidth_in_mbps : "ExpressRoute not enabled"
+}
+
+output "expressroute_gateway_id" {
+  description = "ID of the ExpressRoute Gateway"
+  value       = var.enable_expressroute ? azurerm_express_route_gateway.express_route_gateway[0].id : "ExpressRoute not enabled"
+}
+
+output "expressroute_gateway_name" {
+  description = "Name of the ExpressRoute Gateway"
+  value       = var.enable_expressroute ? azurerm_express_route_gateway.express_route_gateway[0].name : "ExpressRoute not enabled"
+}
+
+output "expressroute_connection_id" {
+  description = "ID of the ExpressRoute Connection"
+  value       = var.enable_expressroute && var.create_expressroute_connection ? azurerm_express_route_connection.express_route_connection[0].id : "Connection not created yet - set create_expressroute_connection = true after service provider provisions the circuit"
+}
+
+output "expressroute_peering_id" {
+  description = "ID of the ExpressRoute Circuit Peering"
+  value       = var.enable_expressroute ? azurerm_express_route_circuit_peering.express_route_peering[0].id : "ExpressRoute not enabled"
+}
+
+output "virtual_hub_id" {
+  description = "ID of the Virtual Hub"
+  value       = var.enable_expressroute ? azurerm_virtual_hub.express_hub[0].id : "ExpressRoute not enabled"
+}
+
+output "virtual_hub_name" {
+  description = "Name of the Virtual Hub"
+  value       = var.enable_expressroute ? azurerm_virtual_hub.express_hub[0].name : "ExpressRoute not enabled"
+}
+
+output "secondary_expressroute_circuit_id" {
+  description = "ID of the Secondary ExpressRoute Circuit"
+  value       = var.enable_expressroute && var.expressroute_secondary_peering_location != "" ? azurerm_express_route_circuit.express_route_secondary[0].id : "Secondary ExpressRoute not enabled"
+}
+
+output "deployment_status" {
+  description = "Current deployment status and next steps"
+  value = var.enable_expressroute ? "✅ Azure infrastructure is ready! The physical connection needs to be provisioned by the service provider (${var.expressroute_service_provider}). Contact them to complete the circuit provisioning." : "ExpressRoute not enabled"
+}
+
+output "service_provider_contact_info" {
+  description = "Information about service provider provisioning"
+  value = var.enable_expressroute ? "Contact ${var.expressroute_service_provider} to provision the physical circuit. Once provisioned, run 'terraform apply' again to create the ExpressRoute connection." : "N/A"
+}
+
+# Route Table Outputs
+output "route_table_id" {
+  description = "ID of the Route Table"
+  value       = var.enable_expressroute ? azurerm_route_table.express_route_route_table[0].id : "ExpressRoute not enabled"
+}
+
+output "route_table_name" {
+  description = "Name of the Route Table"
+  value       = var.enable_expressroute ? azurerm_route_table.express_route_route_table[0].name : "ExpressRoute not enabled"
+}
+
+output "route_table_default_route" {
+  description = "Configured default route destination"
+  value       = var.enable_expressroute ? var.route_table_default_route : "ExpressRoute not enabled"
+}
