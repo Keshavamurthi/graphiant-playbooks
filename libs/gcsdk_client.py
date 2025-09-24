@@ -140,6 +140,8 @@ class GraphiantPortalClient():
             response = self.api.v1_devices_device_id_config_put(
                 authorization=self.bearer_token, device_id=device_id,
                 v1_devices_device_id_config_put_request=device_config_put_request)
+            # Verify device portal status and connection status.
+            self.verify_device_portal_status(device_id=device_id)
             return response
         except ForbiddenException as e:
             LOG.error(f"put_device_config: Got ForbiddenException while config push {e}")
@@ -150,6 +152,8 @@ class GraphiantPortalClient():
                            f"(v1_devices_device_id_config_put).")
         except ApiException as e:
             LOG.warning(f"put_device_config : Exception while config push {e}")
+            assert False, (f"put_device_config : Retrying, Exception while config push to {device_id}. "
+                           f"Exception: {e}")
 
     def post_devices_bringup(self, device_ids):
         """

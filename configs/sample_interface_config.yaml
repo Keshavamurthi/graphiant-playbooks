@@ -1,37 +1,78 @@
 interfaces:
   - edge-1-sdktest:
     # WAN Interface with IPv4/IPv6 DHCP enabled
-    - interface_name: GigabitEthernet5/0/0
+    - name: GigabitEthernet5/0/0
       circuit: c-gigabitethernet5-0-0
-      description: wan_1
-      alias: primary_wan
-    # VLAN Sub-Interface with Static IP assignment
-    - interface_name: GigabitEthernet8/0/0
+      description: Wan 2 interface
+      alias: Gig5
+      mtu: 1500
+    # LAN Sub-Interface (VLAN) with Static IP assignment
+    - name: GigabitEthernet7/0/0
       sub_interfaces:
         - vlan: 18
           lan: lan-7-test
-          ipv4_address: 10.2.7.1/24
-          ipv6_address: 2001:10:2:7::1/64
-          description: lan-7
-          alias: non_production
+          ipv4: 10.1.7.1/24
+          ipv6: 2001:10:1:7::1/64
+          description: Segment lan-7-test interface
+          alias: Gig7.18
+          v4_tcp_mss: 1392
+          v6_tcp_mss: 1220
+
   - edge-2-sdktest:
     # WAN Interface with Static IPv4 and DHCP IPv6 assignment and not enabling it
-    - interface_name: GigabitEthernet5/0/0
+    - name: GigabitEthernet5/0/0
       circuit: c-gigabitethernet5-0-0
-      ipv4_address: 100.200.1.1/24
-      admin_status: False
-    # Multiple VLAN SUB-Interfaces with Static IPv4/IPv6 assignments
-    - interface_name: GigabitEthernet8/0/0
+      ipv4: 100.200.1.1/24
+      enabled: false
+      mtu: 1500
+    # LAN interface and Multiple LAN Sub-Interfaces(VLANs) with Static IPv4/IPv6 assignments
+    - name: GigabitEthernet8/0/0
+      ipv4: 10.2.1.2/24
+      ipv6: 2001:10:2:1::2/64
+      lan: lan-1-test
+      description: Segment-1 interface
+      mtu: 1500
+      v4_tcp_mss: 1392
+      v6_tcp_mss: 1220
       sub_interfaces:
         - vlan: 28
           lan: lan-7-test
-          ipv4_address: 10.2.7.2/24
-          ipv6_address: 2001:10:2:7::2/64
-          description: lan-7
-          alias: non_production
+          ipv4: 10.2.7.2/24
+          ipv6: 2001:10:2:7::2/64
+          description: Segment-7 interface
+          alias: Gig8.28
         - vlan: 29
           lan: lan-8-test
-          ipv4_address: 10.2.8.2/24
-          ipv6_address: 2001:10:2:8::2/64
-          description: lan-8
-          alias: production
+          ipv4: 10.2.8.2/24
+          ipv6: 2001:10:2:8::2/64
+          description: Segment-8 interface
+          alias: Gig8.29
+          mtu: 1450
+          v4_tcp_mss: 1392
+          v6_tcp_mss: 1220
+
+  - edge-3-sdktest:  
+    # WAN Sub-Interface with DHCP IPv4/IPv6 assignment
+    - name: GigabitEthernet5/0/0
+      circuit: c-gigabitethernet5-0-0
+      ipv4: 100.200.1.1/24
+      enabled: false
+      mtu: 1450
+      sub_interfaces:
+        - vlan: 1001
+          circuit: c-gigabitethernet5-0-0.1001
+          description: c-gigabitethernet5-0-0.1001 wan subinterface
+          alias: Gig5.1001
+          ipv4: 100.200.30.3/24
+          ipv6: 2001:10:2:30::1/64
+
+    # LAN Interface with Static IPv4/IPv6 assignment
+    - name: GigabitEthernet8/0/0
+      ipv4: 10.3.7.3/24
+      ipv6: 2001:10:3:7::3/64
+      lan: lan-7-test
+      description: Segment-7 interface
+      mtu: 1500
+      v4_tcp_mss: 1392
+      v6_tcp_mss: 1220
+

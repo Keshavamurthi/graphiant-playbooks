@@ -51,13 +51,15 @@ class PortalUtils(object):
 
         if not_done:
             LOG.warning(f"{len(not_done)} futures did not finish running")
-
+        failures = []
         for future in futures:
             try:
                 if future:
                     future.result(timeout=0)
             except Exception as e:
-                LOG.error(f"future failed: {e}")
+                failures.append(e)
+        if failures:
+            raise Exception(f"futures failed: {failures}")
 
     def update_device_bringup_status(self, device_id, status):
         """

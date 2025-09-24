@@ -1,6 +1,6 @@
 {
-    "vpnProfiles": {
-        {% for profile in vpnProfiles %}
+    "vpn_profiles": {
+        {% for profile in vpn_profiles %}
         "{{ profile.name }}": {
             "vpnProfile": {
                 "name": "{{ profile.name }}",
