@@ -1,0 +1,53 @@
+---
+- name: Manage Graphiant interfaces
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # graphiant_host: "https://api.graphiant.com"
+    # graphiant_username: "{{ vault_graphiant_username }}"
+    # graphiant_password: "{{ vault_graphiant_password }}"
+    
+    # Use YAML anchors to avoid repetition
+    graphiant_client_params: &graphiant_client_params
+      host: "{{ graphiant_host | default(lookup('env', 'GRAPHIANT_HOST')) }}"
+      username: "{{ graphiant_username | default(lookup('env', 'GRAPHIANT_USERNAME')) }}"
+      password: "{{ graphiant_password | default(lookup('env', 'GRAPHIANT_PASSWORD')) }}"
+
+  tasks:
+    - name: Configure LAN interfaces only
+      graphiant.graphiant_playbooks.graphiant_interfaces:
+        <<: *graphiant_client_params
+        interface_config_file: "sample_interface_config.yaml"
+        operation: "configure_lan_interfaces"
+        state: present
+      tags: ['interfaces', 'lan']
+    
+    - name: Configure WAN circuits and interfaces
+      graphiant.graphiant_playbooks.graphiant_interfaces:
+        <<: *graphiant_client_params
+        interface_config_file: "sample_interface_config.yaml"
+        circuit_config_file: "sample_circuit_config.yaml"
+        operation: "configure_wan_circuits_interfaces"
+        state: present
+      tags: ['interfaces', 'wan', 'circuits']
+    
+    - name: Configure all interfaces (combined operation)
+      graphiant.graphiant_playbooks.graphiant_interfaces:
+        <<: *graphiant_client_params
+        interface_config_file: "sample_interface_config.yaml"
+        circuit_config_file: "sample_circuit_config.yaml"
+        operation: "configure_interfaces"
+        state: present
+      tags: ['interfaces', 'all']
+    
+    - name: Deconfigure all interfaces (reset to default)
+      graphiant.graphiant_playbooks.graphiant_interfaces:
+        <<: *graphiant_client_params
+        interface_config_file: "sample_interface_config.yaml"
+        circuit_config_file: "sample_circuit_config.yaml"
+        operation: "deconfigure_interfaces"
+        state: absent
+      when: interface_cleanup is defined and interface_cleanup
+      tags: ['interfaces', 'cleanup']
+
+

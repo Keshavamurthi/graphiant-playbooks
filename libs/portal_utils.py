@@ -1,10 +1,9 @@
+import os
 import yaml
 from concurrent.futures import wait
 from concurrent.futures.thread import ThreadPoolExecutor
 from libs.logger import setup_logger
 from libs.gcsdk_client import GraphiantPortalClient
-
-from pathlib import Path as path
 
 LOG = setup_logger()
 
@@ -12,15 +11,77 @@ LOG = setup_logger()
 class PortalUtils(object):
 
     def __init__(self, base_url=None, username=None, password=None):
-        cwd = path.cwd()
-        self.config_path = str(cwd) + "/configs/"
-        self.templates = str(cwd) + "/templates/"
-        self.logs_path = str(cwd) + "/logs/"
+        # Find the project root directory by looking for the libs directory
+        project_root = self._find_project_root()
+
+        self.config_path = os.path.join(project_root, "configs") + "/"
+        self.templates = os.path.join(project_root, "templates") + "/"
+        self.logs_path = os.path.join(project_root, "logs") + "/"
+
+        LOG.info(f"PortalUtils : project_root : {project_root}")
         LOG.info(f"PortalUtils : templates_path : {self.config_path}")
         LOG.info(f"PortalUtils : config_templates : {self.templates}")
         LOG.info(f"PortalUtils : logs_path : {self.logs_path}")
         self.gsdk = GraphiantPortalClient(base_url=base_url, username=username, password=password)
         self.gsdk.set_bearer_token()
+
+    def _find_project_root(self) -> str:
+        """
+        Find the project root directory using a systematic approach with the following priority:
+        1. Check user-configured GRAPHIANT_PLAYBOOKS_PATH environment variable (highest priority)
+        2. Check PYTHONPATH for graphiant-playbooks directory
+        3. Check current working directory
+        4. Find Git repository root and look for the directory there
+        5. Walk up from the current file location to find the directory (fallback)
+
+        Returns:
+            str: Path to the project root directory
+        """
+        # Method 1: Check user-configured GRAPHIANT_PLAYBOOKS_PATH environment variable (highest priority)
+        user_playbooks_path = os.environ.get('GRAPHIANT_PLAYBOOKS_PATH')
+        if user_playbooks_path and os.path.exists(user_playbooks_path):
+            LOG.debug(f"Found project root via GRAPHIANT_PLAYBOOKS_PATH: {user_playbooks_path}")
+            return user_playbooks_path
+
+        # Method 2: Check PYTHONPATH for graphiant-playbooks directory
+        pythonpath = os.environ.get('PYTHONPATH', '')
+        for path in pythonpath.split(os.pathsep):
+            if path and os.path.exists(path):
+                # Check if this path contains the graphiant-playbooks directory
+                if 'graphiant-playbooks' in path:
+                    LOG.debug(f"Found project root via PYTHONPATH: {path}")
+                    return path
+                # Also check if this path is the project root (contains libs, configs, etc.)
+                if (os.path.exists(os.path.join(path, 'libs')) and os.path.exists(os.path.join(path, 'configs'))):
+                    LOG.debug(f"Found project root via PYTHONPATH (contains libs/configs): {path}")
+                    return path
+
+        # Method 3: Check current working directory
+        if (os.path.exists(os.path.join(os.getcwd(), 'libs')) and os.path.exists(os.path.join(os.getcwd(), 'configs'))):
+            LOG.debug(f"Found project root in current working directory: {os.getcwd()}")
+            return os.getcwd()
+
+        # Method 4: Find Git repository root and look for the directory there
+        current_dir = os.getcwd()
+        for _ in range(10):  # Walk up to 10 levels
+            git_path = os.path.join(current_dir, '.git')
+            if os.path.exists(git_path):
+                LOG.debug(f"Found project root at Git repository: {current_dir}")
+                return current_dir
+            current_dir = os.path.dirname(current_dir)
+
+        # Method 5: Walk up from the current file location (fallback)
+        current_dir = os.path.dirname(__file__)
+        for _ in range(10):  # Walk up to 10 levels
+            if (os.path.exists(os.path.join(current_dir, 'libs')) and os.path.exists(os.path.join(current_dir,
+                                                                                                  'configs'))):
+                LOG.debug(f"Found project root by walking up from file location: {current_dir}")
+                return current_dir
+            current_dir = os.path.dirname(current_dir)
+
+        # Final fallback to current working directory if nothing else works
+        LOG.warning("Could not find project root using any method, using current working directory")
+        return os.getcwd()
 
     def concurrent_task_execution(self, function, config_dict):
         """
@@ -173,7 +234,7 @@ class PortalUtils(object):
         Load a YAML configuration file from the config path.
 
         Args:
-            yaml_file (str): The filename of the YAML config.
+            yaml_file (str): The filename of the YAML config (can be absolute or relative).
 
         Returns:
             dict: Parsed configuration data.
@@ -181,7 +242,13 @@ class PortalUtils(object):
         Logs Warning:
             FileNotFoundError: If the file doesn't exist.
         """
-        input_file_path = self.config_path + yaml_file
+        # Handle absolute paths
+        if os.path.isabs(yaml_file):
+            input_file_path = yaml_file
+        else:
+            # Handle relative paths by concatenating with config_path
+            input_file_path = self.config_path + yaml_file
+
         try:
             with open(input_file_path, "r") as file:
                 config_data = yaml.safe_load(file)
