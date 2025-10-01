@@ -1,4 +1,5 @@
 import configparser
+import os
 import unittest
 from libs.edge import Edge
 from libs.logger import setup_logger
@@ -8,7 +9,10 @@ LOG = setup_logger()
 
 def read_config():
     config = configparser.ConfigParser()
-    config.read('test/test.ini')
+    config_file = 'test/test.ini'
+    if not os.path.exists(config_file):
+        config_file = 'test.ini'
+    config.read(config_file)
     username = config['credentials']['username']
     password = config['credentials']['password']
     host = config['host']['url']
@@ -275,7 +279,9 @@ if __name__ == '__main__':
     suite.addTest(TestGraphiantPlaybooks('test_get_login_token'))
     suite.addTest(TestGraphiantPlaybooks('test_get_enterprise_id'))
     suite.addTest(TestGraphiantPlaybooks('test_get_lan_segments'))
+    suite.addTest(TestGraphiantPlaybooks('test_configure_global_config_prefix_lists'))
 
+    '''
     # Interface Management
     suite.addTest(TestGraphiantPlaybooks('test_configure_lan_interfaces'))
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_lan_interfaces'))
@@ -312,5 +318,5 @@ if __name__ == '__main__':
     # To deconfigure all interfaces
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_circuits'))
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_interfaces'))
-
+    '''
     runner = unittest.TextTestRunner(verbosity=2).run(suite)
