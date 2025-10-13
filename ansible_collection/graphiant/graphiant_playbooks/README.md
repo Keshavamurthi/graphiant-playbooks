@@ -187,6 +187,54 @@ ansible-galaxy collection list | grep graphiant
 - Graphiant SDK >= 25.6.2
 - Access to Graphiant NaaS platform
 
+## Parameter Behavior
+
+All modules support flexible parameter usage with `operation` and `state` parameters:
+
+### **Parameter Rules**
+- **`operation` parameter**: Optional - specifies the exact operation to perform
+- **`state` parameter**: Optional - provides a fallback when operation is not specified
+- **Validation**: At least one of `operation` or `state` must be provided
+- **Precedence**: If both are provided, `operation` takes precedence over `state`
+
+### **State-to-Operation Mapping**
+
+When `operation` is not specified, `state` determines the operation:
+
+- **`state: present`** → Maps to:
+  - `configure` (global_config, bgp, sites)
+  - `configure_interfaces` (interfaces)
+
+- **`state: absent`** → Maps to:
+  - `deconfigure` (global_config, bgp, sites)
+  - `deconfigure_interfaces` (interfaces)
+
+### **Usage Examples**
+
+```yaml
+# Using operation parameter (explicit)
+- name: Configure interfaces
+  graphiant.graphiant_playbooks.graphiant_interfaces:
+    operation: "configure_interfaces"
+    state: present
+
+# Using state parameter only (fallback)
+- name: Configure interfaces
+  graphiant.graphiant_playbooks.graphiant_interfaces:
+    state: present  # operation will be "configure_interfaces"
+
+# Using both (operation takes precedence)
+- name: Configure specific interfaces
+  graphiant.graphiant_playbooks.graphiant_interfaces:
+    operation: "configure_lan_interfaces"  # This takes precedence
+    state: absent  # This is ignored
+
+# Error handling
+- name: Invalid task (will fail)
+  graphiant.graphiant_playbooks.graphiant_interfaces:
+    # No operation or state specified - will show supported operations
+```
+
 ## Modules
 
 ### graphiant_interfaces
@@ -199,7 +247,7 @@ Manages Graphiant interfaces and circuits.
 - `password` (required): Password for authentication
 - `interface_config_file` (required): Path to interface configuration YAML file
 - `circuit_config_file` (optional): Path to circuit configuration YAML file
-- `operation` (required): Operation to perform
+- `operation` (optional): Operation to perform (at least one of operation or state required)
   - `configure_interfaces`: Configure all interfaces
   - `deconfigure_interfaces`: Deconfigure all interfaces
   - `configure_lan_interfaces`: Configure LAN interfaces only
@@ -210,6 +258,11 @@ Manages Graphiant interfaces and circuits.
   - `deconfigure_circuits`: Deconfigure circuits only
 - `circuits_only` (optional): If true, only circuits are affected (default: false)
 - `state` (optional): Desired state (present/absent, default: present)
+  - `present`: Maps to `configure_interfaces` when operation not specified
+  - `absent`: Maps to `deconfigure_interfaces` when operation not specified
+- `detailed_logs` (optional): Enable detailed logging output from library operations (default: false)
+  - `true`: Show detailed library logs in the task output
+  - `false`: Show only basic success/error messages
 
 **Example:**
 ```yaml
@@ -222,6 +275,16 @@ Manages Graphiant interfaces and circuits.
     circuit_config_file: "configs/sample_circuit_config.yaml"
     operation: "configure_interfaces"
     state: present
+
+- name: Configure LAN interfaces with detailed logging
+  graphiant.graphiant_playbooks.graphiant_interfaces:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    interface_config_file: "configs/sample_interface_config.yaml"
+    operation: "configure_lan_interfaces"
+    detailed_logs: true
+    state: present
 ```
 
 ### graphiant_bgp
@@ -233,11 +296,16 @@ Manages Graphiant BGP peering and routing policies.
 - `username` (required): Username for authentication
 - `password` (required): Password for authentication
 - `bgp_config_file` (required): Path to BGP configuration YAML file
-- `operation` (required): Operation to perform
+- `operation` (optional): Operation to perform (at least one of operation or state required)
   - `configure`: Configure BGP peering and attach policies
   - `deconfigure`: Deconfigure BGP peering
   - `detach_policies`: Detach policies from BGP peers
 - `state` (optional): Desired state (present/absent, default: present)
+  - `present`: Maps to `configure` when operation not specified
+  - `absent`: Maps to `deconfigure` when operation not specified
+- `detailed_logs` (optional): Enable detailed logging output from library operations (default: false)
+  - `true`: Show detailed library logs in the task output
+  - `false`: Show only basic success/error messages
 
 **Example:**
 ```yaml
@@ -249,20 +317,43 @@ Manages Graphiant BGP peering and routing policies.
     bgp_config_file: "configs/sample_bgp_peering.yaml"
     operation: "configure"
     state: present
+
+- name: Configure BGP peering with detailed logging
+  graphiant.graphiant_playbooks.graphiant_bgp:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    bgp_config_file: "configs/sample_bgp_peering.yaml"
+    operation: "configure"
+    detailed_logs: true
+    state: present
 ```
 
 ### graphiant_global_config
 
 Manages Graphiant global configuration objects.
 
+**Note:** Global configurations can be managed using either:
+- **General operations**: `configure` and `deconfigure` - automatically detects and processes all configuration types in the YAML file
+- **Specific operations**: `configure_*` and `deconfigure_*` - processes only the specific configuration type
+
+**Detailed Logging:**
+The `detailed_logs` parameter enables comprehensive logging output from the underlying Graphiant library operations. When enabled, you'll see:
+- API call details and responses
+- Configuration processing steps
+- Success/failure messages for each operation
+- Debugging information for troubleshooting
+
 **Parameters:**
 - `host` (required): Graphiant API host URL
 - `username` (required): Username for authentication
 - `password` (required): Password for authentication
 - `config_file` (required): Path to global configuration YAML file
-- `operation` (required): Operation to perform
+- `operation` (optional): Operation to perform (at least one of operation or state required)
   - `configure`: Configure all global objects
   - `deconfigure`: Deconfigure all global objects
+  - `configure_lan_segments`: Configure LAN segments only
+  - `deconfigure_lan_segments`: Deconfigure LAN segments only
   - `configure_prefix_sets`: Configure prefix sets only
   - `deconfigure_prefix_sets`: Deconfigure prefix sets only
   - `configure_bgp_filters`: Configure BGP filters only
@@ -276,6 +367,11 @@ Manages Graphiant global configuration objects.
   - `configure_vpn_profiles`: Configure VPN profiles only
   - `deconfigure_vpn_profiles`: Deconfigure VPN profiles only
 - `state` (optional): Desired state (present/absent, default: present)
+  - `present`: Maps to `configure` when operation not specified
+  - `absent`: Maps to `deconfigure` when operation not specified
+- `detailed_logs` (optional): Enable detailed logging output from library operations (default: false)
+  - `true`: Show detailed library logs in the task output
+  - `false`: Show only basic success/error messages
 
 **Example:**
 ```yaml
@@ -287,33 +383,151 @@ Manages Graphiant global configuration objects.
     config_file: "configs/sample_global_prefix_lists.yaml"
     operation: "configure_prefix_sets"
     state: present
+
+- name: Configure global LAN segments (using specific operation)
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    config_file: "configs/sample_lan_segments.yaml"
+    operation: "configure_lan_segments"
+    state: present
+
+# Alternative: Configure global LAN segments (using general configure operation)
+# - name: Configure global LAN segments
+#   graphiant.graphiant_playbooks.graphiant_global_config:
+#     host: "https://api.graphiant.com"
+#     username: "{{ graphiant_username }}"
+#     password: "{{ graphiant_password }}"
+#     config_file: "configs/sample_lan_segments.yaml"
+#     operation: "configure"
+#     state: present
+
+# Configure with detailed logging enabled
+- name: Configure global LAN segments (with detailed logs)
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    config_file: "configs/sample_lan_segments.yaml"
+    operation: "configure_lan_segments"
+    state: present
+    detailed_logs: true
 ```
 
 ### graphiant_sites
 
-Manages Graphiant site attachments and detachments.
+Manages Graphiant site creation, deletion, and object attachments/detachments.
 
 **Parameters:**
 - `host` (required): Graphiant API host URL
 - `username` (required): Username for authentication
 - `password` (required): Password for authentication
 - `site_config_file` (required): Path to site configuration YAML file
-- `operation` (required): Operation to perform
-  - `configure` or `attach`: Attach global objects to sites
-  - `deconfigure` or `detach`: Detach global objects from sites
+- `operation` (optional): Operation to perform (at least one of operation or state required)
+  - `configure`: Create sites and attach global objects (default for state: present)
+  - `deconfigure`: Detach global objects and delete sites (default for state: absent)
+  - `configure_sites`: Create sites only
+  - `deconfigure_sites`: Delete sites only
+  - `attach_objects`: Attach global objects to existing sites
+  - `detach_objects`: Detach global objects from sites
 - `state` (optional): Desired state (present/absent, default: present)
+  - `present`: Maps to `configure` when operation not specified
+  - `absent`: Maps to `deconfigure` when operation not specified
+- `detailed_logs` (optional): Enable detailed logging output from library operations (default: false)
+  - `true`: Show detailed library logs in the task output
+  - `false`: Show only basic success/error messages
 
-**Example:**
+**Examples:**
 ```yaml
-- name: Attach global objects to sites
+# Configure sites (create sites and attach objects)
+- name: Configure sites
+  graphiant.graphiant_playbooks.graphiant_sites:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    site_config_file: "configs/sample_sites.yaml"
+    operation: "configure"
+    state: present
+
+# Create sites only
+- name: Create sites
+  graphiant.graphiant_playbooks.graphiant_sites:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    site_config_file: "configs/sample_sites.yaml"
+    operation: "configure_sites"
+    state: present
+
+# Attach objects to existing sites
+- name: Attach objects to sites
+  graphiant.graphiant_playbooks.graphiant_sites:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    site_config_file: "configs/sample_sites.yaml"
+    operation: "attach_objects"
+    state: present
+
+- name: Attach global objects to sites with detailed logging
   graphiant.graphiant_playbooks.graphiant_sites:
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
     site_config_file: "configs/sample_site_attachments.yaml"
-    operation: "attach"
+    operation: "attach_objects"
+    detailed_logs: true
     state: present
 ```
+
+## Detailed Logging
+
+All Graphiant Ansible modules support detailed logging through the `detailed_logs` parameter. When enabled, you'll see comprehensive output from the underlying Graphiant library operations, including:
+
+- **API Call Details**: Full request/response information for Graphiant API calls
+- **Configuration Processing**: Step-by-step processing of configuration files
+- **Operation Progress**: Real-time updates on what the library is doing
+- **Debugging Information**: Detailed error messages and troubleshooting data
+- **Success/Failure Details**: Specific information about what succeeded or failed
+
+### When to Use Detailed Logging
+
+- **Development and Testing**: When developing new playbooks or troubleshooting issues
+- **Debugging**: When operations fail and you need to understand why
+- **Monitoring**: When you want to see exactly what changes are being made
+- **Auditing**: When you need detailed records of what operations were performed
+
+### Output Formatting
+
+When using `detailed_logs: true`, you may see output with literal `\n` characters. For clean, readable output, use one of these methods:
+
+#### Method 1: Environment Variable (Recommended)
+```bash
+export ANSIBLE_STDOUT_CALLBACK=debug
+ansible-playbook your_playbook.yml
+```
+
+#### Method 2: Command Line
+```bash
+ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook your_playbook.yml
+```
+
+### Example Usage
+
+```yaml
+- name: Configure interfaces with detailed logging
+  graphiant.graphiant_playbooks.graphiant_interfaces:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    interface_config_file: "configs/sample_interface_config.yaml"
+    operation: "configure_lan_interfaces"
+    detailed_logs: true  # Enable detailed logging
+    state: present
+```
+
+**Note**: Detailed logging is disabled by default (`detailed_logs: false`) to keep output clean during normal operations. Enable it only when you need the additional information.
 
 ## Credential Management
 
@@ -397,7 +611,51 @@ ansible-playbook playbook.yml -e '{"graphiant_username":"myuser","graphiant_pass
 ansible-playbook playbook.yml -e "@vars/credentials.yml"
 ```
 
-### Option 5: Environment Variables
+### Option 5: INI File with Lookup (Development/Testing)
+Use INI files for local development and testing with the `lookup` function:
+
+```ini
+# test/test.ini
+[credentials]
+username = your_username@graphiant.com
+password = your_password
+[host]
+url = https://api.test.graphiant.io
+```
+
+```yaml
+# In playbook
+- name: Configure interfaces using INI file credentials
+  graphiant.graphiant_playbooks.graphiant_interfaces:
+    host: "{{ lookup('ini', 'url file=test/test.ini section=host') }}"
+    username: "{{ lookup('ini', 'username file=test/test.ini section=credentials') }}"
+    password: "{{ lookup('ini', 'password file=test/test.ini section=credentials') }}"
+    interface_config_file: "configs/sample_interface_config.yaml"
+    operation: "configure_lan_interfaces"
+    state: present
+```
+
+**Benefits:**
+- Keep credentials separate from playbooks
+- Easy to switch between different environments
+- Secure for local development (add to `.gitignore`)
+- Works well with the project's existing `test.ini` structure
+
+**Example with existing project structure:**
+```yaml
+# Using the project's test.ini file
+- name: Configure LAN interfaces using project credentials
+  graphiant.graphiant_playbooks.graphiant_interfaces:
+    host: "{{ lookup('ini', 'url file=test/test.ini section=host') }}"
+    username: "{{ lookup('ini', 'username file=test/test.ini section=credentials') }}"
+    password: "{{ lookup('ini', 'password file=test/test.ini section=credentials') }}"
+    interface_config_file: "sample_interface_config.yaml"
+    operation: "configure_lan_interfaces"
+    detailed_logs: true
+    state: present
+```
+
+### Option 6: Environment Variables
 Use environment variables for CI/CD pipelines:
 
 ```bash
@@ -472,29 +730,29 @@ ansible-playbook playbook.yml
     - name: Configure global prefix sets
       graphiant.graphiant_playbooks.graphiant_global_config:
         <<: *graphiant_client_params
-        config_file: "configs/sample_global_prefix_lists.yaml"
+        config_file: "sample_global_prefix_lists.yaml"
         operation: "configure"
         state: present
     
     - name: Configure global BGP filters
       graphiant.graphiant_playbooks.graphiant_global_config:
         <<: *graphiant_client_params
-        config_file: "configs/sample_global_bgp_filters.yaml"
+        config_file: "sample_global_bgp_filters.yaml"
         operation: "configure"
         state: present
     
     - name: Configure BGP peering
       graphiant.graphiant_playbooks.graphiant_bgp:
         <<: *graphiant_client_params
-        bgp_config_file: "configs/sample_bgp_peering.yaml"
+        bgp_config_file: "sample_bgp_peering.yaml"
         operation: "configure"
         state: present
     
     - name: Configure interfaces and circuits
       graphiant.graphiant_playbooks.graphiant_interfaces:
         <<: *graphiant_client_params
-        interface_config_file: "configs/sample_interface_config.yaml"
-        circuit_config_file: "configs/sample_circuit_config.yaml"
+        interface_config_file: "sample_interface_config.yaml"
+        circuit_config_file: "sample_circuit_config.yaml"
         operation: "configure_interfaces"
         state: present
     
@@ -502,7 +760,7 @@ ansible-playbook playbook.yml
       graphiant.graphiant_playbooks.graphiant_sites:
         <<: *graphiant_client_params
         site_config_file: "configs/sample_site_attachments.yaml"
-        operation: "attach"
+        operation: "attach_object"
         state: present
 ```
 
@@ -547,6 +805,7 @@ The collection uses the same YAML configuration files as the standalone Graphian
 - `sample_global_ipfix_exporters.yaml`: Global IPFIX service configurations
 - `sample_global_vpn_profiles.yaml`: Global VPN profile configurations
 - `sample_site_attachments.yaml`: Site attachment configurations
+- `sample_sites.yaml`: Site creation and object attachment configurations
 
 ## Error Handling
 
@@ -556,6 +815,22 @@ The collection provides comprehensive error handling with user-friendly error me
 - Device not found errors
 - Authentication errors
 - File not found errors
+
+### **Parameter Validation Errors**
+
+When neither `operation` nor `state` parameters are provided, modules return helpful error messages with the list of supported operations:
+
+**Example Error Messages:**
+```
+Either 'operation' or 'state' parameter must be provided. 
+Supported operations: configure, deconfigure, configure_prefix_sets, deconfigure_prefix_sets, configure_bgp_filters, deconfigure_bgp_filters, configure_snmp_services, deconfigure_snmp_services, configure_syslog_services, deconfigure_syslog_services, configure_ipfix_services, deconfigure_ipfix_services, configure_vpn_profiles, deconfigure_vpn_profiles, configure_lan_segments, deconfigure_lan_segments
+```
+
+**Module-Specific Supported Operations:**
+- **graphiant_global_config**: configure, deconfigure, configure_prefix_sets, deconfigure_prefix_sets, configure_bgp_filters, deconfigure_bgp_filters, configure_snmp_services, deconfigure_snmp_services, configure_syslog_services, deconfigure_syslog_services, configure_ipfix_services, deconfigure_ipfix_services, configure_vpn_profiles, deconfigure_vpn_profiles, configure_lan_segments, deconfigure_lan_segments
+- **graphiant_interfaces**: configure_interfaces, deconfigure_interfaces, configure_lan_interfaces, deconfigure_lan_interfaces, configure_wan_circuits_interfaces, deconfigure_wan_circuits_interfaces, configure_circuits, deconfigure_circuits
+- **graphiant_sites**: configure, deconfigure, attach, detach
+- **graphiant_bgp**: configure, deconfigure, detach_policies
 
 ## Check Mode
 

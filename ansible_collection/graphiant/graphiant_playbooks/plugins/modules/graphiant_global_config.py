@@ -11,6 +11,7 @@ This module provides global configuration management capabilities including:
 - Syslog services management
 - IPFIX services management
 - VPN profiles management
+- LAN segments management
 """
 
 from ansible.module_utils.basic import AnsibleModule
@@ -19,6 +20,36 @@ from ansible_collections.graphiant.graphiant_playbooks.plugins.module_utils.grap
     handle_graphiant_exception,
     validate_config_file
 )
+from ansible_collections.graphiant.graphiant_playbooks.plugins.module_utils.logging_decorator import (
+    capture_library_logs
+)
+
+
+@capture_library_logs
+def execute_with_logging(module, func, *args, **kwargs):
+    """
+    Execute a function with optional detailed logging.
+
+    Args:
+        module: Ansible module instance
+        func: Function to execute
+        *args: Arguments to pass to the function
+        **kwargs: Keyword arguments to pass to the function
+
+    Returns:
+        dict: Result with 'changed' and 'result_msg' keys
+    """
+    # Extract success_msg from kwargs before passing to func
+    success_msg = kwargs.pop('success_msg', 'Operation completed successfully')
+
+    try:
+        func(*args, **kwargs)
+        return {
+            'changed': True,
+            'result_msg': success_msg
+        }
+    except Exception as e:
+        raise e
 
 
 def main():
@@ -34,7 +65,7 @@ def main():
         config_file=dict(type='str', required=True),
         operation=dict(
             type='str',
-            required=True,
+            required=False,
             choices=[
                 'configure',
                 'deconfigure',
@@ -49,7 +80,9 @@ def main():
                 'configure_ipfix_services',
                 'deconfigure_ipfix_services',
                 'configure_vpn_profiles',
-                'deconfigure_vpn_profiles'
+                'deconfigure_vpn_profiles',
+                'configure_lan_segments',
+                'deconfigure_lan_segments'
             ]
         ),
         state=dict(
@@ -57,6 +90,12 @@ def main():
             required=False,
             default='present',
             choices=['present', 'absent']
+        ),
+        detailed_logs=dict(
+            type='bool',
+            required=False,
+            default=False,
+            description='Enable detailed logging output from library operations'
         )
     )
 
@@ -68,8 +107,33 @@ def main():
 
     # Get parameters
     params = module.params
-    operation = params['operation']
+    operation = params.get('operation')
+    state = params.get('state', 'present')
     config_file = params['config_file']
+
+    # Validate that at least one of operation or state is provided
+    if not operation and not state:
+        supported_operations = [
+            'configure', 'deconfigure', 'configure_prefix_sets', 'deconfigure_prefix_sets',
+            'configure_bgp_filters', 'deconfigure_bgp_filters', 'configure_snmp_services',
+            'deconfigure_snmp_services', 'configure_syslog_services', 'deconfigure_syslog_services',
+            'configure_ipfix_services', 'deconfigure_ipfix_services', 'configure_vpn_profiles',
+            'deconfigure_vpn_profiles', 'configure_lan_segments', 'deconfigure_lan_segments'
+        ]
+        module.fail_json(
+            msg="Either 'operation' or 'state' parameter must be provided. "
+                f"Supported operations: {', '.join(supported_operations)}"
+        )
+
+    # If operation is not specified, use state to determine operation
+    if not operation:
+        if state == 'present':
+            operation = 'configure'
+        elif state == 'absent':
+            operation = 'deconfigure'
+
+    # If operation is specified, it takes precedence over state
+    # No additional mapping needed as operation is explicit
 
     # Validate configuration file
     if not validate_config_file(config_file):
@@ -96,74 +160,100 @@ def main():
         result_msg = ""
 
         if operation == 'configure':
-            edge.global_config.configure(config_file)
-            changed = True
-            result_msg = "Successfully configured all global objects"
+            result = execute_with_logging(module, edge.global_config.configure, config_file,
+                                          success_msg="Successfully configured all global objects")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'deconfigure':
-            edge.global_config.deconfigure(config_file)
-            changed = True
-            result_msg = "Successfully deconfigured all global objects"
+            result = execute_with_logging(module, edge.global_config.deconfigure, config_file,
+                                          success_msg="Successfully deconfigured all global objects")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'configure_prefix_sets':
-            edge.global_config.configure_prefix_sets(config_file)
-            changed = True
-            result_msg = "Successfully configured global prefix sets"
+            result = execute_with_logging(module, edge.global_config.configure_prefix_sets, config_file,
+                                          success_msg="Successfully configured global prefix sets")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'deconfigure_prefix_sets':
-            edge.global_config.deconfigure_prefix_sets(config_file)
-            changed = True
-            result_msg = "Successfully deconfigured global prefix sets"
+            result = execute_with_logging(module, edge.global_config.deconfigure_prefix_sets, config_file,
+                                          success_msg="Successfully deconfigured global prefix sets")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'configure_bgp_filters':
-            edge.global_config.configure_bgp_filters(config_file)
-            changed = True
-            result_msg = "Successfully configured global BGP filters"
+            result = execute_with_logging(module, edge.global_config.configure_bgp_filters, config_file,
+                                          success_msg="Successfully configured global BGP filters")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'deconfigure_bgp_filters':
-            edge.global_config.deconfigure_bgp_filters(config_file)
-            changed = True
-            result_msg = "Successfully deconfigured global BGP filters"
+            result = execute_with_logging(module, edge.global_config.deconfigure_bgp_filters, config_file,
+                                          success_msg="Successfully deconfigured global BGP filters")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'configure_snmp_services':
-            edge.global_config.configure_snmp_services(config_file)
-            changed = True
-            result_msg = "Successfully configured global SNMP services"
+            result = execute_with_logging(module, edge.global_config.configure_snmp_services, config_file,
+                                          success_msg="Successfully configured global SNMP services")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'deconfigure_snmp_services':
-            edge.global_config.deconfigure_snmp_services(config_file)
-            changed = True
-            result_msg = "Successfully deconfigured global SNMP services"
+            result = execute_with_logging(module, edge.global_config.deconfigure_snmp_services, config_file,
+                                          success_msg="Successfully deconfigured global SNMP services")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'configure_syslog_services':
-            edge.global_config.configure_syslog_services(config_file)
-            changed = True
-            result_msg = "Successfully configured global syslog services"
+            result = execute_with_logging(module, edge.global_config.configure_syslog_services, config_file,
+                                          success_msg="Successfully configured global syslog services")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'deconfigure_syslog_services':
-            edge.global_config.deconfigure_syslog_services(config_file)
-            changed = True
-            result_msg = "Successfully deconfigured global syslog services"
+            result = execute_with_logging(module, edge.global_config.deconfigure_syslog_services, config_file,
+                                          success_msg="Successfully deconfigured global syslog services")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'configure_ipfix_services':
-            edge.global_config.configure_ipfix_services(config_file)
-            changed = True
-            result_msg = "Successfully configured global IPFIX services"
+            result = execute_with_logging(module, edge.global_config.configure_ipfix_services, config_file,
+                                          success_msg="Successfully configured global IPFIX services")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'deconfigure_ipfix_services':
-            edge.global_config.deconfigure_ipfix_services(config_file)
-            changed = True
-            result_msg = "Successfully deconfigured global IPFIX services"
+            result = execute_with_logging(module, edge.global_config.deconfigure_ipfix_services, config_file,
+                                          success_msg="Successfully deconfigured global IPFIX services")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'configure_vpn_profiles':
-            edge.global_config.configure_vpn_profiles(config_file)
-            changed = True
-            result_msg = "Successfully configured global VPN profiles"
+            result = execute_with_logging(module, edge.global_config.configure_vpn_profiles, config_file,
+                                          success_msg="Successfully configured global VPN profiles")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'deconfigure_vpn_profiles':
-            edge.global_config.deconfigure_vpn_profiles(config_file)
-            changed = True
-            result_msg = "Successfully deconfigured global VPN profiles"
+            result = execute_with_logging(module, edge.global_config.deconfigure_vpn_profiles, config_file,
+                                          success_msg="Successfully deconfigured global VPN profiles")
+            changed = result['changed']
+            result_msg = result['result_msg']
+
+        elif operation == 'configure_lan_segments':
+            result = execute_with_logging(module, edge.global_config.configure_lan_segments, config_file,
+                                          success_msg="Successfully configured global LAN segments")
+            changed = result['changed']
+            result_msg = result['result_msg']
+
+        elif operation == 'deconfigure_lan_segments':
+            result = execute_with_logging(module, edge.global_config.deconfigure_lan_segments, config_file,
+                                          success_msg="Successfully deconfigured global LAN segments")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         # Return success
         module.exit_json(

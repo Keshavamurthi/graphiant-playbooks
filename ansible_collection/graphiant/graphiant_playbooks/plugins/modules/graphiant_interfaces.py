@@ -17,6 +17,36 @@ from ansible_collections.graphiant.graphiant_playbooks.plugins.module_utils.grap
     handle_graphiant_exception,
     validate_config_file
 )
+from ansible_collections.graphiant.graphiant_playbooks.plugins.module_utils.logging_decorator import (
+    capture_library_logs
+)
+
+
+@capture_library_logs
+def execute_with_logging(module, func, *args, **kwargs):
+    """
+    Execute a function with optional detailed logging.
+
+    Args:
+        module: Ansible module instance
+        func: Function to execute
+        *args: Arguments to pass to the function
+        **kwargs: Keyword arguments to pass to the function
+
+    Returns:
+        dict: Result with 'changed' and 'result_msg' keys
+    """
+    # Extract success_msg from kwargs before passing to func
+    success_msg = kwargs.pop('success_msg', 'Operation completed successfully')
+
+    try:
+        func(*args, **kwargs)
+        return {
+            'changed': True,
+            'result_msg': success_msg
+        }
+    except Exception as e:
+        raise e
 
 
 def main():
@@ -33,7 +63,7 @@ def main():
         circuit_config_file=dict(type='str', required=False, default=None),
         operation=dict(
             type='str',
-            required=True,
+            required=False,
             choices=[
                 'configure_interfaces',
                 'deconfigure_interfaces',
@@ -51,6 +81,12 @@ def main():
             required=False,
             default='present',
             choices=['present', 'absent']
+        ),
+        detailed_logs=dict(
+            type='bool',
+            required=False,
+            default=False,
+            description='Enable detailed logging output from library operations'
         )
     )
 
@@ -68,10 +104,33 @@ def main():
 
     # Get parameters
     params = module.params
-    operation = params['operation']
+    operation = params.get('operation')
+    state = params.get('state', 'present')
     interface_config_file = params['interface_config_file']
     circuit_config_file = params.get('circuit_config_file')
     circuits_only = params.get('circuits_only', False)
+
+    # Validate that at least one of operation or state is provided
+    if not operation and not state:
+        supported_operations = [
+            'configure_interfaces', 'deconfigure_interfaces', 'configure_lan_interfaces',
+            'deconfigure_lan_interfaces', 'configure_wan_circuits_interfaces',
+            'deconfigure_wan_circuits_interfaces', 'configure_circuits', 'deconfigure_circuits'
+        ]
+        module.fail_json(
+            msg="Either 'operation' or 'state' parameter must be provided. "
+                f"Supported operations: {', '.join(supported_operations)}"
+        )
+
+    # If operation is not specified, use state to determine operation
+    if not operation:
+        if state == 'present':
+            operation = 'configure_interfaces'
+        elif state == 'absent':
+            operation = 'deconfigure_interfaces'
+
+    # If operation is specified, it takes precedence over state
+    # No additional mapping needed as operation is explicit
 
     # Validate configuration files
     if not validate_config_file(interface_config_file):
@@ -104,45 +163,60 @@ def main():
         result_msg = ""
 
         if operation == 'configure_interfaces':
-            edge.interfaces.configure_interfaces(interface_config_file, circuit_config_file)
-            changed = True
-            result_msg = "Successfully configured all interfaces"
+            result = execute_with_logging(module, edge.interfaces.configure_interfaces,
+                                          interface_config_file, circuit_config_file,
+                                          success_msg="Successfully configured all interfaces")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'deconfigure_interfaces':
-            edge.interfaces.deconfigure_interfaces(interface_config_file, circuit_config_file, circuits_only)
-            changed = True
-            result_msg = "Successfully deconfigured all interfaces"
+            result = execute_with_logging(module, edge.interfaces.deconfigure_interfaces,
+                                          interface_config_file, circuit_config_file, circuits_only,
+                                          success_msg="Successfully deconfigured all interfaces")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'configure_lan_interfaces':
-            edge.interfaces.configure_lan_interfaces(interface_config_file)
-            changed = True
-            result_msg = "Successfully configured LAN interfaces"
+            result = execute_with_logging(module, edge.interfaces.configure_lan_interfaces,
+                                          interface_config_file,
+                                          success_msg="Successfully configured LAN interfaces")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'deconfigure_lan_interfaces':
-            edge.interfaces.deconfigure_lan_interfaces(interface_config_file)
-            changed = True
-            result_msg = "Successfully deconfigured LAN interfaces"
+            result = execute_with_logging(module, edge.interfaces.deconfigure_lan_interfaces,
+                                          interface_config_file,
+                                          success_msg="Successfully deconfigured LAN interfaces")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'configure_wan_circuits_interfaces':
-            edge.interfaces.configure_wan_circuits_interfaces(circuit_config_file, interface_config_file)
-            changed = True
-            result_msg = "Successfully configured WAN circuits and interfaces"
+            result = execute_with_logging(module, edge.interfaces.configure_wan_circuits_interfaces,
+                                          circuit_config_file, interface_config_file,
+                                          success_msg="Successfully configured WAN circuits and interfaces")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'deconfigure_wan_circuits_interfaces':
-            edge.interfaces.deconfigure_wan_circuits_interfaces(interface_config_file,
-                                                                circuit_config_file, circuits_only)
-            changed = True
-            result_msg = "Successfully deconfigured WAN circuits and interfaces"
+            result = execute_with_logging(module, edge.interfaces.deconfigure_wan_circuits_interfaces,
+                                          interface_config_file, circuit_config_file, circuits_only,
+                                          success_msg="Successfully deconfigured WAN circuits and interfaces")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'configure_circuits':
-            edge.interfaces.configure_circuits(circuit_config_file, interface_config_file)
-            changed = True
-            result_msg = "Successfully configured circuits"
+            result = execute_with_logging(module, edge.interfaces.configure_circuits,
+                                          circuit_config_file, interface_config_file,
+                                          success_msg="Successfully configured circuits")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         elif operation == 'deconfigure_circuits':
-            edge.interfaces.deconfigure_circuits(circuit_config_file, interface_config_file)
-            changed = True
-            result_msg = "Successfully deconfigured circuits"
+            result = execute_with_logging(module, edge.interfaces.deconfigure_circuits,
+                                          circuit_config_file, interface_config_file,
+                                          success_msg="Successfully deconfigured circuits")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         # Return success
         module.exit_json(

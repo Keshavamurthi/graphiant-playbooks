@@ -37,6 +37,24 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         enterprise_id = edge.edge_utils.get_enterprise_id()
         LOG.info(f"Enterprise ID: {enterprise_id}")
 
+    def test_configure_global_lan_segments(self):
+        """
+        Configure Global LAN Segments.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        # edge.global_config.configure_lan_segments("sample_lan_segments.yaml")
+        edge.global_config.configure("sample_lan_segments.yaml")
+
+    def test_deconfigure_global_lan_segments(self):
+        """
+        Deconfigure Global LAN Segments.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        # edge.global_config.deconfigure_lan_segments("sample_lan_segments.yaml")
+        edge.global_config.deconfigure("sample_lan_segments.yaml")
+
     def test_get_lan_segments(self):
         """
         Test login and fetch Lan segments.
@@ -45,6 +63,65 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         edge = Edge(base_url=base_url, username=username, password=password)
         lan_segments = edge.edge_utils.get_all_lan_segments()
         LOG.info(f"Lan Segments: {lan_segments}")
+
+    def test_configure_sites(self):
+        """
+        Create Sites (if site doesn't exist).
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.sites.configure_sites("sample_sites.yaml")
+
+    def test_deconfigure_sites(self):
+        """
+        Delete Sites (if site exists).
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.sites.deconfigure_sites("sample_sites.yaml")
+
+    def test_configure_sites_and_attach_objects(self):
+        """
+        Configure Sites: Create sites and attach global objects.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.sites.configure("sample_sites.yaml")
+
+    def test_get_sites_details(self):
+        """
+        Test getting detailed site information using v1/sites/details API.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        sites_details = edge.edge_utils.gsdk.get_sites_details()
+        LOG.info(f"Sites Details: {len(sites_details)} sites found")
+        for site in sites_details:
+            LOG.info(f"Site: {site.name} (ID: {site.id}, Edges: {site.edge_count}, Segments: {site.segment_count})")
+
+    def test_detach_objects_and_deconfigure_sites(self):
+        """
+        Deconfigure Sites: Detach global objects and delete sites.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.sites.deconfigure("sample_sites.yaml")
+
+    def test_attach_objects_to_sites(self):
+        """
+        Attach Objects: Attach global system objects to existing sites.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.sites.attach_objects("sample_sites.yaml")
+
+    def test_detach_objects_from_sites(self):
+        """
+        Detach Objects: Detach global system objects from sites.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.sites.detach_objects("sample_sites.yaml")
 
     def test_configure_wan_circuits_interfaces(self):
         """
@@ -130,7 +207,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.configure_prefix_sets(prefix_sets)
+        # edge.global_config.configure_prefix_sets("sample_global_prefix_lists.yaml")
         edge.global_config.configure("sample_global_prefix_lists.yaml")
 
     def test_deconfigure_global_config_prefix_lists(self):
@@ -139,7 +216,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.deconfigure_prefix_sets(prefix_sets)
+        # edge.global_config.deconfigure_prefix_sets("sample_global_prefix_lists.yaml")
         edge.global_config.deconfigure("sample_global_prefix_lists.yaml")
 
     def test_configure_global_config_bgp_filters(self):
@@ -148,7 +225,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.configure_bgp_filters(routing_policies)
+        # edge.global_config.configure_bgp_filters("sample_global_bgp_filters.yaml")
         edge.global_config.configure("sample_global_bgp_filters.yaml")
 
     def test_deconfigure_global_config_bgp_filters(self):
@@ -157,7 +234,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.deconfigure_bgp_filters(routing_policies)
+        # edge.global_config.deconfigure_bgp_filters("sample_global_bgp_filters.yaml")
         edge.global_config.deconfigure("sample_global_bgp_filters.yaml")
 
     def test_configure_bgp_peering(self):
@@ -190,7 +267,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.configure_snmp_services(snmp_services)
+        # edge.global_config.configure_snmp_services("sample_global_snmp_services.yaml")
         edge.global_config.configure("sample_global_snmp_services.yaml")
 
     def test_deconfigure_snmp_service(self):
@@ -199,7 +276,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.deconfigure_snmp_services(snmp_services)
+        # edge.global_config.deconfigure_snmp_services("sample_global_snmp_services.yaml")
         edge.global_config.deconfigure("sample_global_snmp_services.yaml")
 
     def test_configure_syslog_service(self):
@@ -208,7 +285,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.configure_syslog_services(syslog_services)
+        # edge.global_config.configure_syslog_services("sample_global_syslog_servers.yaml")
         edge.global_config.configure("sample_global_syslog_servers.yaml")
 
     def test_deconfigure_syslog_service(self):
@@ -217,7 +294,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.deconfigure_syslog_services(syslog_services)
+        # edge.global_config.deconfigure_syslog_services(("sample_global_syslog_servers.yaml")
         edge.global_config.deconfigure("sample_global_syslog_servers.yaml")
 
     def test_configure_ipfix_service(self):
@@ -226,7 +303,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.configure_ipfix_services(ipfix_services)
+        # edge.global_config.configure_ipfix_services("sample_global_ipfix_exporters.yaml")
         edge.global_config.configure("sample_global_ipfix_exporters.yaml")
 
     def test_deconfigure_ipfix_service(self):
@@ -235,7 +312,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.deconfigure_ipfix_services(ipfix_services)
+        # edge.global_config.deconfigure_ipfix_services("sample_global_ipfix_exporters.yaml")
         edge.global_config.deconfigure("sample_global_ipfix_exporters.yaml")
 
     def test_configure_vpn_profiles(self):
@@ -244,7 +321,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.configure_vpn_profiles(vpn_profiles)
+        # edge.global_config.configure_vpn_profiles("sample_global_vpn_profiles.yaml")
         edge.global_config.configure("sample_global_vpn_profiles.yaml")
 
     def test_deconfigure_vpn_profiles(self):
@@ -253,7 +330,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        # edge.global_config.deconfigure_vpn_profiles(vpn_profiles)
+        # edge.global_config.deconfigure_vpn_profiles("sample_global_vpn_profiles.yaml")
         edge.global_config.deconfigure("sample_global_vpn_profiles.yaml")
 
     def test_attach_global_system_objects_to_site(self):
@@ -278,8 +355,30 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(TestGraphiantPlaybooks('test_get_login_token'))
     suite.addTest(TestGraphiantPlaybooks('test_get_enterprise_id'))
+
+    # LAN Segments Management Tests
     suite.addTest(TestGraphiantPlaybooks('test_get_lan_segments'))
-    suite.addTest(TestGraphiantPlaybooks('test_configure_global_config_prefix_lists'))
+    suite.addTest(TestGraphiantPlaybooks('test_configure_global_lan_segments'))
+    suite.addTest(TestGraphiantPlaybooks('test_configure_global_lan_segments'))
+    suite.addTest(TestGraphiantPlaybooks('test_get_lan_segments'))
+    suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_lan_segments'))
+    suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_lan_segments'))
+    suite.addTest(TestGraphiantPlaybooks('test_get_lan_segments'))
+
+    # Site Management Tests
+    suite.addTest(TestGraphiantPlaybooks('test_get_sites_details'))
+    suite.addTest(TestGraphiantPlaybooks('test_configure_sites'))
+    suite.addTest(TestGraphiantPlaybooks('test_get_sites_details'))
+
+    suite.addTest(TestGraphiantPlaybooks('test_configure_global_lan_segments'))  # Pre-req: Create Lan segments.
+    suite.addTest(TestGraphiantPlaybooks('test_configure_snmp_service'))  # Pre-req: SNMP system object.
+
+    suite.addTest(TestGraphiantPlaybooks('test_attach_objects_to_sites'))
+    suite.addTest(TestGraphiantPlaybooks('test_configure_sites_and_attach_objects'))
+    suite.addTest(TestGraphiantPlaybooks('test_detach_objects_from_sites'))
+    suite.addTest(TestGraphiantPlaybooks('test_detach_objects_and_deconfigure_sites'))
+    suite.addTest(TestGraphiantPlaybooks('test_deconfigure_sites'))
+    suite.addTest(TestGraphiantPlaybooks('test_get_sites_details'))
 
     '''
     # Interface Management

@@ -5,7 +5,7 @@ site_attachments:
         - name: syslog-global-test
           interface: GigabitEthernet7/0/0.18
       snmp_servers:
-        - snmp-global-test-noauth
+        - snmp-global-test-authpriv
       ipfix_exporters:
         - name: ipfix-global-test
           interface: GigabitEthernet7/0/0.18

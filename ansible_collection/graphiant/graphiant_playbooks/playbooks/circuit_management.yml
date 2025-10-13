@@ -17,8 +17,8 @@
     - name: Configure circuits only (for static routes)
       graphiant.graphiant_playbooks.graphiant_interfaces:
         <<: *graphiant_client_params
-        interface_config_file: "configs/sample_interface_config.yaml"
-        circuit_config_file: "configs/sample_circuit_config.yaml"
+        interface_config_file: "sample_interface_config.yaml"
+        circuit_config_file: "sample_circuit_config.yaml"
         operation: "configure_circuits"
         state: present
       tags: ['circuits', 'static_routes']
@@ -26,8 +26,8 @@
     - name: Deconfigure circuits only (removes static routes)
       graphiant.graphiant_playbooks.graphiant_interfaces:
         <<: *graphiant_client_params
-        interface_config_file: "configs/sample_interface_config.yaml"
-        circuit_config_file: "configs/sample_circuit_config.yaml"
+        interface_config_file: "sample_interface_config.yaml"
+        circuit_config_file: "sample_circuit_config.yaml"
         operation: "deconfigure_circuits"
         state: absent
       when: circuit_cleanup is defined and circuit_cleanup

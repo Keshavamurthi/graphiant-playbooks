@@ -3,7 +3,7 @@ snmps:
   - name: snmp-global-test-noauth
     v3Enabled: true
     engineEndpoints:
-      - lanSegment: lan-7-test
+      - lanSegment: lan-segment-3
     usmLocalUsers:
       - name: v3_noauth
     vacmGroups:
