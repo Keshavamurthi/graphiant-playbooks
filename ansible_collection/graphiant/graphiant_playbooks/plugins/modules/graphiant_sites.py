@@ -16,6 +16,36 @@ from ansible_collections.graphiant.graphiant_playbooks.plugins.module_utils.grap
     handle_graphiant_exception,
     validate_config_file
 )
+from ansible_collections.graphiant.graphiant_playbooks.plugins.module_utils.logging_decorator import (
+    capture_library_logs
+)
+
+
+@capture_library_logs
+def execute_with_logging(module, func, *args, **kwargs):
+    """
+    Execute a function with optional detailed logging.
+
+    Args:
+        module: Ansible module instance
+        func: Function to execute
+        *args: Arguments to pass to the function
+        **kwargs: Keyword arguments to pass to the function
+
+    Returns:
+        dict: Result with 'changed' and 'result_msg' keys
+    """
+    # Extract success_msg from kwargs before passing to func
+    success_msg = kwargs.pop('success_msg', 'Operation completed successfully')
+
+    try:
+        func(*args, **kwargs)
+        return {
+            'changed': True,
+            'result_msg': success_msg
+        }
+    except Exception as e:
+        raise e
 
 
 def main():
@@ -31,12 +61,14 @@ def main():
         site_config_file=dict(type='str', required=True),
         operation=dict(
             type='str',
-            required=True,
+            required=False,
             choices=[
                 'configure',
                 'deconfigure',
-                'attach',
-                'detach'
+                'configure_sites',
+                'deconfigure_sites',
+                'attach_objects',
+                'detach_objects'
             ]
         ),
         state=dict(
@@ -44,6 +76,12 @@ def main():
             required=False,
             default='present',
             choices=['present', 'absent']
+        ),
+        detailed_logs=dict(
+            type='bool',
+            required=False,
+            default=False,
+            description='Enable detailed logging output from library operations'
         )
     )
 
@@ -55,8 +93,28 @@ def main():
 
     # Get parameters
     params = module.params
-    operation = params['operation']
+    operation = params.get('operation')
+    state = params.get('state', 'present')
     site_config_file = params['site_config_file']
+
+    # Validate that at least one of operation or state is provided
+    if not operation and not state:
+        supported_operations = ['configure', 'deconfigure', 'configure_sites', 'deconfigure_sites',
+                                'attach_objects', 'detach_objects']
+        module.fail_json(
+            msg="Either 'operation' or 'state' parameter must be provided. "
+                f"Supported operations: {', '.join(supported_operations)}"
+        )
+
+    # If operation is not specified, use state to determine operation
+    if not operation:
+        if state == 'present':
+            operation = 'configure'
+        elif state == 'absent':
+            operation = 'deconfigure'
+
+    # If operation is specified, it takes precedence over state
+    # No additional mapping needed as operation is explicit
 
     # Validate configuration file
     if not validate_config_file(site_config_file):
@@ -82,15 +140,41 @@ def main():
         changed = False
         result_msg = ""
 
-        if operation in ['configure', 'attach']:
-            edge.sites.configure(site_config_file)
-            changed = True
-            result_msg = "Successfully attached global system objects to sites"
+        if operation == 'configure':
+            result = execute_with_logging(module, edge.sites.configure, site_config_file,
+                                          success_msg="Successfully configured (created sites and attached objects)")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
-        elif operation in ['deconfigure', 'detach']:
-            edge.sites.deconfigure(site_config_file)
-            changed = True
-            result_msg = "Successfully detached global system objects from sites"
+        elif operation == 'deconfigure':
+            result = execute_with_logging(module, edge.sites.deconfigure, site_config_file,
+                                          success_msg="Successfully deconfigured (detached objects and deleted sites)")
+            changed = result['changed']
+            result_msg = result['result_msg']
+
+        elif operation == 'configure_sites':
+            result = execute_with_logging(module, edge.sites.configure_sites, site_config_file,
+                                          success_msg="Successfully created sites")
+            changed = result['changed']
+            result_msg = result['result_msg']
+
+        elif operation == 'deconfigure_sites':
+            result = execute_with_logging(module, edge.sites.deconfigure_sites, site_config_file,
+                                          success_msg="Successfully deleted sites")
+            changed = result['changed']
+            result_msg = result['result_msg']
+
+        elif operation.lower().startswith('attach'):
+            result = execute_with_logging(module, edge.sites.attach_objects, site_config_file,
+                                          success_msg="Successfully attached global system objects to sites")
+            changed = result['changed']
+            result_msg = result['result_msg']
+
+        elif operation.lower().startswith('detach'):
+            result = execute_with_logging(module, edge.sites.detach_objects, site_config_file,
+                                          success_msg="Successfully detached global system objects from sites")
+            changed = result['changed']
+            result_msg = result['result_msg']
 
         # Return success
         module.exit_json(

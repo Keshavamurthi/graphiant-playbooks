@@ -13,7 +13,7 @@
         host: "{{ graphiant_host }}"
         username: "{{ graphiant_username }}"
         password: "{{ graphiant_password }}"
-        config_file: "configs/sample_global_prefix_lists.yaml"
+        config_file: "sample_global_prefix_lists.yaml"
         operation: "configure"
         state: present
       check_mode: true
@@ -24,7 +24,7 @@
         host: "{{ graphiant_host }}"
         username: "{{ graphiant_username }}"
         password: "{{ graphiant_password }}"
-        bgp_config_file: "configs/sample_bgp_peering.yaml"
+        bgp_config_file: "sample_bgp_peering.yaml"
         operation: "configure"
         state: present
       check_mode: true
@@ -35,8 +35,8 @@
         host: "{{ graphiant_host }}"
         username: "{{ graphiant_username }}"
         password: "{{ graphiant_password }}"
-        interface_config_file: "configs/sample_interface_config.yaml"
-        circuit_config_file: "configs/sample_circuit_config.yaml"
+        interface_config_file: "sample_interface_config.yaml"
+        circuit_config_file: "sample_circuit_config.yaml"
         operation: "configure_interfaces"
         state: present
       check_mode: true
@@ -47,7 +47,7 @@
         host: "{{ graphiant_host }}"
         username: "{{ graphiant_username }}"
         password: "{{ graphiant_password }}"
-        site_config_file: "configs/sample_site_attachments.yaml"
+        site_config_file: "sample_site_attachments.yaml"
         operation: "attach"
         state: present
       check_mode: true

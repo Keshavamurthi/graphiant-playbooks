@@ -584,6 +584,57 @@ edge.interfaces.deconfigure_interfaces(
 
 ### Step 4: Global Object Configurations
 
+**Note:** Global configurations can be managed using either:
+- **General methods**: `configure()` and `deconfigure()` - automatically detects and processes all configuration types in the YAML file
+- **Specific methods**: `configure_*()` and `deconfigure_*()` - processes only the specific configuration type
+
+#### Global Config LAN Segments
+```sh
+# Configure global LAN segments (using general configure method)
+edge.global_config.configure("sample_lan_segments.yaml")
+
+# Deconfigure global LAN segments (using general deconfigure method)
+edge.global_config.deconfigure("sample_lan_segments.yaml")
+
+# Alternative: Configure global LAN segments (using specific method)
+# edge.global_config.configure_lan_segments("sample_lan_segments.yaml")
+
+# Alternative: Deconfigure global LAN segments (using specific method)
+# edge.global_config.deconfigure_lan_segments("sample_lan_segments.yaml")
+```
+
+### Step 4.1: Detailed Logging in Ansible
+
+When using Ansible modules, you can enable detailed logging to see the same comprehensive output as the library:
+
+```yaml
+# Basic usage (no detailed logs)
+- name: Configure global LAN segments
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    config_file: "sample_lan_segments.yaml"
+    operation: "configure_lan_segments"
+    detailed_logs: false  # Default
+
+# Detailed usage (with comprehensive logs)
+- name: Configure global LAN segments (with detailed logs)
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    config_file: "sample_lan_segments.yaml"
+    operation: "configure_lan_segments"
+    detailed_logs: true  # Enable detailed logging
+```
+
+**Detailed logging shows:**
+- API call details and responses
+- Configuration processing steps
+- Success/failure messages for each operation
+- Debugging information for troubleshooting
+
 #### Global Config Prefix Lists
 ```sh
 # Configure global prefix sets
@@ -638,7 +689,36 @@ edge.global_config.configure("sample_global_vpn_profiles.yaml")
 edge.global_config.deconfigure("sample_global_vpn_profiles.yaml")
 ```
 
-### Step 5: BGP Peering Neighbors Configurations
+### Step 5: Site Management
+
+#### Site Creation and Object Attachment
+```sh
+# Configure sites (create sites and attach global objects)
+edge.sites.configure("sample_sites.yaml")
+
+# Deconfigure sites (detach objects and delete sites)
+edge.sites.deconfigure("sample_sites.yaml")
+```
+
+#### Site-Only Operations
+```sh
+# Create sites only
+edge.sites.configure_sites("sample_sites.yaml")
+
+# Delete sites only
+edge.sites.deconfigure_sites("sample_sites.yaml")
+```
+
+#### Object Attachment Operations
+```sh
+# Attach global objects to existing sites
+edge.sites.attach_objects("sample_sites.yaml")
+
+# Detach global objects from sites
+edge.sites.detach_objects("sample_sites.yaml")
+```
+
+### Step 6: BGP Peering Neighbors Configurations
 
 #### Configure BGP Peering and Attach Global Config BGP Filters
 ```sh
@@ -662,19 +742,31 @@ edge.bgp.deconfigure("sample_bgp_peering.yaml")
 
 #### Attach Global System Objects to Sites
 ```sh
-edge.sites.manage_global_system_objects_on_site("sample_site_attachments.yaml", "attach")
+edge.sites.attach_objects("sample_sites.yaml")
 ```
 
 #### Detach Global System Objects from Sites
 ```sh
-edge.sites.manage_global_system_objects_on_site("sample_site_attachments.yaml", "detach")
+edge.sites.detach_objects("sample_sites.yaml")
 ```
 
 **Configuration Format:**
-The `sample_site_attachments.yaml` uses a simple, user-friendly format:
+The `sample_sites.yaml` uses a combined format for both sites and object attachments:
 ```yaml
+sites:
+  - name: "UAT-Site1"
+    location:
+      addressLine1: "Zanker Rd, San Jose, CA, USA"
+      latitude: 37.3997071
+      longitude: -121.9325338
+      city: "San Jose"
+      state: "California"
+      stateCode: "CA"
+      country: "United States"
+      countryCode: "US"
+
 site_attachments:
-  - San Jose-sdktest:
+  - UAT-Site1:
       syslogServers:
         - syslog-global-test
       snmpServers:
@@ -683,7 +775,7 @@ site_attachments:
         - ipfix-global-test
 ```
 
-**Note:** Just specify the object names in simple lists. The system automatically converts them to the proper API format with "Attach" or "Detach" operations based on the function parameter.
+**Note:** The `configure` and `deconfigure` methods automatically handle both site creation and object attachment/detachment based on the keys present in the YAML file.
 
 ## 📚 API Reference
 
@@ -792,6 +884,9 @@ edge.global_config.configure("configs/sample_global_ipfix_exporters.yaml")
 
 # VPN Profiles
 edge.global_config.configure("configs/sample_global_vpn_profiles.yaml")
+
+# LAN Segments
+edge.global_config.configure("configs/sample_lan_segments.yaml")
 ```
 
 ### BGP Peering Management
@@ -810,17 +905,23 @@ edge.bgp.deconfigure("configs/sample_bgp_peering.yaml")
 ### Site Management
 
 ```python
-# Attach global system objects to sites
-edge.sites.manage_global_system_objects_on_site(
-    "configs/sample_site_attachments.yaml", 
-    "attach"
-)
+# Configure sites (create sites and attach objects)
+edge.sites.configure("sample_sites.yaml")
 
-# Detach global system objects from sites
-edge.sites.manage_global_system_objects_on_site(
-    "configs/sample_site_attachments.yaml", 
-    "detach"
-)
+# Deconfigure sites (detach objects and delete sites)
+edge.sites.deconfigure("sample_sites.yaml")
+
+# Create sites only
+edge.sites.configure_sites("sample_sites.yaml")
+
+# Delete sites only
+edge.sites.deconfigure_sites("sample_sites.yaml")
+
+# Attach objects to existing sites
+edge.sites.attach_objects("sample_sites.yaml")
+
+# Detach objects from sites
+edge.sites.detach_objects("sample_sites.yaml")
 ```
 
 ### Utility Functions

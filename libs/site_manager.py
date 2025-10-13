@@ -23,29 +23,197 @@ class SiteManager(BaseManager):
 
     def configure(self, config_yaml_file: str) -> None:
         """
-        Attach global system objects to sites.
+        Configure sites: create sites and attach global system objects.
 
         Args:
-            config_yaml_file: Path to the YAML file containing site attachment configurations
+            config_yaml_file: Path to the YAML file containing site configurations
 
         Raises:
             ConfigurationError: If configuration processing fails
             SiteNotFoundError: If any site cannot be found
             ValidationError: If configuration data is invalid
         """
+        # Step 1: Create sites if they don't exist
+        self._manage_sites(config_yaml_file, operation="create")
+
+        # Step 2: Attach global objects to sites
         self._manage_site_objects(config_yaml_file, operation="attach")
 
     def deconfigure(self, config_yaml_file: str) -> None:
+        """
+        Deconfigure sites: detach global system objects and delete sites.
+
+        Args:
+            config_yaml_file: Path to the YAML file containing site configurations
+
+        Raises:
+            ConfigurationError: If configuration processing fails
+            SiteNotFoundError: If any site cannot be found
+            ValidationError: If configuration data is invalid
+        """
+        # Step 1: Detach global objects from sites
+        self._manage_site_objects(config_yaml_file, operation="detach")
+
+        # Step 2: Delete sites
+        self._manage_sites(config_yaml_file, operation="delete")
+
+    def configure_sites(self, config_yaml_file: str) -> None:
+        """
+        Create sites (idempotent - only creates if site doesn't exist).
+
+        Args:
+            config_yaml_file: Path to the YAML file containing site configurations
+
+        Raises:
+            ConfigurationError: If configuration processing fails
+            ValidationError: If configuration data is invalid
+        """
+        self._manage_sites(config_yaml_file, operation="create")
+
+    def deconfigure_sites(self, config_yaml_file: str) -> None:
+        """
+        Delete sites (idempotent - only deletes if site exists).
+
+        Args:
+            config_yaml_file: Path to the YAML file containing site configurations
+
+        Raises:
+            ConfigurationError: If configuration processing fails
+            ValidationError: If configuration data is invalid
+        """
+        self._manage_sites(config_yaml_file, operation="delete")
+
+    def _manage_sites(self, config_yaml_file: str, operation: str) -> None:
+        """
+        Manage sites (create or delete).
+
+        Args:
+            config_yaml_file: Path to the YAML file containing site configurations
+            operation: Operation to perform - "create" or "delete"
+
+        Raises:
+            ConfigurationError: If configuration processing fails
+            ValidationError: If configuration data is invalid
+        """
+        try:
+            config_data = self.render_config_file(config_yaml_file)
+
+            if 'sites' not in config_data:
+                LOG.info(f"No sites configuration found in {config_yaml_file}, skipping site {operation}")
+                return
+
+            processed_sites = 0
+
+            for site_config in config_data.get('sites'):
+                try:
+                    site_name = site_config.get('name')
+                    if not site_name:
+                        raise ValidationError("Site configuration must include 'name' field")
+
+                    if operation == "create":
+                        self._create_site_if_not_exists(site_config)
+                    elif operation == "delete":
+                        self._delete_site_if_exists(site_name)
+
+                    processed_sites += 1
+                    LOG.info(f"Successfully {operation}d site: {site_name}")
+
+                except Exception as e:
+                    LOG.error(f"Error {operation}ing site '{site_name}': {str(e)}")
+                    raise ConfigurationError(f"Failed to {operation} site {site_name}: {str(e)}")
+
+            LOG.info(f"Successfully {operation}d {processed_sites} sites")
+
+        except Exception as e:
+            LOG.error(f"Error in site {operation} operation: {str(e)}")
+            raise ConfigurationError(f"Site {operation} operation failed: {str(e)}")
+
+    def _create_site_if_not_exists(self, site_config: dict) -> None:
+        """
+        Create a site if it doesn't already exist (idempotent).
+
+        Args:
+            site_config: Site configuration dictionary
+
+        Raises:
+            ConfigurationError: If site creation fails
+        """
+        site_name = site_config.get('name')
+
+        # Check if site already exists using v1/sites/details
+        if self.gsdk.site_exists(site_name):
+            existing_site_id = self.gsdk.get_site_id(site_name)
+            LOG.info(f"Site '{site_name}' already exists with ID: {existing_site_id}, skipping creation")
+            return
+
+        try:
+            # Prepare site data for creation (simple site creation only)
+            site_data = {
+                "site": {
+                    "name": site_name,
+                    "location": site_config.get('location', {})
+                }
+            }
+
+            # Create the site
+            created_site = self.gsdk.create_site(site_data)
+            LOG.info(f"Successfully created site '{site_name}' with ID: {created_site.id}")
+
+        except Exception as e:
+            error_msg = str(e)
+            # Handle "already exists" errors gracefully
+            if "already exists" in error_msg.lower() or "already created" in error_msg.lower():
+                LOG.info(f"Site '{site_name}' already exists, skipping creation: {error_msg}")
+                return
+            else:
+                LOG.error(f"Failed to create site '{site_name}': {error_msg}")
+                raise ConfigurationError(f"Site creation failed for {site_name}: {error_msg}")
+
+    def _delete_site_if_exists(self, site_name: str) -> None:
+        """
+        Delete a site if it exists (idempotent).
+
+        Args:
+            site_name: Name of the site to delete
+
+        Raises:
+            ConfigurationError: If site deletion fails
+        """
+        try:
+            # Check if site exists using v1/sites/details
+            if not self.gsdk.site_exists(site_name):
+                LOG.info(f"Site '{site_name}' does not exist, skipping deletion")
+                return
+
+            # Get site ID for deletion
+            site_id = self.gsdk.get_site_id(site_name)
+
+            # Delete the site
+            success = self.gsdk.delete_site(site_id)
+            if success:
+                LOG.info(f"Successfully deleted site '{site_name}' with ID: {site_id}")
+            else:
+                raise ConfigurationError(f"Failed to delete site '{site_name}' with ID: {site_id}")
+
+        except Exception as e:
+            LOG.error(f"Failed to delete site '{site_name}': {str(e)}")
+            raise ConfigurationError(f"Site deletion failed for {site_name}: {str(e)}")
+
+    def attach_objects(self, config_yaml_file: str) -> None:
+        """
+        Attach global system objects to sites.
+
+        Args:
+            config_yaml_file: Path to the YAML file containing site attachment configurations
+        """
+        self._manage_site_objects(config_yaml_file, operation="attach")
+
+    def detach_objects(self, config_yaml_file: str) -> None:
         """
         Detach global system objects from sites.
 
         Args:
             config_yaml_file: Path to the YAML file containing site attachment configurations
-
-        Raises:
-            ConfigurationError: If configuration processing fails
-            SiteNotFoundError: If any site cannot be found
-            ValidationError: If configuration data is invalid
         """
         self._manage_site_objects(config_yaml_file, operation="detach")
 
@@ -66,10 +234,10 @@ class SiteManager(BaseManager):
             config_data = self.render_config_file(config_yaml_file)
 
             if 'site_attachments' not in config_data:
-                LOG.warning(f"No site attachments configuration found in {config_yaml_file}")
+                LOG.info(f"No site attachments configuration found in {config_yaml_file}, skipping object {operation}")
                 return
 
-            default_operation = 'Attach' if operation.lower() == "attach" else 'Detach'
+            default_operation = 'Attach' if operation.lower().startswith("attach") else 'Detach'
             processed_sites = 0
 
             for site_config in config_data.get('site_attachments'):
@@ -103,16 +271,34 @@ class SiteManager(BaseManager):
                     self.gsdk.post_site_config(site_id=site_id, site_config=site_payload)
                     processed_sites += 1
 
-                    LOG.info(f"Successfully {operation.lower()}ed global objects for site: {site_name} (ID: {site_id})")
+                    LOG.info(f"Successfully {default_operation.lower()} global objects "
+                             f"for site: {site_name} (ID: {site_id})")
 
                 except SiteNotFoundError:
                     LOG.error(f"Site '{site_name}' not found, skipping {operation} operation")
                     raise
                 except Exception as e:
-                    LOG.error(f"Error {operation.lower()}ing objects for site '{site_name}': {str(e)}")
-                    raise ConfigurationError(f"Failed to {operation.lower()} objects for {site_name}: {str(e)}")
+                    error_msg = str(e)
+                    # Handle "already attached" errors gracefully
+                    if operation.lower().startswith("attach") and (
+                          "already attached" in error_msg.lower() or "already exists" in error_msg.lower()):
+                        LOG.info(f"Object already {default_operation.lower()}ed to site '{site_name}', "
+                                 f"skipping: {error_msg}")
+                        processed_sites += 1
+                        continue
+                    # Handle "already detached","not attached" and "not found" errors gracefully for detach operations
+                    elif operation.lower().startswith("detach") and (
+                      "already detached" in error_msg.lower() or
+                      "not attached" in error_msg.lower() or "not found" in error_msg.lower()):
+                        LOG.info(f"Object not attached to site '{site_name}', "
+                                 f"skipping {default_operation.lower()}: {error_msg}")
+                        processed_sites += 1
+                        continue
+                    else:
+                        LOG.error(f"Error {default_operation.lower()}ing objects for site '{site_name}': {error_msg}")
+                        raise ConfigurationError(f"Failed to {operation.lower()} objects for {site_name}: {error_msg}")
 
-            LOG.info(f"Successfully {operation.lower()}ed global objects for {processed_sites} sites")
+            LOG.info(f"Successfully {default_operation.lower()}ed global objects for {processed_sites} sites")
 
         except Exception as e:
             LOG.error(f"Error in site {operation} operation: {str(e)}")
@@ -179,32 +365,3 @@ class SiteManager(BaseManager):
                     "interface": interface
                 }
             }
-
-    def attach_objects(self, config_yaml_file: str) -> None:
-        """
-        Attach global system objects to sites.
-
-        Args:
-            config_yaml_file: Path to the YAML file containing site attachment configurations
-        """
-        self._manage_site_objects(config_yaml_file, operation="attach")
-
-    def detach_objects(self, config_yaml_file: str) -> None:
-        """
-        Detach global system objects from sites.
-
-        Args:
-            config_yaml_file: Path to the YAML file containing site attachment configurations
-        """
-        self._manage_site_objects(config_yaml_file, operation="detach")
-
-    # Backward compatibility methods
-    def manage_global_system_objects_on_site(self, config_yaml_file: str, operation: str = "attach") -> None:
-        """
-        Manage global system objects on sites (attach or detach).
-
-        Args:
-            config_yaml_file: Path to the YAML file containing site management definitions
-            operation: Operation to perform - "attach" or "detach". Defaults to "attach"
-        """
-        self._manage_site_objects(config_yaml_file, operation)

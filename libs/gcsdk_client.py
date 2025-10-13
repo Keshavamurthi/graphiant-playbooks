@@ -74,21 +74,6 @@ class GraphiantPortalClient():
                     return edge_info
         return response.edges_summary
 
-    def get_global_lan_segments(self):
-        """
-        Get all edges summary from GCS.
-
-        Args:
-            device_id (int, optional): The device ID to filter edges.
-            If not provided, returns all edges.
-
-        Returns:
-            list or dict: A list of all edges info if no device_id is provided,
-            or a single edge's information if a device_id is provided.
-        """
-        response = self.api.v1_global_lan_segments_get(authorization=self.bearer_token)
-        return response.entries
-
     @poller(timeout=90, wait=5)
     def verify_device_portal_status(self, device_id: int):
         """
@@ -301,7 +286,7 @@ class GraphiantPortalClient():
 
     def get_site_id(self, site_name: str):
         """
-        Get site ID by site name.
+        Get site ID by site name using v1/sites/details API.
 
         Args:
             site_name (str): The name of the site.
@@ -310,10 +295,10 @@ class GraphiantPortalClient():
             int or None: The site ID if found, None otherwise.
         """
         try:
-            # Get all sites
-            response = self.api.v1_sites_get(authorization=self.bearer_token)
+            # Get detailed site information using v1/sites/details
+            response = self.api.v1_sites_details_get(authorization=self.bearer_token)
             sites = response.sites
-            LOG.debug(f"get_site_id: Looking for site '{site_name}' in {len(sites)} sites")
+            LOG.debug(f"get_site_id: Looking for site '{site_name}' in {len(sites)} sites using v1/sites/details")
             for site in sites:
                 if site.name == site_name:
                     LOG.debug(f"get_site_id: Found site '{site_name}' with ID {site.id}")
@@ -323,3 +308,160 @@ class GraphiantPortalClient():
         except ApiException as e:
             LOG.error(f"get_site_id: Got Exception while getting site ID for {site_name}: {e}")
             return None
+
+    def create_site(self, site_data: dict):
+        """
+        Create a new site.
+
+        Args:
+            site_data (dict): The site data containing name, location, etc.
+
+        Returns:
+            dict: The created site information
+
+        Raises:
+            ApiException: If the API call fails.
+        """
+        try:
+            LOG.info(f"create_site: Creating site with data: {json.dumps(site_data, indent=2)}")
+            response = self.api.v1_sites_post(
+                authorization=self.bearer_token,
+                v1_sites_post_request=site_data
+            )
+            LOG.info(f"create_site: Successfully created site with ID: {response.site.id}")
+            return response.site
+        except ApiException as e:
+            LOG.error(f"create_site: Got Exception while creating site: {e}")
+            raise e
+
+    def delete_site(self, site_id: int):
+        """
+        Delete a site.
+
+        Args:
+            site_id (int): The ID of the site to delete
+
+        Returns:
+            bool: True if deletion was successful, False otherwise
+        """
+        try:
+            LOG.info(f"delete_site: Deleting site with ID: {site_id}")
+            self.api.v1_sites_site_id_delete(
+                authorization=self.bearer_token,
+                site_id=site_id
+            )
+            LOG.info(f"delete_site: Successfully deleted site with ID: {site_id}")
+            return True
+        except ApiException as e:
+            LOG.error(f"delete_site: Got Exception while deleting site {site_id}: {e}")
+            return False
+
+    def get_sites_details(self):
+        """
+        Get detailed information about all sites using v1/sites/details API.
+
+        Returns:
+            list: List of site details
+        """
+        try:
+            response = self.api.v1_sites_details_get(authorization=self.bearer_token)
+            LOG.debug(f"get_sites_details: Retrieved {len(response.sites)} sites using v1/sites/details")
+            return response.sites
+        except ApiException as e:
+            LOG.error(f"get_sites_details: Got Exception while getting sites details: {e}")
+            return []
+
+    def site_exists(self, site_name: str) -> bool:
+        """
+        Check if a site exists using v1/sites/details API.
+
+        Args:
+            site_name (str): The name of the site to check.
+
+        Returns:
+            bool: True if site exists, False otherwise.
+        """
+        try:
+            site_id = self.get_site_id(site_name)
+            return site_id is not None
+        except Exception as e:
+            LOG.error(f"site_exists: Got Exception while checking if site '{site_name}' exists: {e}")
+            return False
+
+    def get_global_lan_segments(self):
+        """
+        Get all global LAN segments.
+
+        Returns:
+            list: List of global LAN segments
+        """
+        try:
+            response = self.api.v1_global_lan_segments_get(authorization=self.bearer_token)
+            LOG.debug(f"get_global_lan_segments: {response}")
+            # Ensure we always return a list, even if entries is None
+            if hasattr(response, 'entries') and response.entries is not None:
+                return response.entries
+            else:
+                LOG.info("get_global_lan_segments: No LAN segments found or entries is None")
+                return []
+        except ApiException as e:
+            LOG.error(f"get_global_lan_segments: Got Exception while getting LAN segments: {e}")
+            return []
+
+    def post_global_lan_segments(self, name: str, description: str = ""):
+        """
+        Create a global LAN segment.
+
+        Args:
+            name (str): Name of the LAN segment
+            description (str): Description of the LAN segment
+
+        Returns:
+            dict: Response containing the created LAN segment ID
+        """
+        try:
+            post_lan_segments_request = graphiant_sdk.V1GlobalLanSegmentsPostRequest(
+                name=name,
+                description=description
+            )
+            LOG.info(f"post_global_lan_segments: Creating LAN segment '{name}' with description '{description}'")
+            response = self.api.v1_global_lan_segments_post(
+                authorization=self.bearer_token,
+                v1_global_lan_segments_post_request=post_lan_segments_request
+            )
+            LOG.info(f"post_global_lan_segments: Successfully created LAN segment '{name}' with ID: {response.id}")
+            return response
+        except ApiException as e:
+            LOG.error(f"post_global_lan_segments: Got Exception while creating LAN segment '{name}': {e}")
+            raise
+
+    def delete_global_lan_segments(self, lan_segment_id: int):
+        """
+        Delete a global LAN segment.
+
+        Args:
+            lan_segment_id (int): ID of the LAN segment to delete
+
+        Returns:
+            bool: True if deletion was successful, False otherwise
+        """
+        try:
+            LOG.info(f"delete_global_lan_segments: Deleting LAN segment with ID: {lan_segment_id}")
+            # Use the correct method name from the SDK
+            self.api.v1_global_lan_segments_id_delete(
+                authorization=self.bearer_token,
+                id=lan_segment_id
+            )
+            # DELETE operations typically return 204 (No Content) or empty response
+            # We consider any successful call (no exception) as success
+            LOG.info(f"delete_global_lan_segments: Successfully deleted LAN segment with ID: {lan_segment_id}")
+            return True
+        except Exception as e:
+            # Check if it's a validation error that we can ignore
+            if "validation error" in str(e) and "V1GlobalLanSegmentsPost200Response" in str(e):
+                LOG.info(f"delete_global_lan_segments: Delete operation completed "
+                         f"(validation error can be ignored): {lan_segment_id}")
+                return True
+            else:
+                LOG.error(f"delete_global_lan_segments: Got Exception while deleting LAN segment {lan_segment_id}: {e}")
+                return False
