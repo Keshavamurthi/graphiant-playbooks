@@ -465,3 +465,107 @@ class GraphiantPortalClient():
             else:
                 LOG.error(f"delete_global_lan_segments: Got Exception while deleting LAN segment {lan_segment_id}: {e}")
                 return False
+
+    # Site Lists API methods
+    def get_global_site_lists(self):
+        """
+        Get all global site lists.
+        """
+        try:
+            LOG.info("get_global_site_lists: Retrieving all global site lists")
+            response = self.api.v1_global_site_lists_get(
+                authorization=self.bearer_token
+            )
+            if response and hasattr(response, 'entries') and response.entries:
+                LOG.info(f"get_global_site_lists: Successfully retrieved {len(response.entries)} site lists")
+                return response.entries
+            else:
+                LOG.info("get_global_site_lists: No site lists found")
+                return []
+        except ApiException as e:
+            LOG.error(f"get_global_site_lists: Got Exception while retrieving site lists: {e}")
+            return []
+
+    def create_global_site_list(self, site_list_config: dict):
+        """
+        Create a global site list.
+        """
+        try:
+            LOG.info(f"create_global_site_list: Creating site list '{site_list_config.get('name')}'")
+            response = self.api.v1_global_site_lists_post(
+                authorization=self.bearer_token,
+                v1_global_site_lists_post_request=site_list_config
+            )
+            LOG.info(f"create_global_site_list: Successfully created site list with ID: {response.id}")
+            return response
+        except ApiException as e:
+            LOG.error(f"create_global_site_list: Got Exception while creating site list: {e}")
+            raise e
+
+    def get_global_site_list(self, site_list_id: int):
+        """
+        Get a specific global site list by ID.
+        """
+        try:
+            LOG.info(f"get_global_site_list: Retrieving site list with ID: {site_list_id}")
+            response = self.api.v1_global_site_lists_id_get(
+                authorization=self.bearer_token,
+                id=site_list_id
+            )
+            LOG.info("get_global_site_list: Successfully retrieved site list")
+            return response
+        except ApiException as e:
+            LOG.error(f"get_global_site_list: Got Exception while retrieving site list {site_list_id}: {e}")
+            raise e
+
+    def get_global_site_list_sites(self, site_list_id: int):
+        """
+        Get sites in a specific global site list.
+        """
+        try:
+            LOG.info(f"get_global_site_list_sites: Retrieving sites for site list ID: {site_list_id}")
+            response = self.api.v1_global_site_lists_id_sites_get(
+                authorization=self.bearer_token,
+                id=site_list_id
+            )
+            LOG.info(f"get_global_site_list_sites: Successfully retrieved {len(response.entries)} sites")
+            return response.entries
+        except ApiException as e:
+            LOG.error(f"get_global_site_list_sites: "
+                      f"Got Exception while retrieving sites for site list {site_list_id}: {e}")
+            raise e
+
+    def delete_global_site_list(self, site_list_id: int):
+        """
+        Delete a global site list.
+        """
+        try:
+            LOG.info(f"delete_global_site_list: Deleting site list with ID: {site_list_id}")
+            self.api.v1_global_site_lists_id_delete(
+                authorization=self.bearer_token,
+                id=site_list_id
+            )
+            LOG.info(f"delete_global_site_list: Successfully deleted site list with ID: {site_list_id}")
+            return True
+        except Exception as e:
+            # Handle validation errors for DELETE operations (often return empty responses)
+            if "validation error" in str(e) and "V1GlobalLanSegmentsPost200Response" in str(e):
+                LOG.info(f"delete_global_site_list: "
+                         f"Delete operation completed (validation error can be ignored): {site_list_id}")
+                return True
+            LOG.error(f"delete_global_site_list: Got Exception while deleting site list {site_list_id}: {e}")
+            return False
+
+    def get_site_list_id(self, site_list_name: str):
+        """
+        Get site list ID by name.
+        """
+        try:
+            site_lists = self.get_global_site_lists()
+            for site_list in site_lists:
+                if site_list.name == site_list_name:
+                    return site_list.id
+            return None
+        except Exception as e:
+            LOG.error(f"get_site_list_id: Error finding site list '{site_list_name}': {e}")
+            return None

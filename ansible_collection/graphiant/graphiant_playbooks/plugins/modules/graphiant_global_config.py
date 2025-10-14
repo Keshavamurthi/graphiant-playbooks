@@ -82,7 +82,9 @@ def main():
                 'configure_vpn_profiles',
                 'deconfigure_vpn_profiles',
                 'configure_lan_segments',
-                'deconfigure_lan_segments'
+                'deconfigure_lan_segments',
+                'configure_site_lists',
+                'deconfigure_site_lists'
             ]
         ),
         state=dict(
@@ -118,7 +120,8 @@ def main():
             'configure_bgp_filters', 'deconfigure_bgp_filters', 'configure_snmp_services',
             'deconfigure_snmp_services', 'configure_syslog_services', 'deconfigure_syslog_services',
             'configure_ipfix_services', 'deconfigure_ipfix_services', 'configure_vpn_profiles',
-            'deconfigure_vpn_profiles', 'configure_lan_segments', 'deconfigure_lan_segments'
+            'deconfigure_vpn_profiles', 'configure_lan_segments', 'deconfigure_lan_segments',
+            'configure_site_lists', 'deconfigure_site_lists'
         ]
         module.fail_json(
             msg="Either 'operation' or 'state' parameter must be provided. "
@@ -252,6 +255,18 @@ def main():
         elif operation == 'deconfigure_lan_segments':
             result = execute_with_logging(module, edge.global_config.deconfigure_lan_segments, config_file,
                                           success_msg="Successfully deconfigured global LAN segments")
+            changed = result['changed']
+            result_msg = result['result_msg']
+
+        elif operation == 'configure_site_lists':
+            result = execute_with_logging(module, edge.global_config.configure_site_lists, config_file,
+                                          success_msg="Successfully configured global site lists")
+            changed = result['changed']
+            result_msg = result['result_msg']
+
+        elif operation == 'deconfigure_site_lists':
+            result = execute_with_logging(module, edge.global_config.deconfigure_site_lists, config_file,
+                                          success_msg="Successfully deconfigured global site lists")
             changed = result['changed']
             result_msg = result['result_msg']
 

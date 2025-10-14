@@ -413,6 +413,24 @@ The `detailed_logs` parameter enables comprehensive logging output from the unde
     operation: "configure_lan_segments"
     state: present
     detailed_logs: true
+
+- name: Configure global site lists
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    config_file: "configs/sample_global_site_lists.yaml"
+    operation: "configure_site_lists"
+    state: present
+
+- name: Deconfigure global site lists
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    host: "https://api.graphiant.com"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    config_file: "configs/sample_global_site_lists.yaml"
+    operation: "deconfigure_site_lists"
+    state: absent
 ```
 
 ### graphiant_sites
@@ -804,8 +822,50 @@ The collection uses the same YAML configuration files as the standalone Graphian
 - `sample_global_syslog_servers.yaml`: Global syslog service configurations
 - `sample_global_ipfix_exporters.yaml`: Global IPFIX service configurations
 - `sample_global_vpn_profiles.yaml`: Global VPN profile configurations
+- `sample_lan_segments.yaml`: Global LAN segment configurations
+- `sample_global_site_lists.yaml`: Global site list configurations
 - `sample_site_attachments.yaml`: Site attachment configurations
 - `sample_sites.yaml`: Site creation and object attachment configurations
+
+## Configuration Format Examples
+
+### Global Site Lists Configuration
+
+The `sample_global_site_lists.yaml` file demonstrates how to configure global site lists:
+
+```yaml
+# Sample Global Site Lists Configuration
+# This file demonstrates how to configure global site lists
+#
+# The system will:
+# 1. Read site names from the 'sites' list
+# 2. Look up site IDs using v1/sites/details API
+# 3. Generate the correct API payload with site IDs
+# 4. POST to v1/global/site-lists with the payload
+
+site_lists:
+  - name: "Site-list1"
+    description: "Site-list1 desc"
+    sites:
+      - "UAT-Site1"
+      - "UAT-Site2"
+      - "UAT-Site3"
+      - "Liverpool-sdktest"
+      - "Wales-sdktest"
+
+  - name: "Site-list2"
+    description: "Site-list2 desc"
+    sites:
+      - "UAT-Site3"
+      - "Liverpool-sdktest"
+      - "Wales-sdktest"
+```
+
+**Key Features:**
+- **Site Name Resolution**: The system automatically converts site names to site IDs
+- **Fail-Fast Approach**: If any site name is not found, the entire operation fails
+- **Idempotent Operations**: Configure only creates if not exists, deconfigure only deletes if exists
+- **Reference Checking**: Deconfigure fails if site lists have active references
 
 ## Error Handling
 
@@ -823,11 +883,11 @@ When neither `operation` nor `state` parameters are provided, modules return hel
 **Example Error Messages:**
 ```
 Either 'operation' or 'state' parameter must be provided. 
-Supported operations: configure, deconfigure, configure_prefix_sets, deconfigure_prefix_sets, configure_bgp_filters, deconfigure_bgp_filters, configure_snmp_services, deconfigure_snmp_services, configure_syslog_services, deconfigure_syslog_services, configure_ipfix_services, deconfigure_ipfix_services, configure_vpn_profiles, deconfigure_vpn_profiles, configure_lan_segments, deconfigure_lan_segments
+Supported operations: configure, deconfigure, configure_prefix_sets, deconfigure_prefix_sets, configure_bgp_filters, deconfigure_bgp_filters, configure_snmp_services, deconfigure_snmp_services, configure_syslog_services, deconfigure_syslog_services, configure_ipfix_services, deconfigure_ipfix_services, configure_vpn_profiles, deconfigure_vpn_profiles, configure_lan_segments, deconfigure_lan_segments, configure_site_lists, deconfigure_site_lists
 ```
 
 **Module-Specific Supported Operations:**
-- **graphiant_global_config**: configure, deconfigure, configure_prefix_sets, deconfigure_prefix_sets, configure_bgp_filters, deconfigure_bgp_filters, configure_snmp_services, deconfigure_snmp_services, configure_syslog_services, deconfigure_syslog_services, configure_ipfix_services, deconfigure_ipfix_services, configure_vpn_profiles, deconfigure_vpn_profiles, configure_lan_segments, deconfigure_lan_segments
+- **graphiant_global_config**: configure, deconfigure, configure_prefix_sets, deconfigure_prefix_sets, configure_bgp_filters, deconfigure_bgp_filters, configure_snmp_services, deconfigure_snmp_services, configure_syslog_services, deconfigure_syslog_services, configure_ipfix_services, deconfigure_ipfix_services, configure_vpn_profiles, deconfigure_vpn_profiles, configure_lan_segments, deconfigure_lan_segments, configure_site_lists, deconfigure_site_lists
 - **graphiant_interfaces**: configure_interfaces, deconfigure_interfaces, configure_lan_interfaces, deconfigure_lan_interfaces, configure_wan_circuits_interfaces, deconfigure_wan_circuits_interfaces, configure_circuits, deconfigure_circuits
 - **graphiant_sites**: configure, deconfigure, attach, detach
 - **graphiant_bgp**: configure, deconfigure, detach_policies

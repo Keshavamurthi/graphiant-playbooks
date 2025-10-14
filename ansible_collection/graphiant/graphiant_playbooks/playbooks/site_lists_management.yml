@@ -1,6 +1,10 @@
 ---
-- name: LAN Segments Management
+# Site Lists Management Playbook
+# This playbook demonstrates site lists management operations
+
+- name: Site Lists Management Operations
   hosts: localhost
+  connection: local
   gather_facts: false
   vars:
     # graphiant_host: "https://api.graphiant.com"
@@ -18,41 +22,30 @@
       # password: "{{ lookup('ini', 'password file=/path/to/test.ini section=credentials') }}"
 
   tasks:
-    - name: Configure Global LAN Segments
+    - name: Configure Global Site Lists
       graphiant.graphiant_playbooks.graphiant_global_config:
         <<: *graphiant_client_params
-        config_file: "sample_lan_segments.yaml"
-        operation: "configure_lan_segments"
-        detailed_logs: true  # Enable detailed logging to see library operations
+        config_file: "sample_global_site_lists.yaml"
+        operation: "configure_site_lists"
+        detailed_logs: true
         state: present
       register: configure_result
+      tags: ['site_lists', 'configure']
 
     - name: Display Configuration Results
       debug:
         msg: "{{ configure_result.msg }}"
 
-    - name: Deconfigure Global LAN Segments
+    - name: Deconfigure Global Site Lists
       graphiant.graphiant_playbooks.graphiant_global_config:
         <<: *graphiant_client_params
-        config_file: "sample_lan_segments.yaml"
-        operation: "deconfigure_lan_segments"
-        detailed_logs: true  # Enable detailed logging to see library operations
+        config_file: "sample_global_site_lists.yaml"
+        operation: "deconfigure_site_lists"
+        detailed_logs: true
         state: absent
       register: deconfigure_result
+      tags: ['site_lists', 'deconfigure']
 
     - name: Display Deconfiguration Results
       debug:
         msg: "{{ deconfigure_result.msg }}"
-
-    - name: Configure Global LAN Segments
-      graphiant.graphiant_playbooks.graphiant_global_config:
-        <<: *graphiant_client_params
-        config_file: "sample_lan_segments.yaml"
-        operation: "configure_lan_segments"
-        detailed_logs: true  # Enable detailed logging to see library operations
-        state: present
-      register: configure_result
-
-    - name: Display Configuration Results
-      debug:
-        msg: "{{ configure_result.msg }}"

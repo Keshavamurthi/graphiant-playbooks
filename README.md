@@ -16,16 +16,18 @@ Graphiant Playbooks is a comprehensive automation framework for managing Graphia
 - [Directory Structure](#directory-structure)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Configuration](#configuration)
 - [Usage Examples](#usage-examples)
-- [Terraform Infrastructure](#terraform-infrastructure)
-- [Docker Support](#docker-support)
-- [CI/CD Pipelines](#cicd-pipelines)
-- [Cloud-Init Generator](#cloud-init-generator)
 - [API Reference](#api-reference)
 - [Development](#development)
-- [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
+- [Support](#support)
+
+### 📚 Additional Documentation
+- [🐳 Docker Support](Docker.md) - Docker setup and usage
+- [🏗️ Terraform Infrastructure](terraform/README.md) - Infrastructure as Code
+- [🔄 CI/CD Pipelines](pipelines/README.md) - CI/CD configuration
+- [☁️ Cloud-Init Generator](scripts/cloud-init-generator/README.md) - Device onboarding
+- [📦 Ansible Collection](ansible_collection/graphiant/graphiant_playbooks/README.md) - Ansible automation
 
 ## 🎯 Overview
 
@@ -106,7 +108,7 @@ edge = Edge(
 )
 
 # Configure interfaces
-edge.interfaces.configure_lan_interfaces("configs/sample_interface_config.yaml")
+edge.interfaces.configure_lan_interfaces("sample_interface_config.yaml")
 ``` 
 
 ## 📁 Directory Structure
@@ -114,7 +116,8 @@ edge.interfaces.configure_lan_interfaces("configs/sample_interface_config.yaml")
 ```
 graphiant-playbooks/
 ├── 📄 LICENSE                    # MIT License
-├── 📄 README.md                  # This documentation
+├── 📄 README.md                  # Main documentation
+├── 📄 Docker.md                  # Docker documentation
 ├── 📄 requirements.txt           # Python dependencies
 ├── 📄 setup.cfg                  # Python package configuration
 ├── 🐳 Dockerfile                 # Docker container configuration
@@ -146,6 +149,7 @@ graphiant-playbooks/
 │   ├── global_*_template.yaml           # Global object templates
 │   └── ...
 ├── 📁 terraform/                 # Infrastructure as Code
+│   ├── README.md                # Terraform documentation
 │   ├── azure-expressroute/      # Azure ExpressRoute modules
 │   │   ├── main.tf             # Main Terraform configuration
 │   │   ├── variables.tf        # Variable definitions
@@ -159,9 +163,14 @@ graphiant-playbooks/
 │       ├── generate-cloud-init.sh  # Interactive cloud-init generator
 │       └── README.md               # Generator documentation
 ├── 📁 pipelines/                 # CI/CD pipeline definitions
+│   ├── README.md                # CI/CD documentation
 │   ├── docker.yml              # Docker build pipeline
 │   ├── lint.yml                # Code quality pipeline
 │   └── run.yml                 # Test execution pipeline
+├── 📁 ansible_collection/        # Ansible collection
+│   └── graphiant/
+│       └── graphiant_playbooks/
+│           └── README.md        # Ansible documentation
 └── 📁 test/                      # Testing framework
     ├── test.py                 # Main test suite
     └── test.ini                # Test configuration
@@ -174,9 +183,10 @@ graphiant-playbooks/
 | **`configs/`** | Input configuration files | `sample_*.yaml`, `terraform/*.tfvars` |
 | **`libs/`** | Core Python libraries | `edge.py`, `*_manager.py`, `gcsdk_client.py` |
 | **`templates/`** | Jinja2 configuration templates | `*_template.yaml` |
-| **`terraform/`** | Infrastructure as Code | `azure-expressroute/`, `aws-directconnect/` |
-| **`scripts/`** | Standalone utilities | `cloud-init-generator/` |
-| **`pipelines/`** | CI/CD definitions | `docker.yml`, `lint.yml`, `run.yml` |
+| **`terraform/`** | Infrastructure as Code | `README.md`, `azure-expressroute/`, `aws-directconnect/` |
+| **`scripts/`** | Standalone utilities | `cloud-init-generator/README.md` |
+| **`pipelines/`** | CI/CD definitions | `README.md`, `docker.yml`, `lint.yml`, `run.yml` |
+| **`ansible_collection/`** | Ansible automation | `graphiant/graphiant_playbooks/README.md` |
 | **`test/`** | Testing framework | `test.py`, `test.ini` |
 
 ## 📋 Prerequisites
@@ -333,117 +343,19 @@ az version          # Should show Azure CLI
 
 Graphiant Playbooks includes Docker support for consistent development and deployment environments.
 
-### Building the Docker Image
-
-```bash
-# Build the Docker image
-docker build -t graphiant-playbooks .
-
-# Build with specific commit SHA
-docker build --build-arg COMMIT_SHA=$(git rev-parse HEAD) -t graphiant-playbooks .
-```
-
-### Running with Docker
-
-```bash
-# Run interactive container
-docker run -it graphiant-playbooks
-
-# Run with volume mount for development
-docker run -it -v $(pwd):/home/graphiant-playbooks graphiant-playbooks
-
-# Run with environment variables
-docker run -it -e GRAPHIANT_API_URL=https://api.graphiant.com graphiant-playbooks
-```
-
-### Docker Features
-
-- **Multi-stage build** for optimized image size
-- **Python 3.11.5** runtime environment
-- **Pre-installed dependencies** from requirements.txt
-- **Development tools** (vim, git, sshpass)
-- **Version tracking** via COMMIT_SHA build arg
+**📖 [Docker Documentation](Docker.md)** - Complete Docker setup, usage, and troubleshooting guide.
 
 ## 🔄 CI/CD Pipelines
 
 The project includes pre-configured CI/CD pipelines for automated testing and deployment.
 
-### Pipeline Structure
-
-| Pipeline | Purpose | Triggers |
-|----------|---------|----------|
-| **`docker.yml`** | Docker image build and push | Push to main branch |
-| **`lint.yml`** | Code quality checks | Pull requests |
-| **`run.yml`** | Test execution | Pull requests, pushes |
-
-### Pipeline Features
-
-- **Automated Testing**: Runs test suite on every PR
-- **Code Quality**: Flake8 and Pylint checks
-- **Template Validation**: Jinja2 template linting
-- **Docker Builds**: Automated container image creation
-- **Multi-Environment**: Support for different deployment targets
-
-### Local Pipeline Testing
-
-```bash
-# Run linting checks locally
-flake8 ./libs ./test
-pylint --errors-only ./libs
-djlint configs -e yaml
-djlint templates -e yaml
-
-# Run tests
-python3 test/test.py
-```
+**📖 [CI/CD Documentation](pipelines/README.md)** - Complete pipeline configuration, usage, and troubleshooting guide.
 
 ## ☁️ Cloud-Init Generator
 
 The cloud-init generator is an interactive tool for creating device onboarding configurations.
 
-### Features
-
-- **Interactive Configuration**: Step-by-step parameter collection
-- **Multiple Environments**: Support for production and test environments
-- **Flexible Networking**: DHCP or static IP configuration
-- **Custom Interfaces**: Configurable management and WAN interfaces
-- **Onboarding Tokens**: Optional token inclusion for secure onboarding
-- **Multiple Output Formats**: ISO, QCOW2, and other cloud image formats
-
-### Usage
-
-```bash
-# Navigate to the generator
-cd scripts/cloud-init-generator
-
-# Make executable
-chmod +x generate-cloud-init.sh
-
-# Run the generator
-./generate-cloud-init.sh
-```
-
-### Example Configuration
-
-The generator will prompt for:
-
-1. **Environment**: `prod` or `test`
-2. **Device Role**: `cpe`, `gateway`, or `core`
-3. **Onboarding Token**: Optional secure token
-4. **Management Interface**: Default or custom interface name
-5. **WAN Interface**: Default or custom interface name
-6. **Network Configuration**: DHCP or static IP settings
-7. **DNS Servers**: Custom or default DNS configuration
-8. **Web Server Password**: Local management password
-9. **Hostname**: Custom device hostname
-10. **Output Format**: ISO, QCOW2, or other formats
-
-### Output
-
-The generator creates a cloud-init configuration with:
-- **User Data**: Device configuration and networking setup
-- **Meta Data**: Instance metadata and device identification
-- **Cloud Image**: Ready-to-deploy image file
+**📖 [Cloud-Init Generator Documentation](scripts/cloud-init-generator/README.md)** - Complete setup, usage, and configuration guide.
 
 ## 📦 Installation
 
@@ -601,6 +513,21 @@ edge.global_config.deconfigure("sample_lan_segments.yaml")
 
 # Alternative: Deconfigure global LAN segments (using specific method)
 # edge.global_config.deconfigure_lan_segments("sample_lan_segments.yaml")
+```
+
+#### Global Site Lists
+```sh
+# Configure global site lists (using general configure method)
+edge.global_config.configure("sample_global_site_lists.yaml")
+
+# Deconfigure global site lists (using general deconfigure method)
+edge.global_config.deconfigure("sample_global_site_lists.yaml")
+
+# Alternative: Configure global site lists (using specific method)
+# edge.global_config.configure_site_lists("sample_global_site_lists.yaml")
+
+# Alternative: Deconfigure global site lists (using specific method)
+# edge.global_config.deconfigure_site_lists("sample_global_site_lists.yaml")
 ```
 
 ### Step 4.1: Detailed Logging in Ansible
@@ -887,6 +814,9 @@ edge.global_config.configure("configs/sample_global_vpn_profiles.yaml")
 
 # LAN Segments
 edge.global_config.configure("configs/sample_lan_segments.yaml")
+
+# Site Lists
+edge.global_config.configure("configs/sample_global_site_lists.yaml")
 ```
 
 ### BGP Peering Management
@@ -971,196 +901,7 @@ logger.info("Starting configuration process")
 
 Graphiant Playbooks includes production-ready Terraform modules for deploying cloud networking infrastructure that seamlessly integrates with Graphiant Edge devices.
 
-### 🎯 What Terraform Creates
-
-#### Azure ExpressRoute Infrastructure
-- **Resource Group**: Container for all Azure resources
-- **Virtual Network**: Network infrastructure with subnets
-- **ExpressRoute Circuit**: Primary and secondary circuits for redundancy
-- **ExpressRoute Gateway**: Gateway for connecting to ExpressRoute
-- **Virtual Hub**: Central networking hub (optional)
-- **BGP Peering**: Border Gateway Protocol configuration
-- **ExpressRoute Connection**: Connection between Gateway and Circuit
-
-
-### 📁 Terraform Directory Structure
-
-```
-terraform/
-├── azure-expressroute/           # Azure ExpressRoute modules
-│   ├── main.tf                   # Main Terraform configuration
-│   ├── variables.tf              # Variable definitions
-│   ├── outputs.tf                # Output values
-│   └── README.md                 # Azure-specific documentation
-
-configs/terraform/
-├── azure_config.tfvars           # Azure variable configuration
-```
-
-### 🔧 Prerequisites
-
-| Requirement | Version | Purpose |
-|-------------|---------|---------|
-| **Terraform CLI** | >= 1.1.0 | Infrastructure provisioning |
-| **Azure CLI** | Latest | Azure authentication and management |
-| **Cloud Account** | Active | Azure subscription |
-| **Permissions** | Required | Resource creation and management rights |
-
-### Quick Start with Terraform
-
-#### Azure ExpressRoute Setup
-
-##### 1. Authenticate with Azure
-```bash
-az login
-az account set --subscription "your-subscription-id"
-```
-
-##### 2. Configure Variables
-```bash
-# Edit the configuration file
-nano configs/terraform/azure_config.tfvars
-
-# Or copy and modify if needed
-cp configs/terraform/azure_config.tfvars configs/terraform/my-azure-config.tfvars
-```
-
-##### 3. Deploy Infrastructure
-```bash
-cd terraform/azure-expressroute
-
-# Initialize Terraform
-terraform init
-
-# Validate configuration
-terraform validate
-
-# Create and review plan
-terraform plan -var-file="../../configs/terraform/azure_config.tfvars" -out=tfplan
-
-# Apply the configuration
-terraform apply tfplan
-```
-
-
-### What Terraform Creates
-
-#### Azure ExpressRoute Infrastructure
-The Azure Terraform configuration deploys:
-
-- **Resource Group** - Container for all resources
-- **Virtual Network** - Network infrastructure with subnets
-- **ExpressRoute Circuit** - Primary and secondary circuits for redundancy
-- **ExpressRoute Gateway** - Gateway for connecting to ExpressRoute
-- **Virtual Hub** - Central networking hub (if enabled)
-- **BGP Peering** - Border Gateway Protocol configuration
-- **ExpressRoute Connection** - Connection between Gateway and Circuit (conditional)
-
-**Note**: The ExpressRoute Connection is only created after the service provider provisions the physical circuit. This prevents deployment failures while waiting for service provider provisioning.
-
-
-### Integration with Graphiant Playbooks
-
-After deploying the ExpressRoute infrastructure with Terraform, you can use the outputs to configure BGP peering with your Graphiant edge devices:
-
-```python
-from libs.edge import Edge
-
-# Initialize Graphiant Edge
-edge = Edge(base_url='https://api.graphiant.com', username='user', password='pass')
-
-# Get Terraform outputs for circuit information
-# Use these values in your BGP peering configuration
-edge.configure_bgp_peers("your_bgp_config.yaml")
-```
-
-### Terraform Commands
-
-#### Azure ExpressRoute
-```bash
-cd terraform/azure-expressroute
-
-# Initialize
-terraform init
-
-# Validate
-terraform validate
-
-# Plan
-terraform plan -var-file="../../configs/terraform/azure_config.tfvars" -out=tfplan
-
-# Apply
-terraform apply tfplan
-
-# Show outputs
-terraform output
-
-# Destroy (cleanup)
-terraform destroy -var-file="../../configs/terraform/azure_config.tfvars"
-```
-
-
-### Key Configuration Variables
-
-#### Azure ExpressRoute
-Update these in `configs/terraform/azure_config.tfvars`:
-
-- **`project_name`** - Your project name for resource naming
-- **`azure_region`** - Azure region for deployment
-- **`expressroute_peering_location`** - Your ExpressRoute peering location
-- **`expressroute_service_provider`** - Your service provider (e.g., PacketFabric)
-- **`expressroute_bandwidth`** - Circuit bandwidth in Mbps
-- **`expressroute_shared_key`** - BGP shared key
-- **`expressroute_peer_asn`** - Your ASN
-
-
-### Security and Best Practices
-
-- **Sensitive files** (`terraform.tfvars`) are automatically ignored by git
-- **State files** are excluded from version control
-- **Authentication** is required before deployment
-- **Validation** is performed before applying changes
-
-### Troubleshooting
-
-#### Common Issues
-
-**Azure ExpressRoute:**
-1. **Authentication Error**: Run `az login` and verify subscription
-2. **Provider Version**: Ensure correct Azure provider version
-3. **Resource Quotas**: Check Azure subscription limits
-4. **Network Conflicts**: Verify IP address ranges
-
-
-#### Useful Commands
-
-**Azure:**
-```bash
-# Check Terraform version
-terraform version
-
-# Check Azure CLI authentication
-az account show
-
-# List available peering locations
-az network express-route list-service-providers
-
-# Check resource group permissions
-az role assignment list --assignee $(az account show --query user.name -o tsv)
-```
-
-
-### Cleanup
-
-#### Azure ExpressRoute
-To destroy all Azure Terraform-managed resources:
-```bash
-cd terraform/azure-expressroute
-terraform destroy -var-file="../../configs/terraform/azure_config.tfvars"
-```
-
-
-**⚠️ Warning**: These commands will permanently delete all created resources!
+**📖 [Terraform Documentation](terraform/README.md)** - Complete infrastructure setup, deployment, and management guide.
 
 
 ## Source code linter checks
