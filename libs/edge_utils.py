@@ -294,3 +294,32 @@ class EdgeUtils(PortalUtils):
         except Exception as e:
             LOG.error(f"Failed to process global VPN profile service {kwargs.get('name')}: {str(e)}")
             raise ConfigurationError(f"Global VPN profile service processing failed: {str(e)}")
+
+    def global_site_list(self, config_payload, action="add", **kwargs):
+        """
+        Update the site_lists section of configuration payload.
+
+        Args:
+            config_payload (dict): The main configuration payload dict to be updated.
+            action (str, optional): Action to perform, either "add" or "delete". Defaults to "add".
+            **kwargs: Additional key-value pairs required for rendering the template.
+
+        Raises:
+            ConfigurationError: If required parameters are missing.
+        """
+        self._validate_required_params(kwargs, ['name'])
+        LOG.debug(f"Global site list: {action.upper()} {kwargs.get('name')}")
+
+        try:
+            if action == "add":
+                # Use template for complex payload generation
+                result = self.template.render_site_list(action=action, **kwargs)
+                config_payload['site_lists'].update(result)
+            else:  # delete
+                # Simple delete logic in code
+                name = kwargs.get('name')
+                if name:
+                    config_payload['site_lists'][name] = {}
+        except Exception as e:
+            LOG.error(f"Failed to process global site list {kwargs.get('name')}: {str(e)}")
+            raise ConfigurationError(f"Global site list processing failed: {str(e)}")

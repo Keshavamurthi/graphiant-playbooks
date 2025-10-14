@@ -31,6 +31,8 @@ class GlobalConfigManager(BaseManager):
         - Syslog global objects (syslog_servers)
         - IPFIX global objects (ipfix_exporters)
         - VPN profile global objects (vpn_profiles)
+        - LAN segments (lan_segments)
+        - Site lists (site_lists)
 
         Args:
             config_yaml_file: Path to the YAML file containing global configurations
@@ -69,6 +71,10 @@ class GlobalConfigManager(BaseManager):
             if 'lan_segments' in config_data:
                 self.configure_lan_segments(config_yaml_file)
 
+            # Configure site lists (Global Site Lists)
+            if 'site_lists' in config_data:
+                self.configure_site_lists(config_yaml_file)
+
         except Exception as e:
             LOG.error(f"Error in global configuration: {str(e)}")
             raise ConfigurationError(f"Global configuration failed: {str(e)}")
@@ -84,6 +90,8 @@ class GlobalConfigManager(BaseManager):
         - Syslog global objects (syslog_servers)
         - IPFIX global objects (ipfix_exporters)
         - VPN profile global objects (vpn_profiles)
+        - LAN segments (lan_segments)
+        - Site lists (site_lists)
 
         Args:
             config_yaml_file: Path to the YAML file containing global configurations
@@ -121,6 +129,10 @@ class GlobalConfigManager(BaseManager):
             # Deconfigure LAN segments (Global LAN Segments)
             if 'lan_segments' in config_data:
                 self.deconfigure_lan_segments(config_yaml_file)
+
+            # Deconfigure site lists (Global Site Lists)
+            if 'site_lists' in config_data:
+                self.deconfigure_site_lists(config_yaml_file)
 
         except Exception as e:
             LOG.error(f"Error in global deconfiguration: {str(e)}")
@@ -530,3 +542,146 @@ class GlobalConfigManager(BaseManager):
         except Exception as e:
             LOG.error(f"Failed to deconfigure LAN segments: {e}")
             raise ConfigurationError(f"LAN segment deconfiguration failed: {e}")
+
+    def configure_site_lists(self, config_yaml_file: str) -> None:
+        """
+        Configure global site lists from YAML file.
+        Args:
+            config_yaml_file: Path to the YAML file containing site list configurations
+        """
+        try:
+            LOG.info(f"Configuring global site lists from {config_yaml_file}")
+
+            # Load and parse YAML configuration
+            try:
+                config_data = self.edge_utils.render_config_file(config_yaml_file)
+            except ConfigurationError as e:
+                # Re-raise configuration errors with better context
+                raise ConfigurationError(f"Configuration file error: {str(e)}")
+            if not config_data or 'site_lists' not in config_data:
+                LOG.info("No site_lists configuration found in YAML file")
+                return
+
+            site_lists = config_data['site_lists']
+            if not isinstance(site_lists, list):
+                raise ConfigurationError("Configuration error: 'site_lists' must be a list. "
+                                         "Please check your YAML file structure.")
+
+            created_count = 0
+            skipped_count = 0
+
+            for site_list_config in site_lists:
+                site_list_name = site_list_config.get('name')
+                if not site_list_name:
+                    raise ConfigurationError("Configuration error: Each site list must have a 'name' field. "
+                                             "Please check your YAML file structure.")
+
+                # Check if site list already exists
+                existing_site_list_id = self.gsdk.get_site_list_id(site_list_name)
+                if existing_site_list_id:
+                    LOG.info(f"Site list '{site_list_name}' already exists "
+                             f"(ID: {existing_site_list_id}), skipping creation")
+                    skipped_count += 1
+                    continue
+
+                # Get site IDs for the sites in the site list
+                site_names = site_list_config.get('sites', [])
+                site_ids = []
+
+                for site_name in site_names:
+                    site_id = self.gsdk.get_site_id(site_name)
+                    if site_id:
+                        site_ids.append(site_id)
+                        LOG.info(f"Added site '{site_name}' (ID: {site_id}) to site list '{site_list_name}'")
+                    else:
+                        raise ConfigurationError(f"Site '{site_name}' not found for site list '{site_list_name}'. "
+                                                 "Please ensure all sites exist before creating site lists.")
+
+                if not site_ids:
+                    LOG.warning(f"No valid sites found for site list '{site_list_name}', skipping creation")
+                    skipped_count += 1
+                    continue
+
+                # Use template approach for consistency with other global config methods
+                config_payload = {"site_lists": {}}
+                self.edge_utils.global_site_list(
+                    config_payload,
+                    action="add",
+                    name=site_list_name,
+                    description=site_list_config.get('description', ''),
+                    site_ids=site_ids
+                )
+
+                # Create the site list using the generated payload
+                site_list_payload = config_payload['site_lists'][site_list_name]
+                self.gsdk.create_global_site_list(site_list_payload)
+                LOG.info(f"Successfully created site list '{site_list_name}'")
+                created_count += 1
+
+            LOG.info(f"Site lists configuration completed: {created_count} created, {skipped_count} skipped")
+        except ConfigurationError:
+            raise
+        except Exception as e:
+            LOG.error(f"Failed to configure site lists: {e}")
+            raise ConfigurationError(f"Site list configuration failed: {e}")
+
+    def deconfigure_site_lists(self, config_yaml_file: str) -> None:
+        """
+        Deconfigure global site lists from YAML file.
+        """
+        try:
+            LOG.info(f"Deconfiguring global site lists from {config_yaml_file}")
+
+            # Load and parse YAML configuration
+            config_data = self.edge_utils.render_config_file(config_yaml_file)
+            if not config_data or 'site_lists' not in config_data:
+                LOG.info("No site_lists configuration found in YAML file")
+                return
+
+            site_lists = config_data['site_lists']
+            if not isinstance(site_lists, list):
+                raise ConfigurationError("Configuration error: 'site_lists' must be a list. "
+                                         "Please check your YAML file structure.")
+
+            deleted_count = 0
+            skipped_count = 0
+
+            for site_list_config in site_lists:
+                site_list_name = site_list_config.get('name')
+                if not site_list_name:
+                    raise ConfigurationError("Configuration error: Each site list must have a 'name' field. "
+                                             "Please check your YAML file structure.")
+
+                # Check if site list exists
+                site_list_id = self.gsdk.get_site_list_id(site_list_name)
+                if not site_list_id:
+                    LOG.info(f"Site list '{site_list_name}' not found, skipping deletion")
+                    skipped_count += 1
+                    continue
+
+                # Check if site list is in use
+                site_list_details = self.gsdk.get_global_site_list(site_list_id)
+                if (hasattr(site_list_details,
+                            'site_list_references') and site_list_details.site_list_references > 0) or \
+                   (hasattr(site_list_details, 'edge_references') and site_list_details.edge_references > 0) or \
+                   (hasattr(site_list_details, 'policy_references') and site_list_details.policy_references > 0):
+                    LOG.error(f"Cannot delete site list '{site_list_name}' - has references: "
+                              f"siteListReferences={getattr(site_list_details, 'site_list_references', 0)}, "
+                              f"edgeReferences={getattr(site_list_details, 'edge_references', 0)}, "
+                              f"policyReferences={getattr(site_list_details, 'policy_references', 0)}")
+                    raise ConfigurationError(f"Site list '{site_list_name}' "
+                                             "cannot be deleted because it has active references. "
+                                             "Please remove all references before deletion.")
+
+                # Delete the site list
+                self.gsdk.delete_global_site_list(site_list_id)
+                LOG.info(f"Successfully deleted site list '{site_list_name}' (ID: {site_list_id})")
+                deleted_count += 1
+
+            LOG.info(f"Site lists deconfiguration completed: {deleted_count} deleted, {skipped_count} skipped")
+        except ConfigurationError:
+            # Re-raise configuration errors (reference issues, SDK errors)
+            raise
+        except Exception as e:
+            LOG.error(f"Unexpected error during site list deconfiguration: {e}")
+            raise ConfigurationError(f"Site list deconfiguration failed: {e}")

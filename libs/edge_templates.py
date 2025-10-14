@@ -32,7 +32,8 @@ class EdgeTemplates:
         'snmp_service': 'global_snmps_template.yaml',
         'syslog_service': 'global_syslog_template.yaml',
         'ipfix_service': 'global_ipfix_template.yaml',
-        'vpn_profile': 'global_vpn_profile_template.yaml'
+        'vpn_profile': 'global_vpn_profile_template.yaml',
+        'site_list': 'global_site_lists_template.yaml'
     }
 
     def __init__(self, config_template_path: str):
@@ -180,6 +181,10 @@ class EdgeTemplates:
             error_msg = f"Error in VPN profile rendering: {str(e)}"
             LOG.error(error_msg)
             raise TemplateError(error_msg) from e
+
+    def render_site_list(self, **kwargs) -> Dict[str, Any]:
+        """Render site list template."""
+        return self.render_by_type('site_list', **kwargs)
 
     def get_available_templates(self) -> Dict[str, str]:
         """

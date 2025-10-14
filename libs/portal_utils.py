@@ -4,6 +4,7 @@ from concurrent.futures import wait
 from concurrent.futures.thread import ThreadPoolExecutor
 from libs.logger import setup_logger
 from libs.gcsdk_client import GraphiantPortalClient
+from libs.exceptions import ConfigurationError
 
 LOG = setup_logger()
 
@@ -255,6 +256,20 @@ class PortalUtils(object):
             return config_data
         except FileNotFoundError:
             LOG.warning(f"File not found : {input_file_path}")
+        except yaml.YAMLError as e:
+            # Provide user-friendly YAML error messages
+            if hasattr(e, 'problem_mark'):
+                line_num = e.problem_mark.line + 1
+                col_num = e.problem_mark.column + 1
+                error_msg = f"YAML syntax error in '{input_file_path}' at line {line_num}, column {col_num}:\n"
+                error_msg += f"  {str(e)}\n"
+                error_msg += f"Please check the YAML syntax around line {line_num} " \
+                             "and fix any indentation or formatting issues."
+                raise ConfigurationError(error_msg)
+            else:
+                raise ConfigurationError(f"YAML parsing error in '{input_file_path}': {str(e)}")
+        except Exception as e:
+            raise ConfigurationError(f"Error reading configuration file '{input_file_path}': {str(e)}")
 
     def get_global_routing_policy_id(self, policy_name):
         """

@@ -64,6 +64,33 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         lan_segments = edge.edge_utils.get_all_lan_segments()
         LOG.info(f"Lan Segments: {lan_segments}")
 
+    def test_configure_global_site_lists(self):
+        """
+        Configure Global Site Lists.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.global_config.configure_site_lists("sample_global_site_lists.yaml")
+
+    def test_deconfigure_global_site_lists(self):
+        """
+        Deconfigure Global Site Lists.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        edge.global_config.deconfigure_site_lists("sample_global_site_lists.yaml")
+
+    def test_get_global_site_lists(self):
+        """
+        Test getting global site lists.
+        """
+        base_url, username, password = read_config()
+        edge = Edge(base_url=base_url, username=username, password=password)
+        site_lists = edge.edge_utils.gsdk.get_global_site_lists()
+        LOG.info(f"Global Site Lists: {len(site_lists)} found")
+        for site_list in site_lists:
+            LOG.info(f"Site List: {site_list.name} (ID: {site_list.id})")
+
     def test_configure_sites(self):
         """
         Create Sites (if site doesn't exist).
@@ -335,12 +362,11 @@ class TestGraphiantPlaybooks(unittest.TestCase):
 
     def test_attach_global_system_objects_to_site(self):
         """
-      syslog_servers:
         Attach Global System Objects (SNMP, Syslog, IPFIX etc) to Sites.
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        edge.sites.manage_global_system_objects_on_site("sample_site_attachments.yaml", "attach")
+        edge.sites.attach_objects("sample_site_attachments.yaml")
 
     def test_detach_global_system_objects_from_site(self):
         """
@@ -348,7 +374,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         edge = Edge(base_url=base_url, username=username, password=password)
-        edge.sites.manage_global_system_objects_on_site("sample_site_attachments.yaml", "detach")
+        edge.sites.detach_objects("sample_site_attachments.yaml")
 
 
 if __name__ == '__main__':
@@ -380,8 +406,17 @@ if __name__ == '__main__':
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_sites'))
     suite.addTest(TestGraphiantPlaybooks('test_get_sites_details'))
 
-    '''
-    # Interface Management
+    # Global Configuration Management (Site Lists)
+    suite.addTest(TestGraphiantPlaybooks('test_get_global_site_lists'))
+    suite.addTest(TestGraphiantPlaybooks('test_configure_sites'))  # Pre-req: Create sites.
+    suite.addTest(TestGraphiantPlaybooks('test_configure_global_site_lists'))
+    suite.addTest(TestGraphiantPlaybooks('test_configure_global_site_lists'))
+    suite.addTest(TestGraphiantPlaybooks('test_get_global_site_lists'))
+    suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_site_lists'))
+    suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_site_lists'))
+    suite.addTest(TestGraphiantPlaybooks('test_get_global_site_lists'))
+
+    # Device Interface Configuration Management
     suite.addTest(TestGraphiantPlaybooks('test_configure_lan_interfaces'))
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_lan_interfaces'))
     suite.addTest(TestGraphiantPlaybooks('test_configure_wan_circuits_interfaces'))
@@ -393,7 +428,7 @@ if __name__ == '__main__':
     # To deconfigure all interfaces=
     # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_interfaces'))
 
-    # Global Configuration Management, BGP Peering and Sites Management
+    # Global Configuration Management and BGP Peering
     suite.addTest(TestGraphiantPlaybooks('test_configure_global_config_prefix_lists'))
     suite.addTest(TestGraphiantPlaybooks('test_configure_global_config_bgp_filters'))
     suite.addTest(TestGraphiantPlaybooks('test_configure_bgp_peering'))
@@ -402,9 +437,11 @@ if __name__ == '__main__':
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_config_bgp_filters'))
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_config_prefix_lists'))
 
+    # Global Configuration Management and VPN Profiles
     suite.addTest(TestGraphiantPlaybooks('test_configure_vpn_profiles'))
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_vpn_profiles'))
 
+    # Global Configuration Management and Attaching System Objects (SNMP, Syslog, IPFIX etc) to Sites
     suite.addTest(TestGraphiantPlaybooks('test_configure_snmp_service'))
     suite.addTest(TestGraphiantPlaybooks('test_configure_syslog_service'))
     suite.addTest(TestGraphiantPlaybooks('test_configure_ipfix_service'))
@@ -417,5 +454,4 @@ if __name__ == '__main__':
     # To deconfigure all interfaces
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_circuits'))
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_interfaces'))
-    '''
     runner = unittest.TextTestRunner(verbosity=2).run(suite)

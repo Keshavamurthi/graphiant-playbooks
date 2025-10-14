@@ -73,6 +73,21 @@ def capture_library_logs(func):
 
             return result
 
+        except Exception as e:
+            # Capture logs even when exception occurs
+            if log_handler:
+                captured_logs = log_capture.getvalue()
+                if captured_logs:
+                    # Add logs to the exception message for better debugging
+                    import traceback
+                    full_traceback = traceback.format_exc()
+                    enhanced_message = f"{str(e)}\n\nDetailed logs before exception:\n{captured_logs}"
+                    # Create a new exception with enhanced message (without full traceback to avoid duplication)
+                    new_exception = type(e)(enhanced_message)
+                    new_exception.__cause__ = e
+                    raise new_exception
+            raise
+
         finally:
             # Clean up the handler
             if log_handler:
@@ -81,7 +96,5 @@ def capture_library_logs(func):
                 except Exception:
                     pass
                 log_capture.close()
-
-            # No need to restore callback since we're not setting it
 
     return wrapper

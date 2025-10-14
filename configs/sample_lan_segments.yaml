@@ -9,5 +9,12 @@ lan_segments:
   - name: "lan-segment-3"
     description: "Development LAN segment"
 
+# LAN segments for interface management testing
+  - name: "lan-1-test"
+    description: "LAN segment for testing"
+
   - name: "lan-7-test"
+    description: "LAN segment for testing"
+
+  - name: "lan-8-test"
     description: "LAN segment for testing"
