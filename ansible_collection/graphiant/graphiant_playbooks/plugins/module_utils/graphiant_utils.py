@@ -102,7 +102,7 @@ def _import_graphiant_libs():
     Import Graphiant library modules with robust path resolution.
 
     Returns:
-        tuple: (Edge, GraphiantPlaybookError, ConfigurationError, APIError, DeviceNotFoundError)
+        tuple: (GraphiantConfig, GraphiantPlaybookError, ConfigurationError, APIError, DeviceNotFoundError)
     """
     # Find the libs directory
     libs_path = _find_libs_directory()
@@ -111,9 +111,9 @@ def _import_graphiant_libs():
         # Add libs directory to Python path
         sys.path.insert(0, libs_path)
         try:
-            from libs.edge import Edge
+            from libs.graphiant_config import GraphiantConfig
             from libs.exceptions import GraphiantPlaybookError, ConfigurationError, APIError, DeviceNotFoundError
-            return Edge, GraphiantPlaybookError, ConfigurationError, APIError, DeviceNotFoundError
+            return GraphiantConfig, GraphiantPlaybookError, ConfigurationError, APIError, DeviceNotFoundError
         except ImportError:
             # Remove the path we just added to avoid conflicts
             if libs_path in sys.path:
@@ -121,25 +121,25 @@ def _import_graphiant_libs():
 
     # Fallback: Try direct imports (for when libs is in current directory)
     try:
-        from edge import Edge
+        from graphiant_config import GraphiantConfig
         from exceptions import GraphiantPlaybookError, ConfigurationError, APIError, DeviceNotFoundError
-        return Edge, GraphiantPlaybookError, ConfigurationError, APIError, DeviceNotFoundError
+        return GraphiantConfig, GraphiantPlaybookError, ConfigurationError, APIError, DeviceNotFoundError
     except ImportError:
         pass
 
     # Final fallback: Create mock classes for testing/development
-    class MockEdge:
+    class MockGraphiantConfig:
         def __init__(self, *args, **kwargs):
             raise ImportError("Graphiant SDK not available. Please install graphiant-sdk package.")
 
     class MockException(Exception):
         pass
 
-    return MockEdge, MockException, MockException, MockException, MockException
+    return MockGraphiantConfig, MockException, MockException, MockException, MockException
 
 
 # Import the Graphiant library modules
-Edge, GraphiantPlaybookError, ConfigurationError, APIError, DeviceNotFoundError = _import_graphiant_libs()
+GraphiantConfig, GraphiantPlaybookError, ConfigurationError, APIError, DeviceNotFoundError = _import_graphiant_libs()
 
 
 class GraphiantConnection:
@@ -159,19 +159,19 @@ class GraphiantConnection:
         self.host = host
         self.username = username
         self.password = password
-        self._edge = None
+        self._graphiant_config = None
 
     @property
-    def edge(self) -> Edge:
+    def graphiant_config(self) -> GraphiantConfig:
         """
-        Get or create Edge instance.
+        Get or create GraphiantConfig instance.
 
         Returns:
-            Edge: Graphiant Edge instance
+            GraphiantConfig: Graphiant configuration instance
         """
-        if self._edge is None:
+        if self._graphiant_config is None:
             try:
-                self._edge = Edge(
+                self._graphiant_config = GraphiantConfig(
                     base_url=self.host,
                     username=self.username,
                     password=self.password
@@ -179,7 +179,7 @@ class GraphiantConnection:
             except Exception as e:
                 raise GraphiantPlaybookError(f"Failed to initialize Graphiant connection: {str(e)}")
 
-        return self._edge
+        return self._graphiant_config
 
     def test_connection(self) -> bool:
         """
@@ -190,7 +190,7 @@ class GraphiantConnection:
         """
         try:
             # Try to get manager status to test connection
-            status = self.edge.get_manager_status()
+            status = self.graphiant_config.get_manager_status()
             return all(status.values())
         except Exception:
             return False

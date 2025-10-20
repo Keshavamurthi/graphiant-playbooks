@@ -93,13 +93,7 @@ def main():
     # Create Ansible module
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
-        required_together=[
-            ['configure_wan_circuits_interfaces', 'circuit_config_file'],
-            ['deconfigure_wan_circuits_interfaces', 'circuit_config_file'],
-            ['configure_circuits', 'circuit_config_file'],
-            ['deconfigure_circuits', 'circuit_config_file']
-        ]
+        supports_check_mode=True
     )
 
     # Get parameters
@@ -143,6 +137,19 @@ def main():
             msg=f"Circuit configuration file not found or not readable: {circuit_config_file}"
         )
 
+    # Validate operation-specific requirements
+    circuit_operations = [
+        'configure_wan_circuits_interfaces',
+        'deconfigure_wan_circuits_interfaces',
+        'configure_circuits',
+        'deconfigure_circuits'
+    ]
+
+    if operation in circuit_operations and not circuit_config_file:
+        module.fail_json(
+            msg=f"Operation '{operation}' requires 'circuit_config_file' parameter"
+        )
+
     # Handle check mode
     if module.check_mode:
         module.exit_json(
@@ -156,63 +163,63 @@ def main():
     try:
         # Get Graphiant connection
         connection = get_graphiant_connection(params)
-        edge = connection.edge
+        graphiant_config = connection.graphiant_config
 
         # Execute the requested operation
         changed = False
         result_msg = ""
 
         if operation == 'configure_interfaces':
-            result = execute_with_logging(module, edge.interfaces.configure_interfaces,
+            result = execute_with_logging(module, graphiant_config.interfaces.configure_interfaces,
                                           interface_config_file, circuit_config_file,
                                           success_msg="Successfully configured all interfaces")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_interfaces':
-            result = execute_with_logging(module, edge.interfaces.deconfigure_interfaces,
+            result = execute_with_logging(module, graphiant_config.interfaces.deconfigure_interfaces,
                                           interface_config_file, circuit_config_file, circuits_only,
                                           success_msg="Successfully deconfigured all interfaces")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_lan_interfaces':
-            result = execute_with_logging(module, edge.interfaces.configure_lan_interfaces,
+            result = execute_with_logging(module, graphiant_config.interfaces.configure_lan_interfaces,
                                           interface_config_file,
                                           success_msg="Successfully configured LAN interfaces")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_lan_interfaces':
-            result = execute_with_logging(module, edge.interfaces.deconfigure_lan_interfaces,
+            result = execute_with_logging(module, graphiant_config.interfaces.deconfigure_lan_interfaces,
                                           interface_config_file,
                                           success_msg="Successfully deconfigured LAN interfaces")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_wan_circuits_interfaces':
-            result = execute_with_logging(module, edge.interfaces.configure_wan_circuits_interfaces,
+            result = execute_with_logging(module, graphiant_config.interfaces.configure_wan_circuits_interfaces,
                                           circuit_config_file, interface_config_file,
                                           success_msg="Successfully configured WAN circuits and interfaces")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_wan_circuits_interfaces':
-            result = execute_with_logging(module, edge.interfaces.deconfigure_wan_circuits_interfaces,
+            result = execute_with_logging(module, graphiant_config.interfaces.deconfigure_wan_circuits_interfaces,
                                           interface_config_file, circuit_config_file, circuits_only,
                                           success_msg="Successfully deconfigured WAN circuits and interfaces")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_circuits':
-            result = execute_with_logging(module, edge.interfaces.configure_circuits,
+            result = execute_with_logging(module, graphiant_config.interfaces.configure_circuits,
                                           circuit_config_file, interface_config_file,
                                           success_msg="Successfully configured circuits")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_circuits':
-            result = execute_with_logging(module, edge.interfaces.deconfigure_circuits,
+            result = execute_with_logging(module, graphiant_config.interfaces.deconfigure_circuits,
                                           circuit_config_file, interface_config_file,
                                           success_msg="Successfully deconfigured circuits")
             changed = result['changed']

@@ -1,6 +1,4 @@
 """
-Refactored Edge Templates for Graphiant Playbooks.
-
 This module provides a clean, maintainable interface for template rendering
 with proper error handling, type hints, and reduced code duplication.
 """
@@ -14,7 +12,7 @@ from libs.exceptions import TemplateError, ConfigurationError
 LOG = setup_logger()
 
 
-class EdgeTemplates:
+class ConfigTemplates:
     """
     Manages Jinja2 template rendering for Graphiant configurations.
 
@@ -38,7 +36,7 @@ class EdgeTemplates:
 
     def __init__(self, config_template_path: str):
         """
-        Initialize the EdgeTemplates with template directory path.
+        Initialize the ConfigTemplates with template directory path.
 
         Args:
             config_template_path: Path to the directory containing Jinja2 templates
@@ -49,7 +47,7 @@ class EdgeTemplates:
         try:
             self.template_env = Environment(loader=FileSystemLoader(config_template_path))
             self.template_path = config_template_path
-            LOG.debug(f"EdgeTemplates initialized with path: {config_template_path}")
+            LOG.debug(f"ConfigTemplates initialized with path: {config_template_path}")
         except Exception as e:
             raise TemplateError(f"Failed to initialize template environment: {str(e)}")
 

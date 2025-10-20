@@ -7,7 +7,7 @@ for all configuration managers.
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
-from libs.edge_utils import EdgeUtils
+from libs.config_utils import ConfigUtils
 from libs.logger import setup_logger
 from libs.exceptions import ConfigurationError, APIError, DeviceNotFoundError, SiteNotFoundError
 
@@ -22,16 +22,16 @@ class BaseManager(ABC):
     template rendering, and API communication.
     """
 
-    def __init__(self, edge_utils: EdgeUtils):
+    def __init__(self, config_utils: ConfigUtils):
         """
         Initialize the base manager.
 
         Args:
-            edge_utils: Instance of EdgeUtils containing common utilities
+            config_utils: Instance of ConfigUtils containing common utilities
         """
-        self.edge_utils = edge_utils
-        self.gsdk = edge_utils.gsdk
-        self.template = edge_utils.template
+        self.config_utils = config_utils
+        self.gsdk = config_utils.gsdk
+        self.template = config_utils.template
 
     @abstractmethod
     def configure(self, config_yaml_file: str) -> None:
@@ -67,7 +67,7 @@ class BaseManager(ABC):
             ConfigurationError: If the file cannot be loaded or parsed
         """
         try:
-            config_data = self.edge_utils.render_config_file(yaml_file)
+            config_data = self.config_utils.render_config_file(yaml_file)
             if config_data is None:
                 raise ConfigurationError(f"Failed to load configuration file: {yaml_file}")
             return config_data
@@ -86,7 +86,7 @@ class BaseManager(ABC):
             Dictionary with execution results
         """
         try:
-            return self.edge_utils.concurrent_task_execution(function, config_dict)
+            return self.config_utils.concurrent_task_execution(function, config_dict)
         except Exception as e:
             raise APIError(f"Error executing concurrent tasks: {str(e)}")
 
@@ -103,7 +103,7 @@ class BaseManager(ABC):
         Raises:
             DeviceNotFoundError: If device cannot be found
         """
-        device_id = self.edge_utils.get_device_id(device_name)
+        device_id = self.gsdk.get_device_id(device_name)
         if not device_id:
             raise DeviceNotFoundError(f"Device '{device_name}' not found")
         return device_id
@@ -121,7 +121,7 @@ class BaseManager(ABC):
         Raises:
             SiteNotFoundError: If site cannot be found
         """
-        site_id = self.edge_utils.get_site_id(site_name)
+        site_id = self.gsdk.get_site_id(site_name)
         if not site_id:
             raise SiteNotFoundError(f"Site '{site_name}' not found")
         return site_id

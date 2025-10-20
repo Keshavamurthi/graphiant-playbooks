@@ -31,10 +31,165 @@ configs/terraform/
 
 | Requirement | Version | Purpose |
 |-------------|---------|---------|
+| **Python** | 3.12+ | Core runtime for Graphiant SDK |
 | **Terraform CLI** | >= 1.1.0 | Infrastructure provisioning |
 | **Azure CLI** | Latest | Azure authentication and management |
+| **AWS CLI** | Latest | AWS resource management (for future AWS modules) |
 | **Cloud Account** | Active | Azure subscription |
 | **Permissions** | Required | Resource creation and management rights |
+
+## Python Installation
+
+### macOS
+```bash
+# Using Homebrew (recommended)
+brew install python@3.12
+
+# Or download from python.org
+```
+
+### Windows
+```bash
+# Using Chocolatey
+choco install python --version=3.12.0
+
+# Or download from python.org
+```
+
+### Linux (Ubuntu/Debian)
+```bash
+# Add deadsnakes PPA for latest Python versions
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.12 python3.12-venv python3.12-pip
+```
+
+## Terraform Installation
+
+### macOS
+```bash
+# Using Homebrew
+brew install terraform
+
+# Verify installation
+terraform version
+```
+
+### Windows
+```bash
+# Using Chocolatey
+choco install terraform
+
+# Or download from https://www.terraform.io/downloads
+```
+
+### Linux (Ubuntu/Debian)
+```bash
+# Add HashiCorp GPG key
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+
+# Add repository
+sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+
+# Install Terraform
+sudo apt-get update && sudo apt-get install terraform
+```
+
+## Azure CLI Installation
+
+### macOS
+```bash
+# Using Homebrew
+brew install azure-cli
+
+# Verify installation
+az version
+```
+
+### Windows
+```bash
+# Using Chocolatey
+choco install azure-cli
+
+# Or download from Microsoft
+```
+
+### Linux (Ubuntu/Debian)
+```bash
+# Install Azure CLI
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+# Verify installation
+az version
+```
+
+## AWS CLI Installation
+
+### macOS
+```bash
+# Using Homebrew
+brew install awscli
+
+# Verify installation
+aws --version
+```
+
+### Windows
+```bash
+# Using Chocolatey
+choco install awscli
+
+# Or download from AWS
+```
+
+### Linux (Ubuntu/Debian)
+```bash
+# Install AWS CLI
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+
+# Verify installation
+aws --version
+```
+
+## Cloud Authentication
+
+### Azure Authentication
+```bash
+# Login to Azure
+az login
+
+# Set subscription (if multiple)
+az account set --subscription "your-subscription-id"
+
+# Verify authentication
+az account show
+```
+
+### AWS Authentication
+```bash
+# Configure AWS credentials
+aws configure
+
+# Or use environment variables
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+export AWS_DEFAULT_REGION="us-west-2"
+
+# Verify authentication
+aws sts get-caller-identity
+```
+
+### Verification
+
+```bash
+# Check all installations
+python3 --version    # Should show Python 3.12+
+terraform version    # Should show Terraform 1.1.0+
+az version          # Should show Azure CLI
+aws --version       # Should show AWS CLI
+```
 
 ## Quick Start with Terraform
 
@@ -92,14 +247,14 @@ The Azure Terraform configuration deploys:
 After deploying the ExpressRoute infrastructure with Terraform, you can use the outputs to configure BGP peering with your Graphiant edge devices:
 
 ```python
-from libs.edge import Edge
+from libs.graphiant_config import GraphiantConfig
 
 # Initialize Graphiant Edge
-edge = Edge(base_url='https://api.graphiant.com', username='user', password='pass')
+graphiant_config = GraphiantConfig(base_url='https://api.graphiant.com', username='user', password='pass')
 
 # Get Terraform outputs for circuit information
 # Use these values in your BGP peering configuration
-edge.configure_bgp_peers("your_bgp_config.yaml")
+graphiant_config.configure_bgp_peers("your_bgp_config.yaml")
 ```
 
 ## Terraform Commands
@@ -157,6 +312,12 @@ Update these in `configs/terraform/azure_config.tfvars`:
 3. **Resource Quotas**: Check Azure subscription limits
 4. **Network Conflicts**: Verify IP address ranges
 
+**Python/Graphiant SDK:**
+1. **Python Version**: Ensure Python 3.12+ is installed
+2. **Virtual Environment**: Use virtual environment for isolation
+3. **Dependencies**: Install required packages with `pip install -r requirements.txt`
+4. **PYTHONPATH**: Set PYTHONPATH for Graphiant SDK access
+
 ### Useful Commands
 
 **Azure:**
@@ -174,6 +335,30 @@ az network express-route list-service-providers
 az role assignment list --assignee $(az account show --query user.name -o tsv)
 ```
 
+**Python/Graphiant:**
+```bash
+# Check Python version
+python3 --version
+
+# Check Graphiant SDK installation
+python3 -c "import graphiant_sdk; print('Graphiant SDK installed')"
+
+# Test Graphiant connection
+python3 -c "from libs.graphiant_config import GraphiantConfig; print('Graphiant Playbooks ready')"
+```
+
+**AWS:**
+```bash
+# Check AWS CLI version
+aws --version
+
+# Check AWS authentication
+aws sts get-caller-identity
+
+# List available regions
+aws ec2 describe-regions --query 'Regions[].RegionName'
+```
+
 ## Cleanup
 
 ### Azure ExpressRoute
@@ -189,4 +374,5 @@ terraform destroy -var-file="../../configs/terraform/azure_config.tfvars"
 
 - [Terraform Azure Provider Documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
 - [Azure ExpressRoute Documentation](https://docs.microsoft.com/en-us/azure/expressroute/)
+- [AWS Direct Connect Documentation](https://docs.aws.amazon.com/directconnect/)
 - [Graphiant Playbooks Main Documentation](../README.md)

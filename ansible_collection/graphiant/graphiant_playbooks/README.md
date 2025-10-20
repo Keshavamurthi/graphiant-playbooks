@@ -1,27 +1,15 @@
 # Graphiant Playbooks Ansible Collection
 
-This Ansible collection provides modules for automating Graphiant NaaS (Network as a Service) configurations. It allows you to manage network infrastructure, interfaces, circuits, BGP peering, and global configurations through Ansible playbooks.
+This Ansible collection provides modules for automating Graphiant NaaS (Network as a Service) configurations. It allows you to manage network infrastructure, interfaces, circuits, BGP peering, global configurations, and Data Exchange workflows through Ansible playbooks.
+
+## Prerequisites
+
+- Ansible >= 2.15
+- Python >= 3.12
+- Graphiant SDK >= 25.6.2
+- Access to Graphiant NaaS platform
 
 ## Installation
-
-### Prerequisites
-Before installing the collection, ensure you have the following requirements:
-
-```bash
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Verify Ansible installation
-ansible --version
-
-# Set PYTHONPATH to include the project directory (required for library access)
-export PYTHONPATH=$(pwd):$PYTHONPATH
-```
-
-### From Ansible Galaxy (when published)
-```bash
-ansible-galaxy collection install graphiant.graphiant_playbooks
-```
 
 ### From Source (Recommended Method)
 
@@ -47,7 +35,7 @@ cd graphiant-playbooks
 # Build the collection
 python ansible_collection/graphiant/graphiant_playbooks/build_collection.py
 
-# Install from built archive (Note: This method may have issues with MANIFEST.json)
+# Install from built archive
 ansible-galaxy collection install build/graphiant-graphiant_playbooks-1.0.0.tar.gz --force
 ```
 
@@ -84,11 +72,6 @@ ansible-config dump | grep COLLECTIONS_PATHS
 3. **Current working directory**: Check if running from project root
 4. **Git repository root**: Find .git directory and look for configs/libs there
 5. **File location walk-up**: Walk up from current file location (fallback)
-
-**Troubleshooting Collection Issues:**
-- If collections aren't found, check the `COLLECTIONS_PATHS` configuration
-- Ensure the collection is installed in the correct directory
-- Verify file permissions on the collection directory
 
 ### Testing the Installation
 Test the collection with a simple playbook:
@@ -140,34 +123,6 @@ ansible-galaxy collection list | grep graphiant
 # graphiant.portal                         1.0.0  (if installed)
 ```
 
-### Understanding Collection Paths
-To understand where Ansible looks for collections:
-
-```bash
-# Check Ansible collection search paths
-ansible-config dump | grep COLLECTIONS_PATHS
-
-# Typical output:
-# COLLECTIONS_PATHS(default) = ['/Users/username/.ansible/collections', '/usr/share/ansible/collections']
-```
-
-**Collection Search Order:**
-1. **User collections**: `~/.ansible/collections/` (highest priority)
-2. **System collections**: `/usr/share/ansible/collections/` (fallback)
-3. **Custom paths**: Any additional paths configured in `ansible.cfg`
-
-**Path Resolution Priority (for config files):**
-1. **GRAPHIANT_PLAYBOOKS_PATH**: User-configured environment variable (highest priority)
-2. **PYTHONPATH**: Check paths in PYTHONPATH for graphiant-playbooks directory
-3. **Current working directory**: Check if running from project root
-4. **Git repository root**: Find .git directory and look for configs/libs there
-5. **File location walk-up**: Walk up from current file location (fallback)
-
-**Troubleshooting Collection Issues:**
-- If collections aren't found, check the `COLLECTIONS_PATHS` configuration
-- Ensure the collection is installed in the correct directory
-- Verify file permissions on the collection directory
-
 ### Clean Up (Optional)
 If you want to completely remove all Graphiant collections:
 
@@ -179,13 +134,6 @@ rm -rf ~/.ansible/collections/ansible_collections/graphiant/
 ansible-galaxy collection list | grep graphiant
 # Expected output: (empty)
 ```
-
-## Requirements
-
-- Ansible >= 2.15
-- Python >= 3.12
-- Graphiant SDK >= 25.6.2
-- Access to Graphiant NaaS platform
 
 ## Parameter Behavior
 
@@ -235,6 +183,29 @@ When `operation` is not specified, `state` determines the operation:
     # No operation or state specified - will show supported operations
 ```
 
+## Manager Template Usage
+
+The Graphiant Playbooks collection includes different managers that use different approaches for configuration payload generation:
+
+| Manager | Operations | Template Usage | Notes |
+|---------|------------|----------------|--------|
+| **InterfaceManager** | `configure_interfaces`, `configure_lan_interfaces`, `configure_wan_circuits_interfaces`, `configure_circuits` | ✅ **Uses Templates** | Uses Jinja2 templates for interface and circuit configurations |
+| **BGPManager** | `configure`, `detach_policies`, `deconfigure` | ✅ **Uses Templates** | Uses Jinja2 templates for BGP peering configurations |
+| **GlobalConfigManager** | `configure`, `deconfigure`, `configure_*`, `deconfigure_*` | ✅ **Uses Templates** | Uses Jinja2 templates for global object configurations |
+| **SiteManager** | `configure`, `deconfigure`, `configure_sites`, `attach_objects` | ✅ **Uses Templates** | Uses Jinja2 templates for site and attachment configurations |
+| **DataExchangeManager** | `create_services`, `create_customers`, `match_service_to_customers`, `delete_services`, `delete_customers` | ❌ **Direct API Calls** | Uses direct API calls without template rendering |
+
+### Template-Based Managers
+- **InterfaceManager**: Uses `interface_template.yaml` and `circuit_template.yaml`
+- **BGPManager**: Uses `bgp_peering_template.yaml`
+- **GlobalConfigManager**: Uses various global templates (`global_*_template.yaml`)
+- **SiteManager**: Uses site and attachment templates
+
+### Direct API Managers
+- **DataExchangeManager**: Processes YAML configuration directly and makes API calls without template rendering
+
+**Note**: The Data Exchange manager was designed to work directly with the existing YAML configuration structure, avoiding the complexity of template rendering for Data Exchange operations.
+
 ## Modules
 
 ### graphiant_interfaces
@@ -271,8 +242,8 @@ Manages Graphiant interfaces and circuits.
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    interface_config_file: "configs/sample_interface_config.yaml"
-    circuit_config_file: "configs/sample_circuit_config.yaml"
+    interface_config_file: "sample_interface_config.yaml"
+    circuit_config_file: "sample_circuit_config.yaml"
     operation: "configure_interfaces"
     state: present
 
@@ -281,7 +252,7 @@ Manages Graphiant interfaces and circuits.
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    interface_config_file: "configs/sample_interface_config.yaml"
+    interface_config_file: "sample_interface_config.yaml"
     operation: "configure_lan_interfaces"
     detailed_logs: true
     state: present
@@ -314,7 +285,7 @@ Manages Graphiant BGP peering and routing policies.
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    bgp_config_file: "configs/sample_bgp_peering.yaml"
+    bgp_config_file: "sample_bgp_peering.yaml"
     operation: "configure"
     state: present
 
@@ -323,7 +294,7 @@ Manages Graphiant BGP peering and routing policies.
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    bgp_config_file: "configs/sample_bgp_peering.yaml"
+    bgp_config_file: "sample_bgp_peering.yaml"
     operation: "configure"
     detailed_logs: true
     state: present
@@ -380,7 +351,7 @@ The `detailed_logs` parameter enables comprehensive logging output from the unde
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    config_file: "configs/sample_global_prefix_lists.yaml"
+    config_file: "sample_global_prefix_lists.yaml"
     operation: "configure_prefix_sets"
     state: present
 
@@ -389,7 +360,7 @@ The `detailed_logs` parameter enables comprehensive logging output from the unde
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    config_file: "configs/sample_lan_segments.yaml"
+    config_file: "sample_global_lan_segments.yaml"
     operation: "configure_lan_segments"
     state: present
 
@@ -399,7 +370,7 @@ The `detailed_logs` parameter enables comprehensive logging output from the unde
 #     host: "https://api.graphiant.com"
 #     username: "{{ graphiant_username }}"
 #     password: "{{ graphiant_password }}"
-#     config_file: "configs/sample_lan_segments.yaml"
+#     config_file: "sample_global_lan_segments.yaml"
 #     operation: "configure"
 #     state: present
 
@@ -409,7 +380,7 @@ The `detailed_logs` parameter enables comprehensive logging output from the unde
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    config_file: "configs/sample_lan_segments.yaml"
+    config_file: "sample_global_lan_segments.yaml"
     operation: "configure_lan_segments"
     state: present
     detailed_logs: true
@@ -419,7 +390,7 @@ The `detailed_logs` parameter enables comprehensive logging output from the unde
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    config_file: "configs/sample_global_site_lists.yaml"
+    config_file: "sample_global_site_lists.yaml"
     operation: "configure_site_lists"
     state: present
 
@@ -428,7 +399,7 @@ The `detailed_logs` parameter enables comprehensive logging output from the unde
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    config_file: "configs/sample_global_site_lists.yaml"
+    config_file: "sample_global_site_lists.yaml"
     operation: "deconfigure_site_lists"
     state: absent
 ```
@@ -464,7 +435,7 @@ Manages Graphiant site creation, deletion, and object attachments/detachments.
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    site_config_file: "configs/sample_sites.yaml"
+    site_config_file: "sample_sites.yaml"
     operation: "configure"
     state: present
 
@@ -474,7 +445,7 @@ Manages Graphiant site creation, deletion, and object attachments/detachments.
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    site_config_file: "configs/sample_sites.yaml"
+    site_config_file: "sample_sites.yaml"
     operation: "configure_sites"
     state: present
 
@@ -484,7 +455,7 @@ Manages Graphiant site creation, deletion, and object attachments/detachments.
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    site_config_file: "configs/sample_sites.yaml"
+    site_config_file: "sample_sites.yaml"
     operation: "attach_objects"
     state: present
 
@@ -493,10 +464,98 @@ Manages Graphiant site creation, deletion, and object attachments/detachments.
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    site_config_file: "configs/sample_site_attachments.yaml"
+    site_config_file: "sample_site_attachments.yaml"
     operation: "attach_objects"
     detailed_logs: true
     state: present
+```
+
+### graphiant_data_exchange
+
+Manages Graphiant Data Exchange services, customers, and service-to-customer matches.
+
+**Parameters:**
+- `host` (required): Graphiant API host URL
+- `username` (required): Username for authentication
+- `password` (required): Password for authentication
+- `config_file` (required for create/delete/match operations): Path to Data Exchange configuration YAML file
+- `operation` (optional): Operation to perform (at least one of operation or state required)
+  - `create_services`: Create Data Exchange services from YAML configuration
+  - `delete_services`: Delete Data Exchange services from YAML configuration
+  - `get_services_summary`: Get summary of all Data Exchange services
+  - `create_customers`: Create Data Exchange customers from YAML configuration
+  - `delete_customers`: Delete Data Exchange customers from YAML configuration
+  - `get_customers_summary`: Get summary of all Data Exchange customers
+  - `match_service_to_customers`: Match services to customers from YAML configuration
+- `state` (optional): Desired state (present/absent/query, default: present)
+  - `present`: Maps to `create_services` when operation not specified
+  - `absent`: Maps to `delete_services` when operation not specified
+  - `query`: Maps to `get_services_summary` when operation not specified
+- `detailed_logs` (optional): Enable detailed logging output from library operations (default: false)
+  - `true`: Show detailed library logs in the task output
+  - `false`: Show only basic success/error messages
+
+**Examples:**
+```yaml
+# Create Data Exchange services
+- name: Create Data Exchange services
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: create_services
+    config_file: "sample_data_exchange_services.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+
+# Delete Data Exchange services
+- name: Delete Data Exchange services
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: delete_services
+    config_file: "sample_data_exchange_services.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+
+# Get services summary
+- name: Get Data Exchange services summary
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: get_services_summary
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+
+# Create Data Exchange customers
+- name: Create Data Exchange customers
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: create_customers
+    config_file: "sample_data_exchange_customers.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+
+# Match services to customers
+- name: Match Data Exchange services to customers
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: match_service_to_customers
+    config_file: "sample_data_exchange_matches.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+
+# Using state parameter
+- name: Create services using state parameter
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    state: present
+    config_file: "sample_data_exchange_services.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+
+- name: Query services using state parameter
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    state: query
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
 ```
 
 ## Detailed Logging
@@ -539,7 +598,7 @@ ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook your_playbook.yml
     host: "https://api.graphiant.com"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
-    interface_config_file: "configs/sample_interface_config.yaml"
+    interface_config_file: "sample_interface_config.yaml"
     operation: "configure_lan_interfaces"
     detailed_logs: true  # Enable detailed logging
     state: present
@@ -574,7 +633,7 @@ Use YAML anchors to avoid repetition and keep playbooks clean:
     - name: Configure global prefix sets
       graphiant.graphiant_playbooks.graphiant_global_config:
         <<: *graphiant_client_params
-        config_file: "configs/sample_global_prefix_lists.yaml"
+        config_file: "sample_global_prefix_lists.yaml"
         operation: "configure"
         state: present
 ```
@@ -645,10 +704,10 @@ url = https://api.test.graphiant.io
 # In playbook
 - name: Configure interfaces using INI file credentials
   graphiant.graphiant_playbooks.graphiant_interfaces:
-    host: "{{ lookup('ini', 'url file=test/test.ini section=host') }}"
-    username: "{{ lookup('ini', 'username file=test/test.ini section=credentials') }}"
-    password: "{{ lookup('ini', 'password file=test/test.ini section=credentials') }}"
-    interface_config_file: "configs/sample_interface_config.yaml"
+    host: "{{ lookup('ini', 'url file=/absolute/path/test/test.ini section=host') }}"
+    username: "{{ lookup('ini', 'username file=/absolute/path/test/test.ini section=credentials') }}"
+    password: "{{ lookup('ini', 'password file=/absolute/path/test/test.ini section=credentials') }}"
+    interface_config_file: "sample_interface_config.yaml"
     operation: "configure_lan_interfaces"
     state: present
 ```
@@ -664,9 +723,9 @@ url = https://api.test.graphiant.io
 # Using the project's test.ini file
 - name: Configure LAN interfaces using project credentials
   graphiant.graphiant_playbooks.graphiant_interfaces:
-    host: "{{ lookup('ini', 'url file=test/test.ini section=host') }}"
-    username: "{{ lookup('ini', 'username file=test/test.ini section=credentials') }}"
-    password: "{{ lookup('ini', 'password file=test/test.ini section=credentials') }}"
+    host: "{{ lookup('ini', 'url file=/absolute/path/test/test.ini section=host') }}"
+    username: "{{ lookup('ini', 'username file=/absolute/path/test/test.ini section=credentials') }}"
+    password: "{{ lookup('ini', 'password file=/absolute/path/test/test.ini section=credentials') }}"
     interface_config_file: "sample_interface_config.yaml"
     operation: "configure_lan_interfaces"
     detailed_logs: true
@@ -777,7 +836,7 @@ ansible-playbook playbook.yml
     - name: Attach global objects to sites
       graphiant.graphiant_playbooks.graphiant_sites:
         <<: *graphiant_client_params
-        site_config_file: "configs/sample_site_attachments.yaml"
+        site_config_file: "sample_site_attachments.yaml"
         operation: "attach_object"
         state: present
 ```
@@ -803,8 +862,8 @@ ansible-playbook playbook.yml
     - name: Configure circuits only (for static routes)
       graphiant.graphiant_playbooks.graphiant_interfaces:
         <<: *graphiant_client_params
-        interface_config_file: "configs/sample_interface_config.yaml"
-        circuit_config_file: "configs/sample_circuit_config.yaml"
+        interface_config_file: "sample_interface_config.yaml"
+        circuit_config_file: "sample_circuit_config.yaml"
         operation: "configure_circuits"
         state: present
 ```
@@ -822,10 +881,16 @@ The collection uses the same YAML configuration files as the standalone Graphian
 - `sample_global_syslog_servers.yaml`: Global syslog service configurations
 - `sample_global_ipfix_exporters.yaml`: Global IPFIX service configurations
 - `sample_global_vpn_profiles.yaml`: Global VPN profile configurations
-- `sample_lan_segments.yaml`: Global LAN segment configurations
+- `sample_global_lan_segments.yaml`: Global LAN segment configurations
 - `sample_global_site_lists.yaml`: Global site list configurations
 - `sample_site_attachments.yaml`: Site attachment configurations
 - `sample_sites.yaml`: Site creation and object attachment configurations
+- `sample_data_exchange_services.yaml`: Data Exchange service configurations
+- `sample_data_exchange_customers.yaml`: Data Exchange customer configurations
+- `sample_data_exchange_matches.yaml`: Data Exchange service-to-customer match configurations
+- `sample_data_exchange_services_scale_10.yaml`: Scale test configuration for 10 services
+- `sample_data_exchange_customers_scale_50.yaml`: Scale test configuration for 50 customers
+- `sample_data_exchange_matches_scale_50.yaml`: Scale test configuration for 50 matches
 
 ## Configuration Format Examples
 
@@ -1021,5 +1086,3 @@ For support and documentation, visit:
 - [Graphiant Documentation](https://docs.graphiant.com/)
 - [Graphiant Playbooks User Guide](https://docs.graphiant.com/docs/graphiant-playbooks)
 - [GitHub Repository](https://github.com/graphiant/graphiant-playbooks)
-
-

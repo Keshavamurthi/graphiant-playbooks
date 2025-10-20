@@ -156,116 +156,132 @@ def main():
     try:
         # Get Graphiant connection
         connection = get_graphiant_connection(params)
-        edge = connection.edge
+        graphiant_config = connection.graphiant_config
 
         # Execute the requested operation
         changed = False
         result_msg = ""
 
         if operation == 'configure':
-            result = execute_with_logging(module, edge.global_config.configure, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.configure, config_file,
                                           success_msg="Successfully configured all global objects")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure':
-            result = execute_with_logging(module, edge.global_config.deconfigure, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.deconfigure, config_file,
                                           success_msg="Successfully deconfigured all global objects")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_prefix_sets':
-            result = execute_with_logging(module, edge.global_config.configure_prefix_sets, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.configure_prefix_sets,
+                                          config_file,
                                           success_msg="Successfully configured global prefix sets")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_prefix_sets':
-            result = execute_with_logging(module, edge.global_config.deconfigure_prefix_sets, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.deconfigure_prefix_sets,
+                                          config_file,
                                           success_msg="Successfully deconfigured global prefix sets")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_bgp_filters':
-            result = execute_with_logging(module, edge.global_config.configure_bgp_filters, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.configure_bgp_filters,
+                                          config_file,
                                           success_msg="Successfully configured global BGP filters")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_bgp_filters':
-            result = execute_with_logging(module, edge.global_config.deconfigure_bgp_filters, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.deconfigure_bgp_filters,
+                                          config_file,
                                           success_msg="Successfully deconfigured global BGP filters")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_snmp_services':
-            result = execute_with_logging(module, edge.global_config.configure_snmp_services, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.configure_snmp_services,
+                                          config_file,
                                           success_msg="Successfully configured global SNMP services")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_snmp_services':
-            result = execute_with_logging(module, edge.global_config.deconfigure_snmp_services, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.deconfigure_snmp_services,
+                                          config_file,
                                           success_msg="Successfully deconfigured global SNMP services")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_syslog_services':
-            result = execute_with_logging(module, edge.global_config.configure_syslog_services, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.configure_syslog_services,
+                                          config_file,
                                           success_msg="Successfully configured global syslog services")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_syslog_services':
-            result = execute_with_logging(module, edge.global_config.deconfigure_syslog_services, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.deconfigure_syslog_services,
+                                          config_file,
                                           success_msg="Successfully deconfigured global syslog services")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_ipfix_services':
-            result = execute_with_logging(module, edge.global_config.configure_ipfix_services, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.configure_ipfix_services,
+                                          config_file,
                                           success_msg="Successfully configured global IPFIX services")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_ipfix_services':
-            result = execute_with_logging(module, edge.global_config.deconfigure_ipfix_services, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.deconfigure_ipfix_services,
+                                          config_file,
                                           success_msg="Successfully deconfigured global IPFIX services")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_vpn_profiles':
-            result = execute_with_logging(module, edge.global_config.configure_vpn_profiles, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.configure_vpn_profiles,
+                                          config_file,
                                           success_msg="Successfully configured global VPN profiles")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_vpn_profiles':
-            result = execute_with_logging(module, edge.global_config.deconfigure_vpn_profiles, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.deconfigure_vpn_profiles,
+                                          config_file,
                                           success_msg="Successfully deconfigured global VPN profiles")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_lan_segments':
-            result = execute_with_logging(module, edge.global_config.configure_lan_segments, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.configure_lan_segments,
+                                          config_file,
                                           success_msg="Successfully configured global LAN segments")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_lan_segments':
-            result = execute_with_logging(module, edge.global_config.deconfigure_lan_segments, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.deconfigure_lan_segments,
+                                          config_file,
                                           success_msg="Successfully deconfigured global LAN segments")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_site_lists':
-            result = execute_with_logging(module, edge.global_config.configure_site_lists, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.configure_site_lists,
+                                          config_file,
                                           success_msg="Successfully configured global site lists")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_site_lists':
-            result = execute_with_logging(module, edge.global_config.deconfigure_site_lists, config_file,
+            result = execute_with_logging(module, graphiant_config.global_config.deconfigure_site_lists,
+                                          config_file,
                                           success_msg="Successfully deconfigured global site lists")
             changed = result['changed']
             result_msg = result['result_msg']

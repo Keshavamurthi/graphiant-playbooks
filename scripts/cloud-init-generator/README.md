@@ -4,8 +4,6 @@ This Bash script is an interactive tool for generating a valid `cloud-init` conf
 
 The script is designed to onboard network devices using parameters required by Graphiant's onboarding system and is compatible with both DHCP and static IP environments.
 
----
-
 ## 📦 What It Does
 
 - Prompts the user step-by-step to enter relevant onboarding and networking configuration values.
@@ -14,23 +12,27 @@ The script is designed to onboard network devices using parameters required by G
 - Can optionally include an onboarding token.
 - Outputs a cloud-init ISO.
 
----
-
 ## 🛠️ Requirements
 
 - Bash shell (Linux/macOS)
 - `mkisofs` installed and available in your system path
 
----
-
 ## ▶️ How to Run
 
-- install required packages
-    - Linux/macOS: run "brew install cdrtools"
+### Install Required Packages
+```bash
+# Linux/macOS: install cdrtools
+brew install cdrtools
+```
 
-- start cloud init generation script
+### Start Cloud Init Generation Script
+```bash
+# Make script executable
 chmod +x generate-cloud-init.sh
+
+# Run the script
 ./generate-cloud-init.sh
+```
 
 ## ▶️ Example Run
 ```commandline
@@ -63,3 +65,80 @@ Max brk space used 0
 183 extents written (0 MB)
 ✅ Cloud-init image created: ccccloud.iso
 ```
+
+## Configuration Options
+
+### Onboarding Environment
+- **prod**: Production environment
+- **test**: Test environment
+
+### Device Role
+- **cpe**: Customer Premises Equipment
+- **gateway**: Gateway device
+- **core**: Core network device
+
+### Interface Configuration
+- **Local Management Interface**: Default is `GigabitEthernet2`
+- **WAN Interface**: Default is `GigabitEthernet1`
+- **IP Configuration**: DHCP or static IP assignment
+
+### Network Settings
+- **WAN IP Address**: CIDR format (e.g., `123.123.123.2/24`)
+- **WAN Gateway**: Gateway IP address
+- **DNS Servers**: Optional custom DNS configuration
+- **Hostname**: Optional custom hostname
+
+### Security
+- **Onboarding Token**: Optional token for secure onboarding
+- **Local Web Server Password**: Password for local management interface
+
+## Output Files
+
+The script generates:
+- **Cloud-init ISO**: Bootable image with cloud-init configuration
+- **User-data**: Cloud-init user data configuration
+- **Meta-data**: Cloud-init metadata configuration
+
+## Troubleshooting
+
+### Common Issues
+
+1. **mkisofs not found**: Install cdrtools package
+   ```bash
+   # macOS
+   brew install cdrtools
+   
+   # Ubuntu/Debian
+   sudo apt-get install genisoimage
+   ```
+
+2. **Permission denied**: Make script executable
+   ```bash
+   chmod +x generate-cloud-init.sh
+   ```
+
+3. **Invalid interface names**: Use standard interface naming conventions
+   - Example: `GigabitEthernet1/0/0`, `Ethernet0/0/1`
+
+### Validation
+
+The script includes built-in validation for:
+- Interface name format
+- IP address format (CIDR)
+- Gateway IP format
+- Required field completion
+
+## Integration with Graphiant Playbooks
+
+The generated cloud-init ISO can be used with Graphiant Edge devices for automated onboarding:
+
+1. **Generate ISO**: Use this script to create the cloud-init image
+2. **Deploy to Device**: Boot the device with the generated ISO
+3. **Configure Network**: Use Graphiant Playbooks to configure the device
+4. **Manage Infrastructure**: Use Terraform modules for cloud connectivity
+
+## Additional Resources
+
+- [Cloud-init Documentation](https://cloudinit.readthedocs.io/)
+- [Graphiant Playbooks Main Documentation](../../README.md)
+- [Terraform Infrastructure Documentation](../../terraform/README.md)
