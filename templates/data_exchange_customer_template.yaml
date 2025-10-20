@@ -1,0 +1,8 @@
+# Data Exchange Customer Template
+# This template is not used to generate the API payload for Data Exchange customer creation
+
+name: "{{ customer_name }}"
+type: "{{ customer_type }}"
+invite:
+  adminEmail: {{ admin_emails }}
+  maximumNumberOfSites: {{ max_sites }}

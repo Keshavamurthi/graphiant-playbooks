@@ -146,89 +146,9 @@ class PortalUtils(object):
         with open(input_file_path, "r") as file:
             config_data = yaml.safe_load(file)
             for device_name, config in config_data.items():
-                device_id = self.get_device_id(device_name=device_name)
+                device_id = self.gsdk.get_device_id(device_name=device_name)
                 input_dict[device_id] = {"device_id": device_id, "status": config["status"]}
             self.concurrent_task_execution(self.update_device_bringup_status, input_dict)
-
-    def get_device_id(self, device_name):
-        """
-        Retrieve the device ID(s) based on the device name.
-
-        If a single match is found, returns the device ID.
-        If multiple matches are found, returns a dictionary of {hostname: device_id}.
-        If no match is found, returns an empty dict.
-        """
-        output = self.gsdk.get_edges_summary()
-        output_dict = {}
-        for device_info in output:
-            if device_name in device_info.hostname:
-                output_dict[device_info.hostname] = device_info.device_id
-        LOG.debug(f"get_device_id : {output_dict}")
-        if len(output_dict) == 1:
-            for device_id in output_dict.values():
-                return device_id
-        return output_dict
-
-    def get_enterprise_id(self):
-        """
-        Retrieve the enterprise ID from the first available device in the edges summary.
-
-        Returns:
-            str or None: The enterprise ID, or None if no devices are found.
-        """
-        output = self.gsdk.get_edges_summary()
-        if not output:
-            return None
-        for device_info in output:
-            LOG.debug(f"get_enterprise_id : {device_info.enterprise_id}")
-            return device_info.enterprise_id
-
-    def get_lan_segment_id(self, lan_segment_name):
-        """
-        Retrieve the lan segment ID based on the lan segment name.
-
-        Args:
-            lan_segment_name (str): The name of the lan segment (e.g., 'lan-7-test')
-
-        Returns:
-            int: The ID of the lan segment if found.
-
-        Raises:
-            AssertionError: If the lan segment is not found.
-        """
-        output = self.gsdk.get_global_lan_segments()
-        lan_segment_id = None
-        for lan_segment_obj in output:
-            if lan_segment_obj.name == lan_segment_name:
-                lan_segment_id = lan_segment_obj.id
-                return lan_segment_id
-        assert lan_segment_id, f"Lan segment ID for lan segment '{lan_segment_name}' is {lan_segment_id}"
-        return lan_segment_id
-
-    def get_all_lan_segments(self):
-        """
-        Retrieve all lan segments from the system.
-
-        Returns:
-            dict: A dictionary mapping lan segment names to their IDs.
-        """
-        output = self.gsdk.get_global_lan_segments()
-        lan_segments = {}
-        for lan_segment_obj in output:
-            lan_segments[lan_segment_obj.name] = lan_segment_obj.id
-        return lan_segments
-
-    def get_site_id(self, site_name: str):
-        """
-        Get site ID by site name.
-
-        Args:
-            site_name (str): The name of the site.
-
-        Returns:
-            int or None: The site ID if found, None otherwise.
-        """
-        return self.gsdk.get_site_id(site_name)
 
     def render_config_file(self, yaml_file):
         """
@@ -270,20 +190,3 @@ class PortalUtils(object):
                 raise ConfigurationError(f"YAML parsing error in '{input_file_path}': {str(e)}")
         except Exception as e:
             raise ConfigurationError(f"Error reading configuration file '{input_file_path}': {str(e)}")
-
-    def get_global_routing_policy_id(self, policy_name):
-        """
-        Retrieve the global routing policy ID based on the policy name.
-
-        Args:
-            policy_name (str): The name of the routing policy.
-
-        Returns:
-            str or None: The ID of the routing policy if found, otherwise None.
-        """
-        result = self.gsdk.post_global_summary(routing_policy_type=True)
-        for key, value in result.to_dict().items():
-            for config in value:
-                if config['name'] == policy_name:
-                    return config['id']
-        return None

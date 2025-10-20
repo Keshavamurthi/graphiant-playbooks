@@ -68,7 +68,7 @@ class InterfaceManager(BaseManager):
             # Process each device's configurations
             for device_name, configs in device_configs.items():
                 try:
-                    device_id = self.edge_utils.get_device_id(device_name)
+                    device_id = self.gsdk.get_device_id(device_name)
                     output_config[device_id] = {
                         "device_id": device_id,
                         "edge": {"interfaces": {}, "circuits": {}}
@@ -93,7 +93,7 @@ class InterfaceManager(BaseManager):
                     circuits_configured = 0
                     for circuit_config in configs.get("circuits", []):
                         if circuit_config.get('circuit') in referenced_circuits:
-                            self.edge_utils.edge_circuit(
+                            self.config_utils.device_circuit(
                                 output_config[device_id]["edge"],
                                 action="add",
                                 **circuit_config
@@ -130,7 +130,7 @@ class InterfaceManager(BaseManager):
                                 # Interface has subinterfaces
                                 combined_config = interface_config.copy()
                                 combined_config['sub_interfaces'] = all_subinterfaces
-                                self.edge_utils.edge_interface(
+                                self.config_utils.device_interface(
                                     output_config[device_id]["edge"],
                                     action="add",
                                     **combined_config
@@ -140,7 +140,7 @@ class InterfaceManager(BaseManager):
                                          f"with {len(all_subinterfaces)} subinterfaces for device: {device_name}")
                             else:
                                 # Interface has no subinterfaces
-                                self.edge_utils.edge_interface(
+                                self.config_utils.device_interface(
                                     output_config[device_id]["edge"],
                                     action="add",
                                     **interface_config
@@ -193,7 +193,7 @@ class InterfaceManager(BaseManager):
             # Load interface configurations
             interface_config_data = self.render_config_file(interface_config_file)
             output_config = {}
-            default_lan = f'default-{self.edge_utils.get_enterprise_id()}'
+            default_lan = f'default-{self.gsdk.get_enterprise_id()}'
 
             # Load circuit configurations if provided
             circuit_config_data = None
@@ -225,7 +225,7 @@ class InterfaceManager(BaseManager):
             # Process each device's configurations
             for device_name, configs in device_configs.items():
                 try:
-                    device_id = self.edge_utils.get_device_id(device_name)
+                    device_id = self.gsdk.get_device_id(device_name)
                     output_config[device_id] = {
                         "device_id": device_id,
                         "edge": {"interfaces": {}, "circuits": {}}
@@ -251,7 +251,7 @@ class InterfaceManager(BaseManager):
                     if circuits_only:
                         for circuit_config in configs.get("circuits", []):
                             if circuit_config.get('circuit') in referenced_circuits:
-                                self.edge_utils.edge_circuit(
+                                self.config_utils.device_circuit(
                                     output_config[device_id]["edge"],
                                     action="delete",
                                     **circuit_config
@@ -289,7 +289,7 @@ class InterfaceManager(BaseManager):
                                     # Interface has subinterfaces
                                     combined_config = interface_config.copy()
                                     combined_config['sub_interfaces'] = all_subinterfaces
-                                    self.edge_utils.edge_interface(
+                                    self.config_utils.device_interface(
                                         output_config[device_id]["edge"],
                                         action="delete",
                                         default_lan=default_lan,
@@ -300,7 +300,7 @@ class InterfaceManager(BaseManager):
                                              f"with {len(all_subinterfaces)} subinterfaces for device: {device_name}")
                                 else:
                                     # Interface has no subinterfaces
-                                    self.edge_utils.edge_interface(
+                                    self.config_utils.device_interface(
                                         output_config[device_id]["edge"],
                                         action="delete",
                                         default_lan=default_lan,
@@ -440,7 +440,7 @@ class InterfaceManager(BaseManager):
             for device_info in config_data.get("interfaces"):
                 for device_name, config_list in device_info.items():
                     try:
-                        device_id = self.edge_utils.get_device_id(device_name)
+                        device_id = self.gsdk.get_device_id(device_name)
                         device_config = {"interfaces": {}}
 
                         lan_interfaces_configured = 0
@@ -463,7 +463,7 @@ class InterfaceManager(BaseManager):
                                     # Both main interface and subinterfaces have LAN config
                                     combined_config = config.copy()
                                     combined_config['sub_interfaces'] = lan_subinterfaces
-                                    self.edge_utils.edge_interface(device_config, action="add", **combined_config)
+                                    self.config_utils.device_interface(device_config, action="add", **combined_config)
                                     lan_interfaces_configured += 1 + len(lan_subinterfaces)
                                     LOG.info(f" ✓ To configure LAN main interface '{config.get('name')}' "
                                              f"and {len(lan_subinterfaces)} LAN subinterfaces "
@@ -473,7 +473,7 @@ class InterfaceManager(BaseManager):
                                     # Only main interface has LAN config
                                     main_config = config.copy()
                                     main_config.pop('sub_interfaces', None)  # Remove subinterfaces
-                                    self.edge_utils.edge_interface(device_config, action="add", **main_config)
+                                    self.config_utils.device_interface(device_config, action="add", **main_config)
                                     lan_interfaces_configured += 1
                                     LOG.info(f" ✓ To configure LAN main interface '{config.get('name')}' "
                                              f"for device: {device_name}")
@@ -484,7 +484,8 @@ class InterfaceManager(BaseManager):
                                         'name': config.get('name'),
                                         'sub_interfaces': lan_subinterfaces
                                     }
-                                    self.edge_utils.edge_interface(device_config, action="add", **subinterface_config)
+                                    self.config_utils.device_interface(device_config, action="add",
+                                                                       **subinterface_config)
                                     lan_interfaces_configured += len(lan_subinterfaces)
                                     LOG.info(f" ✓ Configure {len(lan_subinterfaces)} LAN subinterfaces for interface "
                                              f"'{config.get('name')}' on device: {device_name}")
@@ -533,7 +534,7 @@ class InterfaceManager(BaseManager):
         try:
             config_data = self.render_config_file(interface_config_file)
             output_config = {}
-            default_lan = f'default-{self.edge_utils.get_enterprise_id()}'
+            default_lan = f'default-{self.gsdk.get_enterprise_id()}'
 
             if 'interfaces' not in config_data:
                 LOG.warning(f"No interfaces configuration found in {interface_config_file}")
@@ -542,7 +543,7 @@ class InterfaceManager(BaseManager):
             for device_info in config_data.get("interfaces"):
                 for device_name, config_list in device_info.items():
                     try:
-                        device_id = self.edge_utils.get_device_id(device_name)
+                        device_id = self.gsdk.get_device_id(device_name)
                         device_config = {"interfaces": {}}
 
                         lan_interfaces_deconfigured = 0
@@ -565,8 +566,8 @@ class InterfaceManager(BaseManager):
                                     # Both main interface and subinterfaces have LAN config
                                     combined_config = config.copy()
                                     combined_config['sub_interfaces'] = lan_subinterfaces
-                                    self.edge_utils.edge_interface(device_config, action="delete",
-                                                                   **combined_config, default_lan=default_lan)
+                                    self.config_utils.device_interface(device_config, action="delete",
+                                                                       **combined_config, default_lan=default_lan)
                                     lan_interfaces_deconfigured += 1 + len(lan_subinterfaces)
                                     LOG.info(f" ✓ To deconfigure LAN main interface '{config.get('name')}' "
                                              f"and {len(lan_subinterfaces)} LAN subinterfaces "
@@ -576,8 +577,8 @@ class InterfaceManager(BaseManager):
                                     # Only main interface has LAN config
                                     main_config = config.copy()
                                     main_config.pop('sub_interfaces', None)  # Remove subinterfaces
-                                    self.edge_utils.edge_interface(device_config, action="delete", **main_config,
-                                                                   default_lan=default_lan)
+                                    self.config_utils.device_interface(device_config, action="delete", **main_config,
+                                                                       default_lan=default_lan)
                                     lan_interfaces_deconfigured += 1
                                     LOG.info(f" ✓ To deconfigure LAN main interface '{config.get('name')}' "
                                              f"for device: {device_name}")
@@ -588,8 +589,8 @@ class InterfaceManager(BaseManager):
                                         'name': config.get('name'),
                                         'sub_interfaces': lan_subinterfaces
                                     }
-                                    self.edge_utils.edge_interface(device_config, action="delete",
-                                                                   **subinterface_config, default_lan=default_lan)
+                                    self.config_utils.device_interface(device_config, action="delete",
+                                                                       **subinterface_config, default_lan=default_lan)
                                     lan_interfaces_deconfigured += len(lan_subinterfaces)
                                     LOG.info(f" ✓ Deconfigure {len(lan_subinterfaces)} LAN subinterfaces for interface"
                                              f" '{config.get('name')}' on device: {device_name}")
@@ -667,7 +668,7 @@ class InterfaceManager(BaseManager):
             # Process each device's configurations
             for device_name, configs in device_configs.items():
                 try:
-                    device_id = self.edge_utils.get_device_id(device_name)
+                    device_id = self.gsdk.get_device_id(device_name)
                     output_config[device_id] = {
                         "device_id": device_id,
                         "edge": {"interfaces": {}, "circuits": {}}
@@ -697,7 +698,7 @@ class InterfaceManager(BaseManager):
                     circuits_configured = 0
                     for circuit_config in configs.get("circuits", []):
                         if circuit_config.get('circuit') in referenced_circuits:
-                            self.edge_utils.edge_circuit(
+                            self.config_utils.device_circuit(
                                 output_config[device_id]["edge"],
                                 action="add",
                                 **circuit_config
@@ -732,7 +733,7 @@ class InterfaceManager(BaseManager):
                                     # Both main interface and subinterfaces have WAN config
                                     combined_config = interface_config.copy()
                                     combined_config['sub_interfaces'] = wan_subinterfaces
-                                    self.edge_utils.edge_interface(
+                                    self.config_utils.device_interface(
                                         output_config[device_id]["edge"],
                                         action="add",
                                         **combined_config
@@ -747,7 +748,7 @@ class InterfaceManager(BaseManager):
                                     # Only main interface has WAN config
                                     main_config = interface_config.copy()
                                     main_config.pop('sub_interfaces', None)  # Remove subinterfaces
-                                    self.edge_utils.edge_interface(
+                                    self.config_utils.device_interface(
                                         output_config[device_id]["edge"],
                                         action="add",
                                         **main_config
@@ -763,7 +764,7 @@ class InterfaceManager(BaseManager):
                                         'name': interface_config.get('name'),
                                         'sub_interfaces': wan_subinterfaces
                                     }
-                                    self.edge_utils.edge_interface(
+                                    self.config_utils.device_interface(
                                         output_config[device_id]["edge"],
                                         action="add",
                                         **subinterface_config
@@ -833,7 +834,7 @@ class InterfaceManager(BaseManager):
                 circuit_config_data = self.render_config_file(circuit_config_file)
 
             output_config = {}
-            default_lan = f'default-{self.edge_utils.get_enterprise_id()}'
+            default_lan = f'default-{self.gsdk.get_enterprise_id()}'
 
             # Collect all device configurations first
             device_configs = {}
@@ -857,7 +858,7 @@ class InterfaceManager(BaseManager):
             # Process each device's configurations
             for device_name, configs in device_configs.items():
                 try:
-                    device_id = self.edge_utils.get_device_id(device_name)
+                    device_id = self.gsdk.get_device_id(device_name)
                     output_config[device_id] = {
                         "device_id": device_id,
                         "edge": {"interfaces": {}, "circuits": {}}
@@ -884,7 +885,7 @@ class InterfaceManager(BaseManager):
                     if circuits_only:
                         for circuit_config in configs.get("circuits", []):
                             if circuit_config.get('circuit') in referenced_circuits:
-                                self.edge_utils.edge_circuit(
+                                self.config_utils.device_circuit(
                                     output_config[device_id]["edge"],
                                     action="delete",
                                     **circuit_config
@@ -919,7 +920,7 @@ class InterfaceManager(BaseManager):
                                     # Both main interface and subinterfaces have WAN config
                                     combined_config = interface_config.copy()
                                     combined_config['sub_interfaces'] = wan_subinterfaces
-                                    self.edge_utils.edge_interface(
+                                    self.config_utils.device_interface(
                                         output_config[device_id]["edge"],
                                         action="delete",
                                         default_lan=default_lan,
@@ -935,7 +936,7 @@ class InterfaceManager(BaseManager):
                                     # Only main interface has WAN config
                                     main_config = interface_config.copy()
                                     main_config.pop('sub_interfaces', None)  # Remove subinterfaces
-                                    self.edge_utils.edge_interface(
+                                    self.config_utils.device_interface(
                                         output_config[device_id]["edge"],
                                         action="delete",
                                         default_lan=default_lan,
@@ -952,7 +953,7 @@ class InterfaceManager(BaseManager):
                                         'name': interface_config.get('name'),
                                         'sub_interfaces': wan_subinterfaces
                                     }
-                                    self.edge_utils.edge_interface(
+                                    self.config_utils.device_interface(
                                         output_config[device_id]["edge"],
                                         action="delete",
                                         default_lan=default_lan,

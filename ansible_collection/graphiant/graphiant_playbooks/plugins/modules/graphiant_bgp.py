@@ -130,26 +130,26 @@ def main():
     try:
         # Get Graphiant connection
         connection = get_graphiant_connection(params)
-        edge = connection.edge
+        graphiant_config = connection.graphiant_config
 
         # Execute the requested operation
         changed = False
         result_msg = ""
 
         if operation == 'configure':
-            result = execute_with_logging(module, edge.bgp.configure, bgp_config_file,
+            result = execute_with_logging(module, graphiant_config.bgp.configure, bgp_config_file,
                                           success_msg="Successfully configured BGP peering and attached policies")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'detach_policies':
-            result = execute_with_logging(module, edge.bgp.detach_policies, bgp_config_file,
+            result = execute_with_logging(module, graphiant_config.bgp.detach_policies, bgp_config_file,
                                           success_msg="Successfully detached policies from BGP peers")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure':
-            result = execute_with_logging(module, edge.bgp.deconfigure, bgp_config_file,
+            result = execute_with_logging(module, graphiant_config.bgp.deconfigure, bgp_config_file,
                                           success_msg="Successfully deconfigured BGP peering")
             changed = result['changed']
             result_msg = result['result_msg']

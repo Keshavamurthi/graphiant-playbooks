@@ -1,30 +1,28 @@
 """
-Refactored Edge Utilities for Graphiant Playbooks.
-
 This module provides standardized utility methods for building configuration payloads
 using Jinja2 templates. All methods follow consistent patterns for better maintainability.
 """
 
 from libs.portal_utils import PortalUtils
-from libs.edge_templates import EdgeTemplates
+from libs.config_templates import ConfigTemplates
 from libs.logger import setup_logger
 from libs.exceptions import ConfigurationError
 
 LOG = setup_logger()
 
 
-class EdgeUtils(PortalUtils):
+class ConfigUtils(PortalUtils):
     """
-    Standardized utility class for building edge configuration payloads.
+    Standardized utility class for building device configuration payloads.
 
     This class provides consistent methods for rendering templates and updating
     configuration payloads with proper error handling and logging.
     """
 
     def __init__(self, base_url=None, username=None, password=None, **kwargs):
-        """Initialize EdgeUtils with portal connection and template renderer."""
+        """Initialize ConfigUtils with portal connection and template renderer."""
         super().__init__(base_url=base_url, username=username, password=password, **kwargs)
-        self.template = EdgeTemplates(self.templates)
+        self.template = ConfigTemplates(self.templates)
 
     def _validate_required_params(self, kwargs, required_params):
         """
@@ -91,9 +89,9 @@ class EdgeUtils(PortalUtils):
             LOG.error(f"Failed to process global BGP filter {kwargs.get('name')}: {str(e)}")
             raise ConfigurationError(f"Global BGP filter processing failed: {str(e)}")
 
-    def edge_bgp_peering(self, config_payload, action="add", **kwargs):
+    def device_bgp_peering(self, config_payload, action="add", **kwargs):
         """
-        Update the edge_bgp_peering section of configuration payload.
+        Update the Device neighbors section of configuration payload.
 
         Args:
             config_payload (dict): Dictionary to be updated with BGP peering configuration.
@@ -111,18 +109,18 @@ class EdgeUtils(PortalUtils):
             global_ids = {}
             if kwargs.get("route_policies"):
                 for policy_name in kwargs.get("route_policies"):
-                    global_ids[policy_name] = self.get_global_routing_policy_id(policy_name)
+                    global_ids[policy_name] = self.gsdk.get_global_routing_policy_id(policy_name)
                     LOG.debug(f"Global ID for {policy_name}: {global_ids[policy_name]}")
 
             result = self.template.render_bgp_peering(action=action, global_ids=global_ids, **kwargs)
             config_payload.update(result)
         except Exception as e:
-            LOG.error(f"Failed to process edge BGP peering {kwargs.get('segments')}: {str(e)}")
-            raise ConfigurationError(f"Edge BGP peering processing failed: {str(e)}")
+            LOG.error(f"Failed to process device BGP peering {kwargs.get('segments')}: {str(e)}")
+            raise ConfigurationError(f"Device BGP peering processing failed: {str(e)}")
 
-    def edge_interface(self, config_payload, action="add", **kwargs):
+    def device_interface(self, config_payload, action="add", **kwargs):
         """
-        Update the edge interfaces section of the configuration payload.
+        Update the device interfaces section of the configuration payload.
 
         Args:
             config_payload (dict): Dictionary to be updated with interface data.
@@ -133,7 +131,7 @@ class EdgeUtils(PortalUtils):
             ConfigurationError: If required parameters are missing.
         """
         self._validate_required_params(kwargs, ['name'])
-        LOG.info(f"Edge interface: {action.upper()} {kwargs.get('name')}")
+        LOG.info(f"Device interface: {action.upper()} {kwargs.get('name')}")
 
         try:
             result = self.template.render_interface(action=action, **kwargs)
@@ -142,12 +140,12 @@ class EdgeUtils(PortalUtils):
             else:
                 LOG.warning(f"No interfaces found in template result for {kwargs.get('name')}")
         except Exception as e:
-            LOG.error(f"Failed to process edge interface {kwargs.get('name')}: {str(e)}")
-            raise ConfigurationError(f"Edge interface processing failed: {str(e)}")
+            LOG.error(f"Failed to process device interface {kwargs.get('name')}: {str(e)}")
+            raise ConfigurationError(f"Device interface processing failed: {str(e)}")
 
-    def edge_circuit(self, config_payload, action="add", **kwargs):
+    def device_circuit(self, config_payload, action="add", **kwargs):
         """
-        Update the edge circuits section of the configuration payload.
+        Update the device circuits section of the configuration payload.
 
         Args:
             config_payload (dict): Dictionary to be updated with circuit data.
@@ -158,7 +156,7 @@ class EdgeUtils(PortalUtils):
             ConfigurationError: If required parameters are missing.
         """
         self._validate_required_params(kwargs, ['circuit'])
-        LOG.debug(f"Edge circuit: {action.upper()} {kwargs.get('circuit')}")
+        LOG.debug(f"Device circuit: {action.upper()} {kwargs.get('circuit')}")
 
         try:
             result = self.template.render_circuit(action=action, **kwargs)
@@ -167,8 +165,8 @@ class EdgeUtils(PortalUtils):
             else:
                 LOG.warning(f"No circuits found in template result for {kwargs.get('circuit')}")
         except Exception as e:
-            LOG.error(f"Failed to process edge circuit {kwargs.get('circuit')}: {str(e)}")
-            raise ConfigurationError(f"Edge circuit processing failed: {str(e)}")
+            LOG.error(f"Failed to process device circuit {kwargs.get('circuit')}: {str(e)}")
+            raise ConfigurationError(f"Device circuit processing failed: {str(e)}")
 
     def global_snmp(self, config_payload, action="add", **kwargs):
         """
@@ -214,7 +212,7 @@ class EdgeUtils(PortalUtils):
             # Convert lanSegment to vrfId if present
             if 'target' in kwargs and 'lanSegment' in kwargs['target']:
                 lan_segment = kwargs['target']['lanSegment']
-                vrf_id = self.get_lan_segment_id(lan_segment)
+                vrf_id = self.gsdk.get_lan_segment_id(lan_segment)
                 kwargs['target']['vrfId'] = vrf_id
                 del kwargs['target']['lanSegment']
                 LOG.debug(f"Converted lanSegment '{lan_segment}' to vrfId {vrf_id}")
@@ -247,7 +245,7 @@ class EdgeUtils(PortalUtils):
             # Convert lanSegment to vrfId if present in exporter
             if 'exporter' in kwargs and 'lanSegment' in kwargs['exporter']:
                 lan_segment = kwargs['exporter']['lanSegment']
-                vrf_id = self.get_lan_segment_id(lan_segment)
+                vrf_id = self.gsdk.get_lan_segment_id(lan_segment)
                 kwargs['exporter']['vrfId'] = vrf_id
                 del kwargs['exporter']['lanSegment']
                 LOG.debug(f"Converted lanSegment '{lan_segment}' to vrfId {vrf_id}")

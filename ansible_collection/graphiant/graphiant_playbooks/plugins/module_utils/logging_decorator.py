@@ -79,10 +79,8 @@ def capture_library_logs(func):
                 captured_logs = log_capture.getvalue()
                 if captured_logs:
                     # Add logs to the exception message for better debugging
-                    import traceback
-                    full_traceback = traceback.format_exc()
                     enhanced_message = f"{str(e)}\n\nDetailed logs before exception:\n{captured_logs}"
-                    # Create a new exception with enhanced message (without full traceback to avoid duplication)
+                    # Create a new exception with enhanced message
                     new_exception = type(e)(enhanced_message)
                     new_exception.__cause__ = e
                     raise new_exception

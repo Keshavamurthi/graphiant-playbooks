@@ -155,7 +155,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"global_prefix_sets": {}}
 
             for prefix_config in prefix_sets:
-                self.edge_utils.global_prefix_set(config_payload, action="add", **prefix_config)
+                self.config_utils.global_prefix_set(config_payload, action="add", **prefix_config)
 
             LOG.info(f"Configure prefix sets payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -181,7 +181,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"global_prefix_sets": {}}
 
             for prefix_config in prefix_sets:
-                self.edge_utils.global_prefix_set(config_payload, action="delete", **prefix_config)
+                self.config_utils.global_prefix_set(config_payload, action="delete", **prefix_config)
 
             LOG.info(f"Deconfigure prefix sets payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -207,7 +207,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"routing_policies": {}}
 
             for policy_config in routing_policies:
-                self.edge_utils.global_bgp_filter(config_payload, action="add", **policy_config)
+                self.config_utils.global_bgp_filter(config_payload, action="add", **policy_config)
 
             LOG.info(f"Configure BGP filters payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -233,7 +233,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"routing_policies": {}}
 
             for policy_config in routing_policies:
-                self.edge_utils.global_bgp_filter(config_payload, action="delete", **policy_config)
+                self.config_utils.global_bgp_filter(config_payload, action="delete", **policy_config)
 
             LOG.info(f"Deconfigure BGP filters payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -259,7 +259,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"snmps": {}}
 
             for snmp_config in snmp_services:
-                self.edge_utils.global_snmp(config_payload, action="add", **snmp_config)
+                self.config_utils.global_snmp(config_payload, action="add", **snmp_config)
 
             LOG.debug(f"Configure SNMP services payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -285,7 +285,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"snmps": {}}
 
             for snmp_config in snmp_services:
-                self.edge_utils.global_snmp(config_payload, action="delete", **snmp_config)
+                self.config_utils.global_snmp(config_payload, action="delete", **snmp_config)
 
             LOG.debug(f"Deconfigure SNMP services payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -311,7 +311,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"syslog_servers": {}}
 
             for syslog_config in syslog_services:
-                self.edge_utils.global_syslog(config_payload, action="add", **syslog_config)
+                self.config_utils.global_syslog(config_payload, action="add", **syslog_config)
 
             LOG.debug(f"Configure syslog services payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -337,7 +337,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"syslog_servers": {}}
 
             for syslog_config in syslog_services:
-                self.edge_utils.global_syslog(config_payload, action="delete", **syslog_config)
+                self.config_utils.global_syslog(config_payload, action="delete", **syslog_config)
 
             LOG.debug(f"Deconfigure syslog services payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -363,7 +363,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"ipfix_exporters": {}}
 
             for ipfix_config in ipfix_services:
-                self.edge_utils.global_ipfix(config_payload, action="add", **ipfix_config)
+                self.config_utils.global_ipfix(config_payload, action="add", **ipfix_config)
 
             LOG.debug(f"Configure IPFIX services payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -389,7 +389,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"ipfix_exporters": {}}
 
             for ipfix_config in ipfix_services:
-                self.edge_utils.global_ipfix(config_payload, action="delete", **ipfix_config)
+                self.config_utils.global_ipfix(config_payload, action="delete", **ipfix_config)
 
             LOG.debug(f"Deconfigure IPFIX services payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -415,7 +415,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"vpn_profiles": {}}
 
             for vpn_config in vpn_profiles:
-                self.edge_utils.global_vpn_profile(config_payload, action="add", **vpn_config)
+                self.config_utils.global_vpn_profile(config_payload, action="add", **vpn_config)
 
             LOG.info(f"Configure VPN profiles payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -441,7 +441,7 @@ class GlobalConfigManager(BaseManager):
             config_payload = {"vpn_profiles": {}}
 
             for vpn_config in vpn_profiles:
-                self.edge_utils.global_vpn_profile(config_payload, action="delete", **vpn_config)
+                self.config_utils.global_vpn_profile(config_payload, action="delete", **vpn_config)
 
             LOG.debug(f"Deconfigure VPN profiles payload: {config_payload}")
             self.gsdk.patch_global_config(**config_payload)
@@ -554,7 +554,7 @@ class GlobalConfigManager(BaseManager):
 
             # Load and parse YAML configuration
             try:
-                config_data = self.edge_utils.render_config_file(config_yaml_file)
+                config_data = self.config_utils.render_config_file(config_yaml_file)
             except ConfigurationError as e:
                 # Re-raise configuration errors with better context
                 raise ConfigurationError(f"Configuration file error: {str(e)}")
@@ -604,7 +604,7 @@ class GlobalConfigManager(BaseManager):
 
                 # Use template approach for consistency with other global config methods
                 config_payload = {"site_lists": {}}
-                self.edge_utils.global_site_list(
+                self.config_utils.global_site_list(
                     config_payload,
                     action="add",
                     name=site_list_name,
@@ -633,7 +633,7 @@ class GlobalConfigManager(BaseManager):
             LOG.info(f"Deconfiguring global site lists from {config_yaml_file}")
 
             # Load and parse YAML configuration
-            config_data = self.edge_utils.render_config_file(config_yaml_file)
+            config_data = self.config_utils.render_config_file(config_yaml_file)
             if not config_data or 'site_lists' not in config_data:
                 LOG.info("No site_lists configuration found in YAML file")
                 return

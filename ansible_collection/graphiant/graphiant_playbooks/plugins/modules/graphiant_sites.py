@@ -134,44 +134,44 @@ def main():
     try:
         # Get Graphiant connection
         connection = get_graphiant_connection(params)
-        edge = connection.edge
+        graphiant_config = connection.graphiant_config
 
         # Execute the requested operation
         changed = False
         result_msg = ""
 
         if operation == 'configure':
-            result = execute_with_logging(module, edge.sites.configure, site_config_file,
+            result = execute_with_logging(module, graphiant_config.sites.configure, site_config_file,
                                           success_msg="Successfully configured (created sites and attached objects)")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure':
-            result = execute_with_logging(module, edge.sites.deconfigure, site_config_file,
+            result = execute_with_logging(module, graphiant_config.sites.deconfigure, site_config_file,
                                           success_msg="Successfully deconfigured (detached objects and deleted sites)")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'configure_sites':
-            result = execute_with_logging(module, edge.sites.configure_sites, site_config_file,
+            result = execute_with_logging(module, graphiant_config.sites.configure_sites, site_config_file,
                                           success_msg="Successfully created sites")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation == 'deconfigure_sites':
-            result = execute_with_logging(module, edge.sites.deconfigure_sites, site_config_file,
+            result = execute_with_logging(module, graphiant_config.sites.deconfigure_sites, site_config_file,
                                           success_msg="Successfully deleted sites")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation.lower().startswith('attach'):
-            result = execute_with_logging(module, edge.sites.attach_objects, site_config_file,
+            result = execute_with_logging(module, graphiant_config.sites.attach_objects, site_config_file,
                                           success_msg="Successfully attached global system objects to sites")
             changed = result['changed']
             result_msg = result['result_msg']
 
         elif operation.lower().startswith('detach'):
-            result = execute_with_logging(module, edge.sites.detach_objects, site_config_file,
+            result = execute_with_logging(module, graphiant_config.sites.detach_objects, site_config_file,
                                           success_msg="Successfully detached global system objects from sites")
             changed = result['changed']
             result_msg = result['result_msg']

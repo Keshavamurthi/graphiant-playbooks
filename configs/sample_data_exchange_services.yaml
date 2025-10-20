@@ -1,0 +1,24 @@
+# Sample Data Exchange Services Configuration
+# This file demonstrates how to configure Data Exchange services
+#
+# The system will:
+# 1. Read service configuration from the 'data_exchange_services' list
+# 2. Resolve LAN segment names to IDs
+# 3. Resolve site names to site IDs
+# 4. POST to v1/extranets-b2b-peering/producer with the payload
+
+data_exchange_services:
+  - serviceName: "de-service-1"
+    type: "peering_service"
+    policy:
+      serviceLanSegment: "lan-segment-3"  # Will be resolved to ID
+      type: "peering_service"
+      site:
+        - sites: ["UAT-Site1", "UAT-Site2"]  # Will be resolved to IDs
+          siteLists: []
+      description: "de_service_1_description"
+      prefixTags:
+        - prefix: "104.124.86.1/32"
+          tag: "s-1-prefix1"
+        - prefix: "104.124.86.2/32"
+          tag: "s-1-prefix2"

@@ -42,9 +42,9 @@ class BGPManager(BaseManager):
             for device_config in config_data.get('bgp_peering'):
                 for device_name, config in device_config.items():
                     try:
-                        device_id = self.edge_utils.get_device_id(device_name)
+                        device_id = self.gsdk.get_device_id(device_name)
                         config_payload = {}
-                        self.edge_utils.edge_bgp_peering(config_payload, **config)
+                        self.config_utils.device_bgp_peering(config_payload, **config)
 
                         final_config_payload[device_id] = {
                             "device_id": device_id,
@@ -92,9 +92,9 @@ class BGPManager(BaseManager):
             for device_config in config_data.get('bgp_peering'):
                 for device_name, config in device_config.items():
                     try:
-                        device_id = self.edge_utils.get_device_id(device_name)
+                        device_id = self.gsdk.get_device_id(device_name)
                         config_payload = {}
-                        self.edge_utils.edge_bgp_peering(config_payload, action="delete", **config)
+                        self.config_utils.device_bgp_peering(config_payload, action="delete", **config)
 
                         final_config_payload[device_id] = {
                             "device_id": device_id,
@@ -142,9 +142,9 @@ class BGPManager(BaseManager):
             for device_config in config_data.get('bgp_peering'):
                 for device_name, config in device_config.items():
                     try:
-                        device_id = self.edge_utils.get_device_id(device_name)
+                        device_id = self.gsdk.get_device_id(device_name)
                         config_payload = {}
-                        self.edge_utils.edge_bgp_peering(config_payload, action="unlink", **config)
+                        self.config_utils.device_bgp_peering(config_payload, action="unlink", **config)
 
                         final_config_payload[device_id] = {
                             "device_id": device_id,

@@ -219,3 +219,6 @@ terraform.rc
 # Terraform specific files
 terraform/azure-expressroute/.terraform.lock.hcl
 terraform/azure-expressroute/tfplan
+
+# Output files
+output/
