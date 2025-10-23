@@ -62,7 +62,7 @@
                                             },
                                             "localPref": {
                                                 {% if policy.action_set_local_preference %} 
-                                                    "localPref": "{{ policy.action_set_local_preference }}"
+                                                    "localPref": {{ policy.action_set_local_preference }}
                                                 {% else %}
                                                     "localPref": null
                                                 {% endif %}

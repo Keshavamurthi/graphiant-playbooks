@@ -16,7 +16,7 @@ include:
   - local: ${CI_PROJECT_DIR}/pipelines/run.yml
 
 variables:
-  RUNNER_TAG: gcs-python-builder
+  RUNNER_TAG: gcp-run-small
 
 # Define all stages of CI/CD pipeline.
 stages:

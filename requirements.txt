@@ -4,6 +4,9 @@ Jinja2==3.1.2
 future==0.18.3
 # Graphiant SDK Package
 graphiant-sdk>=25.6.2
+# Ansible Collection Dependencies
+ansible>=8.0.0
+ansible-core>=2.15.0
 # Linter Checks Packages
 flake8==7.2.0
 pylint==3.3.7

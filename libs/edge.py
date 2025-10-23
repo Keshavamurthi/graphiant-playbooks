@@ -1,307 +1,81 @@
-from graphiant_sdk import V1DevicesDeviceIdConfigPutRequestEdge, V1GlobalConfigPatchRequest
+"""
+Refactored Edge class for Graphiant Playbooks.
+
+This module provides a clean, maintainable interface for managing
+Graphiant network configurations using composition and proper separation of concerns.
+"""
+
+from typing import Optional, Dict
 from libs.edge_utils import EdgeUtils
+from libs.interface_manager import InterfaceManager
+from libs.bgp_manager import BGPManager
+from libs.global_config_manager import GlobalConfigManager
+from libs.site_manager import SiteManager
 from libs.logger import setup_logger
+from libs.exceptions import GraphiantPlaybookError
 
 LOG = setup_logger()
 
 
-class Edge(EdgeUtils):
+class Edge:
+    """
+    Main interface for Graphiant Playbooks.
 
-    def __init__(self, base_url=None, username=None, password=None, **kwargs):
-        super().__init__(base_url=base_url, username=username, password=password, **kwargs)
+    This class provides a clean, maintainable interface for managing
+    Graphiant network configurations. It uses composition to delegate
+    specific responsibilities to specialized manager classes.
 
-    def configure_global_config_prefix_lists(self, config_yaml_file):
+    The class follows the Single Responsibility Principle by delegating
+    different types of configurations to appropriate managers:
+    - InterfaceManager: Interface and circuit configurations
+    - BGPManager: BGP peering configurations
+    - GlobalConfigManager: Global configuration objects
+    - SiteManager: Site management operations
+    """
+
+    def __init__(self, base_url: Optional[str] = None, username: Optional[str] = None,
+                 password: Optional[str] = None, **kwargs):
         """
-        Configures Global prefix sets based on the provided YAML configuration file.
-
-        This method reads the configuration file, parses the global prefix set entries,
-        and constructs the payload using the Jinja2 templates and configure
-        the global prefixes using the GCSDK APIs.
+        Initialize the Edge class with connection parameters.
 
         Args:
-            config_yaml_file (str): Path to the YAML file containing the global prefix set definitions.
+            base_url: Base URL for the Graphiant API
+            username: Username for authentication
+            password: Password for authentication
+            **kwargs: Additional parameters passed to EdgeUtils
+        """
+        try:
+            # Initialize the base utilities
+            self.edge_utils = EdgeUtils(
+                base_url=base_url,
+                username=username,
+                password=password,
+                **kwargs
+            )
+
+            # Initialize specialized managers
+            self.interfaces = InterfaceManager(self.edge_utils)
+            self.bgp = BGPManager(self.edge_utils)
+            self.global_config = GlobalConfigManager(self.edge_utils)
+            self.sites = SiteManager(self.edge_utils)
+
+            LOG.info("Edge class initialized successfully with all managers")
+
+        except Exception as e:
+            LOG.error(f"Failed to initialize Edge class: {str(e)}")
+            raise GraphiantPlaybookError(f"Edge initialization failed: {str(e)}")
+
+    def get_manager_status(self) -> Dict[str, bool]:
+        """
+        Get the status of all managers.
 
         Returns:
-            None
+            Dictionary indicating which managers are properly initialized
         """
-        config_data = self.render_config_file(yaml_file=config_yaml_file)
-        final_config_payload = {"global_config": {}}
-        config_payload = {}
-        if 'global_prefix_sets' in config_data:
-            config_payload.update({'global_prefix_sets': {}})
-            for prefix_config in config_data.get('global_prefix_sets'):
-                self.global_prefix_set(config_payload, action="add", **prefix_config)
-            final_config_payload["global_config"].update(config_payload)
-
-        # global_prefix_sets from the rendered config
-        LOG.debug(f"Rendered config of global_prefix_sets: {config_payload}")
-
-        v1_global_config_patch_request = V1GlobalConfigPatchRequest(
-            global_prefix_sets=config_payload['global_prefix_sets'])
-        LOG.debug(f'V1GlobalConfigPatchRequest object: {v1_global_config_patch_request}')
-
-        self.gsdk.patch_global_config(v1_global_config_patch_request)
-
-    def deconfigure_global_config_prefix_lists(self, config_yaml_file):
-        """
-        Removes Global prefix sets based on the provided YAML configuration file.
-
-        This method reads the YAML file, extracts global prefix set configurations, and
-        constructs a payload using the Jinja2 templates to delete them from the system
-        using the GCSDK APIs.
-
-        Args:
-            config_yaml_file (str): Path to the YAML file containing the global
-            prefix set definitions to be removed.
-
-        Returns:
-            None
-        """
-        config_data = self.render_config_file(yaml_file=config_yaml_file)
-        final_config_payload = {"global_config": {}}
-        config_payload = {}
-        if 'global_prefix_sets' in config_data:
-            config_payload.update({'global_prefix_sets': {}})
-            for prefix_config in config_data.get('global_prefix_sets'):
-                self.global_prefix_set(config_payload, action="delete", **prefix_config)
-            final_config_payload["global_config"].update(config_payload)
-
-        # global_prefix_sets from the rendered config
-        LOG.info(f"Rendered config of global_prefix_sets: {config_payload}")
-
-        v1_global_config_patch_request = V1GlobalConfigPatchRequest(
-            global_prefix_sets=config_payload['global_prefix_sets'])
-        LOG.debug(f'V1GlobalConfigPatchRequest object: {v1_global_config_patch_request}')
-
-        self.gsdk.patch_global_config(v1_global_config_patch_request)
-
-    def configure_global_bgp_routing_policies(self, config_yaml_file):
-        """
-        Configures Global BGP routing filter policies using the provided YAML configuration file.
-
-        This method parses the input YAML file to extract BGP routing filter policy definitions,
-        builds the appropriate payload using the templates, and applies the configuration
-        via the GCSDK APIs.
-
-        Args:
-            config_yaml_file (str): Path to the YAML file containing routing policy definitions.
-
-        Returns:
-            None
-        """
-        config_data = self.render_config_file(yaml_file=config_yaml_file)
-        final_config_payload = {"global_config": {}}
-        config_payload = {}
-        if 'routing_policies' in config_data:
-            config_payload.update({'routing_policies': {}})
-            for policy_config in config_data.get('routing_policies'):
-                self.global_bgp_filter(config_payload, action="add", **policy_config)
-            final_config_payload["global_config"].update(config_payload)
-        LOG.debug(f"configure_global_bgp_routing_policies: \
-                  final_config_payload {final_config_payload}")
-        self.concurrent_task_execution(self.gsdk.patch_global_config, final_config_payload)
-
-    def deconfigure_global_bgp_routing_policies(self, config_yaml_file):
-        """
-        Removes Global BGP routing filter policies using the provided YAML configuration file.
-
-        This method parses the input YAML file to extract BGP routing policy definitions
-        and constructs the payload using the templates to remove the specified policies
-        using the GCSDK APIs.
-
-        Args:
-            config_yaml_file (str): Path to the YAML file containing routing policy definitions.
-
-        Returns:
-            None
-        """
-        config_data = self.render_config_file(yaml_file=config_yaml_file)
-        final_config_payload = {"global_config": {}}
-        config_payload = {}
-        if 'routing_policies' in config_data:
-            config_payload.update({'routing_policies': {}})
-            for policy_config in config_data.get('routing_policies'):
-                self.global_bgp_filter(config_payload, action="delete", **policy_config)
-            final_config_payload["global_config"].update(config_payload)
-        LOG.debug(f"configure_global_bgp_routing_policies: \
-                  final_config_payload {final_config_payload}")
-        self.concurrent_task_execution(self.gsdk.patch_global_config, final_config_payload)
-
-    def configure_bgp_peers(self, config_yaml_file):
-        """
-        Configures BGP peers based on the provided YAML configuration file
-        concurrently across multiple devices
-
-        This method parses the input YAML file to extract BGP Peers definition
-        and constructs the payload using the templates and apply the configurations
-        concurrently across multiple devices using the GCSDK APIs.
-
-        Args:
-            config_yaml_file (str): Path to the YAML file containing the BGP peering configurations.
-
-        Returns:
-            None
-        """
-        config_data = self.render_config_file(yaml_file=config_yaml_file)
-        final_config_payload = {}
-        if 'bgp_peering' in config_data:
-            for device_config in config_data.get('bgp_peering'):
-                for device_name, config in device_config.items():
-                    device_id = self.get_device_id(device_name=device_name)
-                    config_payload = {}
-                    self.edge_bgp_peering(config_payload, **config)
-                    final_config_payload[device_id] = {"device_id": device_id,
-                                                       "edge": config_payload}
-        LOG.debug(f"configure_bgp_peers: final_config_payload {final_config_payload}")
-        self.concurrent_task_execution(self.gsdk.put_device_config, final_config_payload)
-
-    def detach_policies_from_bgp_peers(self, config_yaml_file):
-        """
-        Detach routing filter policies from BGP peers based on the provided YAML configuration
-        file.
-
-        This method parses the input YAML file to extract BGP Peers and policy definition
-        and constructs the payload using the templates to detach the policies and apply the
-        configurations concurrently across multiple devices using the GCSDK APIs.
-
-        Args:
-            config_yaml_file (str): Path to the YAML file containing the BGP peering configurations.
-
-        Returns:
-            None
-        """
-        config_data = self.render_config_file(yaml_file=config_yaml_file)
-        final_config_payload = {}
-        if 'bgp_peering' in config_data:
-            for device_config in config_data.get('bgp_peering'):
-                for device_name, config in device_config.items():
-                    device_id = self.get_device_id(device_name=device_name)
-                    config_payload = {}
-                    self.edge_bgp_peering(config_payload, action="unlink", **config)
-                    final_config_payload[device_id] = {"device_id": device_id,
-                                                       "edge": config_payload}
-        LOG.debug(f"detach_policies_from_bgp_peers: final_config_payload {final_config_payload}")
-        self.concurrent_task_execution(self.gsdk.put_device_config, final_config_payload)
-
-    def deconfigure_bgp_peers(self, config_yaml_file):
-        """
-        Deconfigures BGP peers provided in configuration YAML file and
-        apply them concurrently using GCSDK APIs across multiple devices.
-
-        Args:
-            config_yaml_file (str): Path to the YAML configuration file containing BGP peer
-            configurations to be removed.
-
-        Returns:
-            None
-        """
-        config_data = self.render_config_file(yaml_file=config_yaml_file)
-        final_config_payload = {}
-        if 'bgp_peering' in config_data:
-            for device_config in config_data.get('bgp_peering'):
-                for device_name, config in device_config.items():
-                    device_id = self.get_device_id(device_name=device_name)
-                    config_payload = {}
-                    self.edge_bgp_peering(config_payload, action="delete", **config)
-                    final_config_payload[device_id] = {"device_id": device_id,
-                                                       "edge": config_payload}
-        LOG.debug(f"deconfigure_bgp_peers: final_config_payload {final_config_payload}")
-        self.concurrent_task_execution(self.gsdk.put_device_config, final_config_payload)
-
-    def configure_interfaces(self, config_yaml_file):
-        """
-        Configures the interfaces/sub-interfaces for multiple devices concurrently
-        as specified in the provided YAML file.
-
-        Args:
-            config_yaml_file (str): Path to the YAML file containing interface configurations.
-
-        Returns:
-            None
-        """
-        config_data = self.render_config_file(yaml_file=config_yaml_file)
-        output_config = {}
-        if 'interfaces' in config_data:
-            for device_info in config_data.get("interfaces"):
-                for device_name, config_list in device_info.items():
-                    if device_id := self.get_device_id(device_name=device_name):
-                        device_config = {"interfaces": {}, "circuits": {}}
-                        for config in config_list:
-                            self.edge_interface(device_config, action="add", **config)
-                        output_config[device_id] = {"device_id": device_id,
-                                                    "edge": device_config}
-                    else:
-                        LOG.error(f"configure_interfaces : \
-                                  {device_name} unable to fetch device-id")
-                        return
-        edge_config = {}
-        for device_id in output_config.keys():
-            edge_config[device_id] = {}
-            edge_config[device_id]['device_id'] = device_id
-
-            # Edge circuits config from the rendered config.
-            circuits = output_config[device_id]['edge']['circuits']
-            LOG.debug(f'Rendered circuits config of {device_id}: {circuits}')
-
-            # Edge interfaces from the rendered config.
-            interfaces = output_config[device_id]['edge']['interfaces']
-            LOG.info(f'Rendered interfaces config of {device_id}: {interfaces}')
-
-            # Set the circuits and interfaces of the config in the Edge config push request
-            device_config_put_request_edge = V1DevicesDeviceIdConfigPutRequestEdge(circuits=circuits,
-                                                                                   interfaces=interfaces)
-            LOG.debug(f'{device_id} V1DevicesDeviceIdConfigPutRequestEdge object: {device_config_put_request_edge}')
-
-            edge_config[device_id]['edge'] = device_config_put_request_edge
-
-        self.concurrent_task_execution(self.gsdk.put_device_config, edge_config)
-
-    def deconfigure_interfaces(self, config_yaml_file):
-        """
-        Configures the interfaces/sub-interfaces into default_lan for multiple devices
-        concurrently as specified in the provided YAML file.
-
-        Args:
-            config_yaml_file (str): Path to the YAML file containing interface configurations.
-
-        Returns:
-            None
-        """
-        config_data = self.render_config_file(yaml_file=config_yaml_file)
-        output_config = {}
-        default_lan = f'default-{self.get_enterprise_id()}'
-        if 'interfaces' in config_data:
-            for device_info in config_data.get("interfaces"):
-                for device_name, config_list in device_info.items():
-                    if device_id := self.get_device_id(device_name=device_name):
-                        device_config = {"interfaces": {}, "circuits": {}}
-                        for config in config_list:
-                            self.edge_interface(device_config, action="default_lan",
-                                                default_lan=default_lan, **config)
-                        output_config[device_id] = {"device_id": device_id,
-                                                    "edge": device_config}
-                    else:
-                        LOG.error(f"deconfigure_interfaces : \
-                                  {device_name} unable to fetch device-id")
-                        return
-
-        edge_config = {}
-        for device_id in output_config.keys():
-            edge_config[device_id] = {}
-            edge_config[device_id]['device_id'] = device_id
-
-            # Edge circuits config from the rendered config.
-            circuits = output_config[device_id]['edge']['circuits']
-            LOG.debug(f'Rendered circuits config of {device_id}: {circuits}')
-
-            # Edge interfaces from the rendered config.
-            interfaces = output_config[device_id]['edge']['interfaces']
-            LOG.info(f'Rendered interfaces config of {device_id}: {interfaces}')
-
-            # Set the circuits and interfaces of the config in the Edge config push request
-            device_config_put_request_edge = V1DevicesDeviceIdConfigPutRequestEdge(circuits=circuits,
-                                                                                   interfaces=interfaces)
-            LOG.debug(f'{device_id} V1DevicesDeviceIdConfigPutRequestEdge object: {device_config_put_request_edge}')
-
-            edge_config[device_id]['edge'] = device_config_put_request_edge
-        self.concurrent_task_execution(self.gsdk.put_device_config, edge_config)
+        return {
+            'interfaces': hasattr(self, 'interfaces') and self.interfaces is not None,
+            'bgp': hasattr(self, 'bgp') and self.bgp is not None,
+            'global_config': hasattr(self, 'global_config') and self.global_config is not None,
+            'sites': hasattr(self, 'sites') and self.sites is not None,
+            'edge_utils': hasattr(self, 'edge_utils') and self.edge_utils is not None
+        }
