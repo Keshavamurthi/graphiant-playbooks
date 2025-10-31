@@ -1,7 +1,7 @@
 ---
 # Data Exchange Management Playbook
 # This playbook demonstrates how to use the graphiant_data_exchange module
-# for managing Data Exchange services, customers, and matches.
+# for managing Data Exchange services.
 
 - name: Data Exchange Management
   hosts: localhost
@@ -36,8 +36,8 @@
       graphiant.graphiant_playbooks.graphiant_data_exchange:
         <<: *graphiant_client_params
         operation: create_services
-        config_file: "sample_data_exchange_services.yaml"
-        # config_file: "sample_data_exchange_services_scale_10.yaml"
+        config_file: "de_workflows_configs/sample_data_exchange_services.yaml"
+        #config_file: "de_workflows_configs/sample_data_exchange_services_scale.yaml" # Scale testing
         detailed_logs: true
       register: create_services_result
 

@@ -81,6 +81,9 @@ class DataExchangeManager(BaseManager):
             if not isinstance(services, list):
                 raise ConfigurationError("Configuration error: 'data_exchange_services' must be a list.")
 
+            # Print current enterprise info
+            LOG.info(f"DataExchangeManager: Current enterprise info: {self.gsdk.enterprise_info}")
+
             created_count = 0
             skipped_count = 0
 
@@ -157,6 +160,9 @@ class DataExchangeManager(BaseManager):
             dict: Services summary response
         """
         try:
+            # Print current enterprise info
+            LOG.info(f"DataExchangeManager: Current enterprise info: {self.gsdk.enterprise_info}")
+
             LOG.info("Retrieving Data Exchange services summary")
             response = self.gsdk.get_data_exchange_services_summary()
 
@@ -164,15 +170,25 @@ class DataExchangeManager(BaseManager):
             if response.info:
                 service_table = []
                 for service in response.info:
+                    # Get publisher/subscriber role
+                    role = "Publisher" if getattr(service, 'is_publisher', False) else "Subscriber"
+
+                    # Get matched customers count
+                    matched_customers = getattr(service, 'matched_customers', 0)
+
                     service_table.append([
                         service.name,
                         service.status,
+                        role,
+                        matched_customers,
                         service.id
                     ])
 
                 LOG.info(
                     f"Services Summary:\n"
-                    f"{tabulate(service_table, headers=['Service Name', 'Status', 'ID'], tablefmt='grid')}")
+                    f"""{tabulate(service_table,
+                                  headers=['Service Name', 'Status', 'Role', 'Matched Customers', 'ID'],
+                                  tablefmt='grid')}""")
 
             return response.to_dict()
         except Exception as e:
@@ -216,6 +232,9 @@ class DataExchangeManager(BaseManager):
             if not isinstance(customers, list):
                 raise ConfigurationError("Configuration error: 'data_exchange_customers' must be a list.")
 
+            # Print current enterprise info
+            LOG.info(f"DataExchangeManager: Current enterprise info: {self.gsdk.enterprise_info}")
+
             created_count = 0
             skipped_count = 0
 
@@ -255,6 +274,9 @@ class DataExchangeManager(BaseManager):
             dict: Customers summary response
         """
         try:
+            # Print current enterprise info
+            LOG.info(f"DataExchangeManager: Current enterprise info: {self.gsdk.enterprise_info}")
+
             LOG.info("Retrieving Data Exchange customers summary")
             response = self.gsdk.get_data_exchange_customers_summary()
 
@@ -262,15 +284,24 @@ class DataExchangeManager(BaseManager):
             if response.customers:
                 customer_table = []
                 for customer in response.customers:
+                    # Get customer type (Non-Graphiant or Graphiant)
+                    customer_type = "Non-Graphiant" if customer.type == "non_graphiant_peer" else "Graphiant"
+
+                    # Get matched services count
+                    matched_services = getattr(customer, 'matched_services', 0)
+
                     customer_table.append([
                         customer.name,
-                        customer.type,
+                        customer_type,
                         customer.status,
+                        matched_services,
                         customer.id
                     ])
 
                 LOG.info(f"Customers Summary:\n"
-                         f"{tabulate(customer_table, headers=['Name', 'Type', 'Status', 'ID'], tablefmt='grid')}")
+                         f"""{tabulate(customer_table,
+                                       headers=['Customer Name', 'Customer Type', 'Status', 'Matched Services', 'ID'],
+                                       tablefmt='grid')}""")
 
             return response.to_dict()
         except Exception as e:
@@ -313,6 +344,9 @@ class DataExchangeManager(BaseManager):
             customers = config_data['data_exchange_customers']
             if not isinstance(customers, list):
                 raise ConfigurationError("Configuration error: 'data_exchange_customers' must be a list.")
+
+            # Print current enterprise info
+            LOG.info(f"DataExchangeManager: Current enterprise info: {self.gsdk.enterprise_info}")
 
             deleted_count = 0
             skipped_count = 0
@@ -361,6 +395,9 @@ class DataExchangeManager(BaseManager):
             services = config_data['data_exchange_services']
             if not isinstance(services, list):
                 raise ConfigurationError("Configuration error: 'data_exchange_services' must be a list.")
+
+            # Print current enterprise info
+            LOG.info(f"DataExchangeManager: Current enterprise info: {self.gsdk.enterprise_info}")
 
             deleted_count = 0
             skipped_count = 0
@@ -428,6 +465,9 @@ class DataExchangeManager(BaseManager):
             if not isinstance(matches, list):
                 raise ConfigurationError("Configuration error: 'data_exchange_matches' must be a list.")
 
+            # Print current enterprise info
+            LOG.info(f"DataExchangeManager: Current enterprise info: {self.gsdk.enterprise_info}")
+
             matched_count = 0
             skipped_count = 0
             match_responses = []
@@ -445,7 +485,12 @@ class DataExchangeManager(BaseManager):
                 if not customer:
                     raise ConfigurationError(f"Customer '{customer_name}' not found.")
 
-                # Check customer status before attempting match
+                # Get service ID
+                service = self.gsdk.get_data_exchange_service_by_name(service_name)
+                if not service:
+                    raise ConfigurationError(f"Service '{service_name}' not found.")
+
+                # TODO: Remove me as it does not hold good for N:1 matching scenario.
                 if customer.status != "B2B_PEERING_SERVICE_STATUS_INACTIVE":
                     LOG.warning(
                         f"Customer '{customer_name}' status is '{customer.status}', "
@@ -457,11 +502,26 @@ class DataExchangeManager(BaseManager):
                     skipped_count += 1
                     continue
 
-                # Get service ID
-                service = self.gsdk.get_data_exchange_service_by_name(service_name)
-                if not service:
-                    raise ConfigurationError(f"Service '{service_name}' not found.")
+                '''
+                # Wait for latest sdk version to be released.
+                # Check if service is already matched to this customer
+                matched_services = self.gsdk.get_matched_services_for_customer(customer.id)
+                if matched_services is not None:
+                    # Check if this service is already in the matched services list
+                    already_matched = False
+                    for matched_service in matched_services:
+                        if matched_service.name == service_name:
+                            LOG.warning(
+                                f"Service '{service_name}' is already matched to customer '{customer_name}'. "
+                                f"Match ID: {matched_service.id}, Status: {matched_service.status}. "
+                                f"Skipping to avoid 'match already exists' error.")
+                            already_matched = True
+                            skipped_count += 1
+                            break
 
+                    if already_matched:
+                        continue
+                '''
                 # Use configured service prefixes (user-selected)
                 service_prefixes = match_config.get('servicePrefixes', [])
                 if not service_prefixes:
@@ -532,3 +592,501 @@ class DataExchangeManager(BaseManager):
         except Exception as e:
             LOG.error(f"Failed to match Data Exchange services to customers: {e}")
             raise ConfigurationError(f"Data Exchange service matching failed: {e}")
+
+    def accept_invitation(self, config_yaml_file: str, matches_file: str = None, dry_run: bool = False) -> None:
+        """
+        Accept Data Exchange service invitation (Workflow 4).
+
+        Args:
+            config_yaml_file (str): Path to YAML configuration file containing acceptance details
+            matches_file (str, optional): Path to matches responses JSON file for match ID lookup
+            dry_run (bool, optional): If True, skip the actual API call (validation only). Defaults to False.
+        """
+        try:
+            LOG.info(f"accept_invitation: Loading configuration from {config_yaml_file}")
+            config_data = self.render_config_file(config_yaml_file)
+
+            # All configurations are under 'data_exchange_acceptances' key
+            if 'data_exchange_acceptances' not in config_data:
+                raise ConfigurationError("Configuration file must contain 'data_exchange_acceptances' key")
+
+            acceptances = config_data['data_exchange_acceptances']
+
+            # Ensure it's always a list
+            if not isinstance(acceptances, list):
+                raise ConfigurationError("data_exchange_acceptances must be a list of acceptance configurations")
+
+            # Print current enterprise info
+            LOG.info(f"DataExchangeManager: Current enterprise info: {self.gsdk.enterprise_info}")
+
+            # Log dry-run mode if enabled
+            if dry_run:
+                LOG.info("accept_invitation: DRY-RUN MODE ENABLED - API calls will be skipped")
+
+            # Validate gateway requirements before processing acceptances
+            self._validate_gateway_requirements_for_acceptances(acceptances)
+
+            # Process acceptances and log results
+            result = self._process_multiple_acceptances(acceptances, matches_file, dry_run)
+
+            # Log summary like other operations
+            total_processed = result.get('total_processed', 0)
+            total_successful = result.get('total_successful', 0)
+            total_failed = total_processed - total_successful
+
+            LOG.info(f"Data Exchange invitation acceptance completed: {total_successful} accepted, "
+                     f"{total_failed} failed")
+
+            # Check if there were any failures
+            if total_failed > 0:
+                LOG.warning(f"accept_invitation: {total_failed} "
+                            f"out of {total_processed} invitation acceptances failed")
+                # TODO:Optionally raise an exception for partial failures
+                # raise ConfigurationError(f"Data Exchange invitation acceptance had {total_failed} failures "
+                #                         f"out of {total_processed} total")
+            return result
+        except ConfigurationError:
+            raise
+        except Exception as e:
+            LOG.error(f"Failed to accept Data Exchange service invitation: {e}")
+            raise ConfigurationError(f"Data Exchange service acceptance failed: {e}")
+
+    def _validate_gateway_requirements_for_acceptances(self, acceptances, min_gateways=2):
+        """
+        Validate gateway requirements for all acceptances.
+
+        Args:
+            acceptances (list): List of acceptance configurations
+            min_gateways (int): Minimum number of gateways required per region
+        """
+        try:
+            LOG.info(f"_validate_gateway_requirements_for_acceptances: Validating gateway requirements for "
+                     f"{len(acceptances)} acceptances")
+
+            # Collect unique regions from acceptances
+            regions_to_validate = set()
+            for acceptance in acceptances:
+                if 'siteToSiteVpn' in acceptance and 'region' in acceptance['siteToSiteVpn']:
+                    region_name = acceptance['siteToSiteVpn']['region']
+                    regions_to_validate.add(region_name)
+
+            # Validate each region
+            for region_name in regions_to_validate:
+                edges_summary = self.gsdk.get_edges_summary_filter(region=region_name, role='gateway', status='active')
+                if not edges_summary:
+                    LOG.error(f"_validate_gateway_requirements_for_acceptances: "
+                              f"No active gateways found in region {region_name}")
+                    raise ConfigurationError(f"No active gateways found in region {region_name}")
+                else:
+                    LOG.info(f"_validate_gateway_requirements_for_acceptances: Region {region_name} has "
+                             f"{len(edges_summary)} active gateways")
+                if len(edges_summary) < min_gateways:
+                    LOG.error(f"_validate_gateway_requirements_for_acceptances: Region {region_name} has only "
+                              f"{len(edges_summary)} gateways, minimum {min_gateways} required")
+                    raise ConfigurationError(f"Region {region_name} has only {len(edges_summary)} gateways,"
+                                             f"minimum {min_gateways} required")
+                else:
+                    LOG.info(f"_validate_gateway_requirements_for_acceptances: Region {region_name} meets "
+                             f"minimum gateway requirements")
+        except Exception as e:
+            LOG.warning(f"_validate_gateway_requirements_for_acceptances: Gateway validation failed: {e}")
+            raise
+            # TODO: Don't fail the entire operation for validation issues ?
+
+    def _process_multiple_acceptances(self, acceptances_config, matches_file=None, dry_run=False):
+        """
+        Process multiple invitation acceptances from configuration.
+
+        Args:
+            acceptances_config (list): List of acceptance configurations
+            matches_file (str, optional): Path to matches responses JSON file for match ID lookup
+            dry_run (bool, optional): If True, skip the actual API call (validation only). Defaults to False.
+
+        Returns:
+            dict: Combined results from all acceptances
+        """
+        try:
+            results = []
+            total_processed = 0
+            total_successful = 0
+
+            LOG.info(f"_process_multiple_acceptances: Processing {len(acceptances_config)} invitation acceptances")
+
+            for i, acceptance_config in enumerate(acceptances_config):
+                try:
+                    LOG.info(f"_process_multiple_acceptances: Processing acceptance {i+1}/{len(acceptances_config)}")
+
+                    # Resolve names to IDs (returns direct API payload structure)
+                    resolved_config = self._resolve_acceptance_names_to_ids(acceptance_config, matches_file)
+
+                    # Extract service ID and match ID from resolved configuration
+                    service_id = resolved_config['id']  # Service ID is 'id' in API payload
+                    match_id = resolved_config['matchId']  # Match ID is 'matchId' in API payload
+
+                    # Validate required fields in resolved configuration
+                    required_fields = ['id', 'siteInformation', 'policy', 'siteToSiteVpn', 'nat']
+                    for field in required_fields:
+                        if field not in resolved_config or resolved_config[field] is None:
+                            raise ConfigurationError(f"Missing required field '{field}' in resolved configuration")
+
+                    # Use the resolved configuration directly as the API payload
+                    acceptance_payload = resolved_config
+
+                    LOG.info(f"_process_multiple_acceptances: Acceptance payload for "
+                             f"'{acceptance_config.get('customerName')}' and '{acceptance_config.get('serviceName')}'"
+                             f": {acceptance_payload}")
+
+                    # Check for dry-run mode
+                    if dry_run:
+                        LOG.info(f"_process_multiple_acceptances: DRY-RUN - Skipping API call for "
+                                 f"'{acceptance_config.get('customerName')}' and "
+                                 f"'{acceptance_config.get('serviceName')}' "
+                                 f" with match_id: {match_id} and service_id: {service_id}")
+                        result = {
+                            'dry_run': True,
+                            'message': 'API call skipped in dry-run mode',
+                            'payload_validated': True,
+                            'match_id': match_id,
+                            'service_id': service_id
+                        }
+                    else:
+                        # Call the acceptance API with match_id as path parameter
+                        response = self.gsdk.accept_data_exchange_service(match_id, acceptance_payload)
+                        result = response.to_dict()
+
+                    results.append({
+                        'customer_name': acceptance_config.get('customerName'),
+                        'service_name': acceptance_config.get('serviceName'),
+                        'result': result,
+                        'status': 'success' if not dry_run else 'dry-run'
+                    })
+                    total_successful += 1
+
+                except Exception as e:
+                    LOG.error(f"_process_multiple_acceptances: Failed to process acceptance {i+1}: {e}")
+                    results.append({
+                        'customer_name': acceptance_config.get('customerName'),
+                        'service_name': acceptance_config.get('serviceName'),
+                        'error': str(e),
+                        'status': 'failed'
+                    })
+
+                total_processed += 1
+
+            LOG.info(f"_process_multiple_acceptances: Completed {total_successful}/{total_processed} "
+                     f"acceptances successfully")
+
+            return {
+                'total_processed': total_processed,
+                'total_successful': total_successful,
+                'results': results
+            }
+
+        except Exception as e:
+            LOG.error(f"Failed to process multiple acceptances: {e}")
+            raise ConfigurationError(f"Multiple acceptance processing failed: {e}")
+
+    def _fill_missing_tunnel_values(self, acceptance_config, region_id, lan_segment_id):
+        """
+        Fill in missing tunnel configuration values using Graphiant portal APIs.
+
+        Args:
+            acceptance_config (dict): The acceptance configuration
+            region_id (int): The region ID for subnet allocation
+            lan_segment_id (int): The LAN segment ID for subnet allocation
+
+        Returns:
+            dict: Updated acceptance configuration with filled values
+        """
+        try:
+            site_to_site_vpn = acceptance_config.get('siteToSiteVpn', {})
+            ipsec_gateway_details = site_to_site_vpn.get('ipsecGatewayDetails', {})
+
+            # Fill in missing tunnel1 values
+            tunnel1 = ipsec_gateway_details.get('tunnel1', {})
+            if tunnel1.get('insideIpv4Cidr') is None:
+                ipv4_subnet = self.gsdk.get_ipsec_inside_subnet(region_id, lan_segment_id, 'ipv4')
+                if ipv4_subnet:
+                    tunnel1['insideIpv4Cidr'] = ipv4_subnet
+                    LOG.info(f"_fill_missing_tunnel_values: Filled tunnel1 insideIpv4Cidr: {ipv4_subnet}")
+
+            if tunnel1.get('insideIpv6Cidr') is None:
+                ipv6_subnet = self.gsdk.get_ipsec_inside_subnet(region_id, lan_segment_id, 'ipv6')
+                if ipv6_subnet:
+                    tunnel1['insideIpv6Cidr'] = ipv6_subnet
+                    LOG.info(f"_fill_missing_tunnel_values: Filled tunnel1 insideIpv6Cidr: {ipv6_subnet}")
+
+            if tunnel1.get('psk') is None:
+                psk = self.gsdk.get_preshared_key()
+                if psk:
+                    tunnel1['psk'] = psk
+                    LOG.info(f"_fill_missing_tunnel_values: Filled tunnel1 psk: {psk}")
+
+            # Fill in missing tunnel2 values
+            tunnel2 = ipsec_gateway_details.get('tunnel2', {})
+            if tunnel2.get('insideIpv4Cidr') is None:
+                ipv4_subnet = self.gsdk.get_ipsec_inside_subnet(region_id, lan_segment_id, 'ipv4')
+                if ipv4_subnet:
+                    tunnel2['insideIpv4Cidr'] = ipv4_subnet
+                    LOG.info(f"_fill_missing_tunnel_values: Filled tunnel2 insideIpv4Cidr: {ipv4_subnet}")
+
+            if tunnel2.get('insideIpv6Cidr') is None:
+                ipv6_subnet = self.gsdk.get_ipsec_inside_subnet(region_id, lan_segment_id, 'ipv6')
+                if ipv6_subnet:
+                    tunnel2['insideIpv6Cidr'] = ipv6_subnet
+                    LOG.info(f"_fill_missing_tunnel_values: Filled tunnel2 insideIpv6Cidr: {ipv6_subnet}")
+
+            if tunnel2.get('psk') is None:
+                psk = self.gsdk.get_preshared_key()
+                if psk:
+                    tunnel2['psk'] = psk
+                    LOG.info(f"_fill_missing_tunnel_values: Filled tunnel2 psk: {psk}")
+
+            return acceptance_config
+
+        except Exception as e:
+            LOG.error(f"_fill_missing_tunnel_values: Error filling tunnel values: {e}")
+            return acceptance_config
+
+    def _resolve_acceptance_names_to_ids(self, acceptance_config, matches_file=None):
+        """
+        Resolve names to IDs for acceptance configuration.
+
+        Args:
+            acceptance_config (dict): Acceptance configuration with names
+            matches_file (str, optional): Path to matches responses JSON file for match ID lookup
+
+        Returns:
+            dict: Resolved configuration with IDs
+        """
+        try:
+            customer_name = acceptance_config.get('customerName')
+            service_name = acceptance_config.get('serviceName')
+
+            if not customer_name or not service_name:
+                raise ConfigurationError("customer_name and service_name are required in acceptance configuration")
+
+            LOG.info(f"_resolve_acceptance_names_to_ids: Resolving names for customer "
+                     f"'{customer_name}' and service '{service_name}'")
+
+            # Get match ID and service ID from customer name and service name combination
+            # This is important because a customer can be matched to multiple services
+            match_data = self._get_match_id_from_customer_service(customer_name, service_name, matches_file)
+
+            if not match_data:
+                raise ConfigurationError(f"No match found for customer '{customer_name}' and service '{service_name}'")
+
+            match_id = match_data.get('match_id')
+            service_id = match_data.get('service_id')
+
+            if not match_id or not service_id:
+                raise ConfigurationError(f"Invalid match data for customer "
+                                         f"'{customer_name}' and service '{service_name}'")
+
+            # Resolve site names to IDs
+            site_names = acceptance_config.get('siteInformation', [{}])[0].get('sites', [])
+            site_ids = []
+            for site_name in site_names:
+                site_id = self.gsdk.get_site_id(site_name)
+                if site_id:
+                    site_ids.append(site_id)
+                else:
+                    raise ConfigurationError(f"Site '{site_name}' not found")
+
+            # Resolve site list names to IDs
+            site_list_names = acceptance_config.get('siteInformation', [{}])[0].get('siteLists', [])
+            site_list_ids = []
+            for site_list_name in site_list_names:
+                site_list_id = self.gsdk.get_site_list_id(site_list_name)
+                if site_list_id:
+                    site_list_ids.append(site_list_id)
+                else:
+                    raise ConfigurationError(f"Site list '{site_list_name}' not found")
+
+            # Resolve LAN segment name to ID
+            lan_segment_name = acceptance_config.get('policy', [{}])[0].get('lanSegment')
+            lan_segment_id = None
+            if lan_segment_name:
+                lan_segment_id = self.gsdk.get_lan_segment_id(lan_segment_name)
+                if not lan_segment_id:
+                    raise ConfigurationError(f"LAN segment '{lan_segment_name}' not found")
+
+            # Resolve region name to ID
+            region_name = acceptance_config.get('siteToSiteVpn', {}).get('region')
+            region_id = None
+            if region_name:
+                region_id = self._get_region_id_from_name(region_name)
+                if not region_id:
+                    raise ConfigurationError(f"Region '{region_name}' not found")
+
+            # Build resolved acceptance configuration in API payload format
+            # Update siteToSiteVpn to include resolved regionId and emails
+            site_to_site_vpn = acceptance_config.get('siteToSiteVpn', {}).copy()
+            if region_id:
+                site_to_site_vpn['regionId'] = region_id
+            # Ensure emails are included in siteToSiteVpn
+            if 'emails' in acceptance_config.get('siteToSiteVpn', {}):
+                site_to_site_vpn['emails'] = acceptance_config.get('siteToSiteVpn', {}).get('emails', [])
+
+            resolved_config = {
+                'id': service_id,  # Service ID for API payload
+                'siteInformation': [{
+                    'sites': site_ids,
+                    'siteLists': site_list_ids
+                }],
+                'nat': acceptance_config.get('nat', []),
+                'policy': [{
+                    'lanSegment': lan_segment_id,
+                    'consumerPrefixes': acceptance_config.get('policy', [{}])[0].get('consumerPrefixes', [])
+                }],
+                'siteToSiteVpn': site_to_site_vpn,
+                'globalObjectOps': acceptance_config.get('globalObjectOps', {}),
+                'routingPolicyTable': acceptance_config.get('routingPolicyTable', []),
+                'matchId': match_id
+            }
+
+            # Fill in missing tunnel values using Graphiant portal APIs
+            resolved_config = self._fill_missing_tunnel_values(resolved_config, region_id, lan_segment_id)
+
+            LOG.info(f"_resolve_acceptance_names_to_ids: Resolved service_id={service_id}, match_id={match_id}, "
+                     f"region_id={region_id}")
+            return resolved_config
+
+        except Exception as e:
+            LOG.error(f"Failed to resolve names to IDs: {e}")
+            raise ConfigurationError(f"Name resolution failed: {e}")
+
+    def _get_match_id_from_customer_service(self, customer_name, service_name, matches_file=None):
+        """
+        Get match ID and service ID from customer name and service name.
+        Reads from the matches responses JSON file.
+
+        Args:
+            customer_name (str): Customer name
+            service_name (str): Service name
+            matches_file (str, optional): Path to matches responses JSON file
+
+        Returns:
+            dict: Dictionary containing match_id and service_id, or None if not found
+        """
+        try:
+            import json
+            import os
+
+            # Use provided matches file or default
+            if not matches_file:
+                # Use the same path resolution logic as render_config_file
+                # Get the project root from config_utils (same as render_config_file)
+                project_root = self.config_utils._find_project_root()
+                matches_file = os.path.join(
+                    project_root,
+                    "ansible_collection/graphiant/graphiant_playbooks/playbooks/de_workflows/",
+                    "de_workflows_configs/output",
+                    "sample_data_exchange_matches_responses_latest.json")
+            else:
+                # Apply the same path resolution logic as render_config_file for provided path
+                if os.path.isabs(matches_file):
+                    # Absolute path - use as is
+                    pass
+                else:
+                    # Relative path - resolve using project root
+                    project_root = self.config_utils._find_project_root()
+                    matches_file = os.path.join(project_root, matches_file)
+
+            if os.path.exists(matches_file):
+                LOG.info(f"_get_match_id_from_customer_service: Reading matches from {matches_file}")
+                with open(matches_file, 'r') as f:
+                    matches_data = json.load(f)
+
+                # Find matching customer and service
+                for match in matches_data:
+                    if (match.get('customer_name') == customer_name and
+                            match.get('service_name') == service_name):
+                        match_id = match.get('match_id')
+                        service_id = match.get('service_id')
+                        LOG.info(f"_get_match_id_from_customer_service: Found match_id {match_id} "
+                                 f"and service_id {service_id} for customer "
+                                 f"'{customer_name}' and service '{service_name}'")
+                        return {
+                            'match_id': match_id,
+                            'service_id': service_id
+                        }
+
+                LOG.warning(f"_get_match_id_from_customer_service: No match found for customer "
+                            f"'{customer_name}' and service '{service_name}'")
+                return None
+            else:
+                LOG.warning(f"_get_match_id_from_customer_service: Matches file not found at {matches_file}")
+                return None
+
+        except Exception as e:
+            LOG.error(f"_get_match_id_from_customer_service: Error reading matches file: {e}")
+            return None
+
+    def _get_region_id_from_name(self, region_name):
+        """
+        Get region ID from region name using the API.
+
+        Args:
+            region_name (str): Region name
+
+        Returns:
+            int: Region ID if found, None otherwise
+        """
+        try:
+            LOG.info(f"_get_region_id_from_name: Looking up region ID for '{region_name}'")
+            region_id = self.gsdk.get_region_id_by_name(region_name)
+
+            if region_id is None:
+                LOG.warning(f"_get_region_id_from_name: Region '{region_name}' not found")
+            else:
+                LOG.info(f"_get_region_id_from_name: Found region '{region_name}' with ID {region_id}")
+
+            return region_id
+        except Exception as e:
+            LOG.error(f"_get_region_id_from_name: Failed to get region ID for '{region_name}': {e}")
+            return None
+
+    def get_service_health(self, service_name, is_provider=False):
+        """
+        Get service health monitoring information.
+
+        Args:
+            service_name (str): The service name
+            is_provider (bool): Whether this is a provider view
+
+        Returns:
+            dict: Service health data
+        """
+        try:
+            LOG.info(f"get_service_health: Retrieving health for service {service_name}")
+
+            # Get service ID from service name
+            service_id = self.gsdk.get_data_exchange_service_id_by_name(service_name)
+            if not service_id:
+                raise ConfigurationError(f"Service '{service_name}' not found")
+
+            LOG.info(f"get_service_health: Found service ID {service_id} for service '{service_name}'")
+            response = self.gsdk.get_service_health(service_id, is_provider)
+
+            if response and hasattr(response, 'service_health'):
+                health_table = []
+                for health in response.service_health:
+                    health_table.append([
+                        health.customer_name,
+                        health.overall_health,
+                        health.producer_prefix_health.health,
+                        health.customer_prefix_health.health
+                    ])
+
+                LOG.info(
+                    f"Service Health:\n"
+                    f"""{tabulate(health_table,
+                                  headers=['Customer', 'Overall', 'Producer Prefixes', 'Customer Prefixes'],
+                                  tablefmt='grid')}""")
+
+            return response.to_dict() if response else {}
+
+        except Exception as e:
+            LOG.error(f"Failed to retrieve service health: {e}")
+            raise ConfigurationError(f"Service health retrieval failed: {e}")

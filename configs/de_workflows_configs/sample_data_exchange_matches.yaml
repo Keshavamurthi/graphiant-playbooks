@@ -14,11 +14,8 @@ data_exchange_matches:
   - customerName: "FinanceInc"
     serviceName: "de-service-1"
     servicePrefixes:  # Select specific service prefixes to include
-      - prefix: "104.124.86.1/32"
+      - prefix: "10.1.1.0/24" 
         tag: "s-1-prefix1"
-      - prefix: "104.124.86.2/32"
-        tag: "s-1-prefix2"
     nat:
-      - prefix: "10.101.1.1/32"
-        outsideNatPrefix: "170.101.1.1/32"
-      - prefix: "170.101.2.1/32"
+      - prefix: "10.101.1.0/24"
+        outsideNatPrefix: "170.101.1.0/24"

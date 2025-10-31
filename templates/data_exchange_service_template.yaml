@@ -2,7 +2,7 @@
 # This template is not used to generate the API payload for Data Exchange service creation
 
 serviceName: "{{ service_name }}"
-type: "{{ service_type }}"
+type: "{{ service_type }}"  # Example: "peering_service"
 policy:
   serviceLanSegment: {{ lan_segment_id }}
   type: "{{ service_type }}"

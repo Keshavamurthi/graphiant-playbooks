@@ -193,7 +193,7 @@ The Graphiant Playbooks collection includes different managers that use differen
 | **BGPManager** | `configure`, `detach_policies`, `deconfigure` | ✅ **Uses Templates** | Uses Jinja2 templates for BGP peering configurations |
 | **GlobalConfigManager** | `configure`, `deconfigure`, `configure_*`, `deconfigure_*` | ✅ **Uses Templates** | Uses Jinja2 templates for global object configurations |
 | **SiteManager** | `configure`, `deconfigure`, `configure_sites`, `attach_objects` | ✅ **Uses Templates** | Uses Jinja2 templates for site and attachment configurations |
-| **DataExchangeManager** | `create_services`, `create_customers`, `match_service_to_customers`, `delete_services`, `delete_customers` | ❌ **Direct API Calls** | Uses direct API calls without template rendering |
+| **DataExchangeManager** | `create_services`, `create_customers`, `match_service_to_customers`, `delete_services`, `delete_customers`, `accept_invitation` | ❌ **Direct API Calls** | Uses direct API calls without template rendering |
 
 ### Template-Based Managers
 - **InterfaceManager**: Uses `interface_template.yaml` and `circuit_template.yaml`

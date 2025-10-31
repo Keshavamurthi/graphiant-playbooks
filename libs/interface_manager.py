@@ -69,6 +69,10 @@ class InterfaceManager(BaseManager):
             for device_name, configs in device_configs.items():
                 try:
                     device_id = self.gsdk.get_device_id(device_name)
+                    if device_id is None:
+                        raise ConfigurationError(f"Device '{device_name}' is not found in the current enterprise: "
+                                                 f"{self.gsdk.enterprise_info['company_name']}. "
+                                                 f"Please check device name and enterprise credentials.")
                     output_config[device_id] = {
                         "device_id": device_id,
                         "edge": {"interfaces": {}, "circuits": {}}
@@ -226,6 +230,10 @@ class InterfaceManager(BaseManager):
             for device_name, configs in device_configs.items():
                 try:
                     device_id = self.gsdk.get_device_id(device_name)
+                    if device_id is None:
+                        raise ConfigurationError(f"Device '{device_name}' is not found in the current enterprise: "
+                                                 f"{self.gsdk.enterprise_info['company_name']}. "
+                                                 f"Please check device name and enterprise credentials.")
                     output_config[device_id] = {
                         "device_id": device_id,
                         "edge": {"interfaces": {}, "circuits": {}}
@@ -329,6 +337,10 @@ class InterfaceManager(BaseManager):
                     raise
                 except Exception as e:
                     LOG.error(f"Error deconfiguring device {device_name}: {str(e)}")
+                    LOG.error(f"Device ID: {device_id}, Device Name: {device_name}")
+                    LOG.error(f"Exception type: {type(e).__name__}")
+                    import traceback
+                    LOG.error(f"Full traceback: {traceback.format_exc()}")
                     raise ConfigurationError(f"Deconfiguration failed for {device_name}: {str(e)}")
 
             if output_config:
@@ -346,6 +358,9 @@ class InterfaceManager(BaseManager):
 
         except Exception as e:
             LOG.error(f"Error in interface and circuit deconfiguration: {str(e)}")
+            LOG.error(f"Exception type: {type(e).__name__}")
+            import traceback
+            LOG.error(f"Full traceback: {traceback.format_exc()}")
             raise ConfigurationError(f"Interface and circuit deconfiguration failed: {str(e)}")
 
     def configure_interfaces(self, interface_config_file: str, circuit_config_file: str = None) -> None:
@@ -441,6 +456,10 @@ class InterfaceManager(BaseManager):
                 for device_name, config_list in device_info.items():
                     try:
                         device_id = self.gsdk.get_device_id(device_name)
+                        if device_id is None:
+                            raise ConfigurationError(f"Device '{device_name}' is not found in the current enterprise: "
+                                                     f"{self.gsdk.enterprise_info['company_name']}. "
+                                                     f"Please check device name and enterprise credentials.")
                         device_config = {"interfaces": {}}
 
                         lan_interfaces_configured = 0
@@ -544,6 +563,10 @@ class InterfaceManager(BaseManager):
                 for device_name, config_list in device_info.items():
                     try:
                         device_id = self.gsdk.get_device_id(device_name)
+                        if device_id is None:
+                            raise ConfigurationError(f"Device '{device_name}' is not found in the current enterprise: "
+                                                     f"{self.gsdk.enterprise_info['company_name']}. "
+                                                     f"Please check device name and enterprise credentials.")
                         device_config = {"interfaces": {}}
 
                         lan_interfaces_deconfigured = 0
@@ -612,6 +635,10 @@ class InterfaceManager(BaseManager):
                         raise
                     except Exception as e:
                         LOG.error(f"Error deconfiguring LAN interfaces for device {device_name}: {str(e)}")
+                        LOG.error(f"Device ID: {device_id}, Device Name: {device_name}")
+                        LOG.error(f"Exception type: {type(e).__name__}")
+                        import traceback
+                        LOG.error(f"Full traceback: {traceback.format_exc()}")
                         raise ConfigurationError(f"LAN interface deconfiguration failed for {device_name}: {str(e)}")
 
             if output_config:
@@ -622,6 +649,9 @@ class InterfaceManager(BaseManager):
 
         except Exception as e:
             LOG.error(f"Error in LAN interface deconfiguration: {str(e)}")
+            LOG.error(f"Exception type: {type(e).__name__}")
+            import traceback
+            LOG.error(f"Full traceback: {traceback.format_exc()}")
             raise ConfigurationError(f"LAN interface deconfiguration failed: {str(e)}")
 
     def configure_wan_circuits_interfaces(self, circuit_config_file: str, interface_config_file: str,
@@ -669,6 +699,10 @@ class InterfaceManager(BaseManager):
             for device_name, configs in device_configs.items():
                 try:
                     device_id = self.gsdk.get_device_id(device_name)
+                    if device_id is None:
+                        raise ConfigurationError(f"Device '{device_name}' is not found in the current enterprise: "
+                                                 f"{self.gsdk.enterprise_info['company_name']}. "
+                                                 f"Please check device name and enterprise credentials.")
                     output_config[device_id] = {
                         "device_id": device_id,
                         "edge": {"interfaces": {}, "circuits": {}}
@@ -859,6 +893,10 @@ class InterfaceManager(BaseManager):
             for device_name, configs in device_configs.items():
                 try:
                     device_id = self.gsdk.get_device_id(device_name)
+                    if device_id is None:
+                        raise ConfigurationError(f"Device '{device_name}' is not found in the current enterprise: "
+                                                 f"{self.gsdk.enterprise_info['company_name']}. "
+                                                 f"Please check device name and enterprise credentials.")
                     output_config[device_id] = {
                         "device_id": device_id,
                         "edge": {"interfaces": {}, "circuits": {}}
@@ -982,6 +1020,10 @@ class InterfaceManager(BaseManager):
                     raise
                 except Exception as e:
                     LOG.error(f"Error deconfiguring device {device_name}: {str(e)}")
+                    LOG.error(f"Device ID: {device_id}, Device Name: {device_name}")
+                    LOG.error(f"Exception type: {type(e).__name__}")
+                    import traceback
+                    LOG.error(f"Full traceback: {traceback.format_exc()}")
                     raise ConfigurationError(f"Deconfiguration failed for {device_name}: {str(e)}")
 
             if output_config:
@@ -999,4 +1041,7 @@ class InterfaceManager(BaseManager):
 
         except Exception as e:
             LOG.error(f"Error in WAN circuits and interfaces deconfiguration: {str(e)}")
+            LOG.error(f"Exception type: {type(e).__name__}")
+            import traceback
+            LOG.error(f"Full traceback: {traceback.format_exc()}")
             raise ConfigurationError(f"WAN circuits and interfaces deconfiguration failed: {str(e)}")
