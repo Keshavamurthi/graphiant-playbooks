@@ -1,6 +1,6 @@
 interfaces:
   - edge-1-sdktest:
-    # LAN Sub-Interface (VLAN) with Static IP assignment
+    # LAN Sub-Interface (VLAN) with Static IPv4 assignment
     - name: GigabitEthernet4/0/0
       sub_interfaces:
         - vlan: 1

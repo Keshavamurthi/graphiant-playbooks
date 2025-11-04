@@ -529,10 +529,10 @@ class GlobalConfigManager(BaseManager):
                             LOG.warning(f"Failed to delete LAN segment '{segment_name}': {delete_error}")
                             skipped_count += 1
                     else:
-                        LOG.warning(f"Cannot delete LAN segment '{segment_name}' - has references: "
-                                    f"siteListReferences={segment.site_list_references}, "
-                                    f"edgeReferences={segment.edge_references}, "
-                                    f"associatedInterfaces={segment.associated_interfaces}")
+                        LOG.error(f"Cannot delete LAN segment '{segment_name}' - has references: "
+                                  f"siteListReferences={segment.site_list_references}, "
+                                  f"edgeReferences={segment.edge_references}, "
+                                  f"associatedInterfaces={segment.associated_interfaces}")
                         skipped_count += 1
                 else:
                     LOG.info(f"LAN segment '{segment_name}' not found, skipping deletion")

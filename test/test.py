@@ -382,7 +382,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         graphiant_config = GraphiantConfig(base_url=base_url, username=username, password=password)
-        graphiant_config.data_exchange.create_services("sample_data_exchange_services.yaml")
+        graphiant_config.data_exchange.create_services("de_workflows_configs/sample_data_exchange_services.yaml")
 
     def test_get_data_exchange_services_summary(self):
         """
@@ -398,7 +398,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         graphiant_config = GraphiantConfig(base_url=base_url, username=username, password=password)
-        graphiant_config.data_exchange.delete_services("sample_data_exchange_services.yaml")
+        graphiant_config.data_exchange.delete_services("de_workflows_configs/sample_data_exchange_services.yaml")
 
     def test_create_data_exchange_customers(self):
         """
@@ -406,7 +406,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         graphiant_config = GraphiantConfig(base_url=base_url, username=username, password=password)
-        graphiant_config.data_exchange.create_customers("sample_data_exchange_customers.yaml")
+        graphiant_config.data_exchange.create_customers("de_workflows_configs/sample_data_exchange_customers.yaml")
 
     def test_get_data_exchange_customers_summary(self):
         """
@@ -422,7 +422,7 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         graphiant_config = GraphiantConfig(base_url=base_url, username=username, password=password)
-        graphiant_config.data_exchange.delete_customers("sample_data_exchange_customers.yaml")
+        graphiant_config.data_exchange.delete_customers("de_workflows_configs/sample_data_exchange_customers.yaml")
 
     def test_match_data_exchange_service_to_customers(self):
         """
@@ -430,7 +430,26 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         """
         base_url, username, password = read_config()
         graphiant_config = GraphiantConfig(base_url=base_url, username=username, password=password)
-        graphiant_config.data_exchange.match_service_to_customers("sample_data_exchange_matches.yaml")
+        graphiant_config.data_exchange.match_service_to_customers(
+            "de_workflows_configs/sample_data_exchange_matches.yaml")
+
+    def test_accept_data_exchange_invitation_dry_run(self):
+        """
+        Accept Data Exchange Service Invitation (Workflow 4).
+        """
+        base_url, username, password = read_config()
+        graphiant_config = GraphiantConfig(base_url=base_url, username=username, password=password)
+
+        # Test accept_invitation with configuration file
+        config_file = "de_workflows_configs/sample_data_exchange_acceptance.yaml"
+        matches_file = (
+            "ansible_collection/graphiant/graphiant_playbooks/playbooks/"
+            "de_workflows/output/sample_data_exchange_matches_responses_latest.json"
+        )
+
+        LOG.info(f"Testing accept_invitation with config: {config_file}")
+        result = graphiant_config.data_exchange.accept_invitation(config_file, matches_file, dry_run=True)
+        LOG.info(f"Accept invitation result: {result}")
 
 
 if __name__ == '__main__':
@@ -481,7 +500,7 @@ if __name__ == '__main__':
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_wan_circuits_interfaces'))
     # To configure all interfaces
     suite.addTest(TestGraphiantPlaybooks('test_configure_interfaces'))
-    # To deconfigure all interfaces=
+    # To deconfigure all interfaces (reset parent interface to default lan and delete subinterfaces)
     # suite.addTest(TestGraphiantPlaybooks('test_deconfigure_interfaces'))
 
     # Global Configuration Management and BGP Peering
@@ -513,8 +532,9 @@ if __name__ == '__main__':
     suite.addTest(TestGraphiantPlaybooks('test_create_data_exchange_customers'))
     suite.addTest(TestGraphiantPlaybooks('test_get_data_exchange_customers_summary'))
     suite.addTest(TestGraphiantPlaybooks('test_match_data_exchange_service_to_customers'))
-    suite.addTest(TestGraphiantPlaybooks('test_delete_data_exchange_customers'))
-    suite.addTest(TestGraphiantPlaybooks('test_delete_data_exchange_services'))
+    suite.addTest(TestGraphiantPlaybooks('test_accept_data_exchange_invitation_dry_run'))
+    # suite.addTest(TestGraphiantPlaybooks('test_delete_data_exchange_customers'))
+    # suite.addTest(TestGraphiantPlaybooks('test_delete_data_exchange_services'))
     suite.addTest(TestGraphiantPlaybooks('test_get_data_exchange_customers_summary'))
     suite.addTest(TestGraphiantPlaybooks('test_get_data_exchange_services_summary'))
 

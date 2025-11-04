@@ -20,7 +20,6 @@
       #username: "{{ graphiant_username | default(lookup('ini', 'username file=/absolute/path/test/test.ini section=credentials')) }}"
       #password: "{{ graphiant_password | default(lookup('ini', 'password file=/absolute/path/test/test.ini section=credentials')) }}"
 
-
   tasks:
     - name: Configure Sites (Create Sites)
       graphiant.graphiant_playbooks.graphiant_sites:

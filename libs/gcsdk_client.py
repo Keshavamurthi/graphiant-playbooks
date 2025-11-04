@@ -23,6 +23,7 @@ class GraphiantPortalClient():
         self.api_client = graphiant_sdk.ApiClient(self.config)
         self.api = graphiant_sdk.DefaultApi(self.api_client)
         self.bearer_token = None
+        self.enterprise_info = None
 
     def set_bearer_token(self):
         v1_auth_login_post_request = \
@@ -43,6 +44,56 @@ class GraphiantPortalClient():
         LOG.debug(f"GraphiantPortalClient Bearer token : {v1_auth_login_post_response.token}")
         LOG.info("Graphiant Portal Bearer token retrieved successfully !!! ")
         self.bearer_token = f'Bearer {v1_auth_login_post_response.token}'
+        # Get and log enterprise information
+        self.enterprise_info = self.get_enterprise_info()
+        LOG.info(f"GraphiantPortalClient Enterprise info: {self.enterprise_info}")
+
+    def get_enterprise_info(self):
+        """
+        Get enterprise information for the authenticated user.
+
+        Returns:
+            dict: Enterprise information including name and ID, or None if failed
+        """
+        try:
+            # First get the current user's enterprise ID
+            user_response = self.api.v1_auth_user_get(authorization=self.bearer_token)
+            if not user_response or not hasattr(user_response, 'enterprise_id'):
+                LOG.warning("get_enterprise_info: Could not get enterprise ID from user info")
+                return None
+
+            current_enterprise_id = user_response.enterprise_id
+
+            # Now get all enterprises to find the one matching the current user's enterprise ID
+            enterprises_response = self.api.v1_enterprises_get(authorization=self.bearer_token)
+            if enterprises_response and hasattr(enterprises_response, 'enterprises') \
+                    and enterprises_response.enterprises:
+                for enterprise in enterprises_response.enterprises:
+                    if getattr(enterprise, 'enterprise_id', None) == current_enterprise_id:
+                        enterprise_name = getattr(enterprise, 'company_name', None)
+                        LOG.info(f"Connected to enterprise: '{enterprise_name}' (ID: {current_enterprise_id})")
+                        return {
+                            'enterprise_id': current_enterprise_id,
+                            'company_name': enterprise_name
+                        }
+
+            # If we couldn't find the enterprise details, return just the ID
+            return {
+                'enterprise_id': current_enterprise_id,
+                'company_name': None
+            }
+
+        except ApiException as e:
+            api_url = f"{self.api.api_client.configuration.host}/v1/auth/user"
+            self._log_api_error(
+                method_name="get_enterprise_info",
+                api_url=api_url,
+                exception=e
+            )
+            return None
+        except Exception as e:
+            LOG.error(f"get_enterprise_info: Unexpected error: {e}")
+            return None
 
     def _log_api_error(self, method_name: str, api_url: str,
                        path_params: dict = None, query_params: dict = None,
@@ -107,22 +158,22 @@ class GraphiantPortalClient():
 
     def get_device_id(self, device_name):
         """
-        Retrieve the device ID(s) based on the device name.
+        Retrieve the device ID based on exact device name match.
 
-        If a single match is found, returns the device ID.
-        If multiple matches are found, returns a dictionary of {hostname: device_id}.
-        If no match is found, returns an empty dict.
+        Args:
+            device_name (str): Exact device name to search for
+
+        Returns:
+            int or None: The device ID if exact match found, None otherwise
         """
         output = self.get_edges_summary()
-        output_dict = {}
         for device_info in output:
-            if device_name in device_info.hostname:
-                output_dict[device_info.hostname] = device_info.device_id
-        LOG.debug(f"get_device_id : {output_dict}")
-        if len(output_dict) == 1:
-            for device_id in output_dict.values():
-                return device_id
-        return output_dict
+            if device_info.hostname == device_name:
+                LOG.debug(f"get_device_id: Found exact match for '{device_name}' -> {device_info.device_id}")
+                return device_info.device_id
+
+        LOG.debug(f"get_device_id: No exact match found for '{device_name}'")
+        return None
 
     def get_enterprise_id(self):
         """
@@ -137,6 +188,31 @@ class GraphiantPortalClient():
         for device_info in output:
             LOG.debug(f"get_enterprise_id : {device_info.enterprise_id}")
             return device_info.enterprise_id
+
+    def get_edges_summary_filter(self, role='gateway', region='us-central-1 (Chicago)', status='active'):
+        """
+        Get edges summary filtered by role, region, and status.
+        """
+        response = self.api.v1_edges_summary_get(authorization=self.bearer_token)
+        edges_summary = []
+        LOG.info(f"get_edges_summary_filter: Getting edges summary for role: {role}, "
+                 f"region: {region}, status: {status}")
+        for edge_info in response.edges_summary:
+            if edge_info.role == role and edge_info.status == status:
+                if hasattr(edge_info, 'override_region') and edge_info.override_region == region:
+                    edges_summary.append(edge_info)
+                elif edge_info.region == region:
+                    edges_summary.append(edge_info)
+                else:
+                    continue
+        if len(edges_summary) > 0:
+            LOG.info(f"get_edges_summary_filter: Found {len(edges_summary)} edges summary "
+                     f"for role: {role}, region: {region}, status: {status}")
+            return edges_summary
+        else:
+            LOG.warning(f"get_edges_summary_filter: No edges summary found for role: {role}, "
+                        f"region: {region}, status: {status}")
+            return None
 
     @poller(timeout=90, wait=5)
     def verify_device_portal_status(self, device_id: int):
@@ -476,12 +552,17 @@ class GraphiantPortalClient():
             # Get detailed site information using v1/sites/details
             response = self.api.v1_sites_details_get(authorization=self.bearer_token)
             sites = response.sites
-            LOG.debug(f"get_site_id: Looking for site '{site_name}' in {len(sites)} sites using v1/sites/details")
+            LOG.info(f"get_site_id: Looking for site '{site_name}' in {len(sites)} sites using v1/sites/details")
+
+            # Log available sites for debugging
+            available_sites = [site.name for site in sites]
+            LOG.info(f"get_site_id: Available sites: {available_sites}")
+
             for site in sites:
                 if site.name == site_name:
-                    LOG.debug(f"get_site_id: Found site '{site_name}' with ID {site.id}")
+                    LOG.info(f"get_site_id: Found site '{site_name}' with ID {site.id}")
                     return site.id
-            LOG.debug(f"get_site_id: Site '{site_name}' not found")
+            LOG.warning(f"get_site_id: Site '{site_name}' not found. Available sites: {available_sites}")
             return None
         except ApiException as e:
             api_url = f"{self.api.api_client.configuration.host}/v1/sites"
@@ -789,6 +870,30 @@ class GraphiantPortalClient():
             LOG.error(f"get_data_exchange_service_by_name: Error finding service '{service_name}': {e}")
             return None
 
+    def get_data_exchange_service_id_by_name(self, service_name: str):
+        """
+        Get a Data Exchange service ID by name.
+
+        Args:
+            service_name (str): Name of the service to retrieve
+
+        Returns:
+            int: Service ID or None if not found
+        """
+        try:
+            LOG.info(f"get_data_exchange_service_id_by_name: Looking for service ID for '{service_name}'")
+            service = self.get_data_exchange_service_by_name(service_name)
+
+            if service:
+                LOG.info(f"get_data_exchange_service_id_by_name: Found service ID {service.id} for '{service_name}'")
+                return service.id
+            else:
+                LOG.info(f"get_data_exchange_service_id_by_name: Service '{service_name}' not found")
+                return None
+        except Exception as e:
+            LOG.error(f"get_data_exchange_service_id_by_name: Error finding service ID for '{service_name}': {e}")
+            return None
+
     def create_data_exchange_customers(self, customer_config: dict):
         """
         Create a new Data Exchange customer.
@@ -876,7 +981,46 @@ class GraphiantPortalClient():
         except Exception as e:
             LOG.error(f"get_data_exchange_customer_by_name: Error finding customer '{customer_name}': {e}")
             return None
+    '''
+    # Wait for latest sdk version to be released.
+    def get_matched_services_for_customer(self, customer_id: int):
+        """
+        Get list of services already matched to a specific customer.
 
+        Args:
+            customer_id (int): ID of the customer
+
+        Returns:
+            list: List of matched services with their details, or None if failed
+        """
+        try:
+            LOG.info(f"get_matched_services_for_customer: Retrieving matched services for customer ID: {customer_id}")
+            response = self.api.v1_extranets_b2b_peering_match_services_summary_get(
+                authorization=self.bearer_token,
+                id=customer_id
+            )
+
+            if response and hasattr(response, 'services'):
+                LOG.info(f"get_matched_services_for_customer: Found {len(response.services)} matched services "
+                         f"for customer {customer_id}")
+                return response.services
+            else:
+                LOG.info(f"get_matched_services_for_customer: No matched services found for customer {customer_id}")
+                return []
+
+        except ApiException as e:
+            api_url = f"{self.api.api_client.configuration.host}/v1/extranets-b2b-peering/match/services/summary"
+            self._log_api_error(
+                method_name="get_matched_services_for_customer",
+                api_url=api_url,
+                query_params={"id": customer_id},
+                exception=e
+            )
+            return None
+        except Exception as e:
+            LOG.error(f"get_matched_services_for_customer: Unexpected error: {e}")
+            return None
+    '''
     def delete_data_exchange_customer(self, customer_id: int):
         """
         Delete a Data Exchange customer.
@@ -999,3 +1143,242 @@ class GraphiantPortalClient():
                 exception=e
             )
             raise e
+
+    def accept_data_exchange_service(self, match_id, acceptance_payload):
+        """
+        Accept a Data Exchange service invitation.
+
+        Args:
+            match_id (int): The match ID to accept
+            acceptance_payload (dict): The acceptance configuration payload
+
+        Returns:
+            API response object
+        """
+        try:
+            LOG.info(f"accept_data_exchange_service: Accepting match {match_id}")
+            # Use the correct method with match_id as path parameter
+            response = self.api.v1_extranets_b2b_peering_consumer_match_id_post(
+                authorization=self.bearer_token,
+                match_id=match_id,  # Use match_id as the path parameter
+                v1_extranets_b2b_peering_consumer_match_id_post_request=acceptance_payload
+            )
+            LOG.info(f"accept_data_exchange_service: Successfully accepted match {match_id}")
+            return response
+        except ApiException as e:
+            api_url = f"{self.api.api_client.configuration.host}/v1/extranets-b2b-peering/consumer/{match_id}"
+            self._log_api_error(
+                method_name="accept_data_exchange_service",
+                api_url=api_url,
+                path_params={"match_id": match_id},
+                exception=e
+            )
+            raise e
+
+    def get_ipsec_inside_subnet(self, region_id, lan_segment_id, address_family):
+        """
+        Get IPSec inside subnet for a specific region and LAN segment.
+
+        Args:
+            region_id (int): The region ID
+            lan_segment_id (int): The LAN segment ID (VRF)
+            address_family (str): Either 'ipv4' or 'ipv6'
+
+        Returns:
+            str or None: The inside subnet CIDR, or None if failed
+        """
+        try:
+            LOG.info(f"get_ipsec_inside_subnet: Getting {address_family} subnet for region {region_id}, "
+                     f"LAN segment {lan_segment_id}")
+            response = self.api.v1_gateways_ipsec_regions_region_id_vrfs_vrf_id_inside_subnet_get(
+                authorization=self.bearer_token,
+                region_id=region_id,
+                vrf_id=lan_segment_id,
+                address_family=address_family
+            )
+
+            if address_family == 'ipv4':
+                subnet = getattr(response, 'ipv4_subnet', None)
+            else:  # ipv6
+                subnet = getattr(response, 'ipv6_subnet', None)
+
+            LOG.info(f"get_ipsec_inside_subnet: Retrieved {address_family} subnet: {subnet}")
+            return subnet
+        except ApiException as e:
+            api_url = (f"{self.api.api_client.configuration.host}/v1/gateways/ipsec/regions/"
+                       f"{region_id}/vrfs/{lan_segment_id}/inside-subnet")
+            self._log_api_error(
+                method_name="get_ipsec_inside_subnet",
+                api_url=api_url,
+                query_params={"addressFamily": address_family},
+                exception=e
+            )
+            return None
+        except Exception as e:
+            LOG.error(f"get_ipsec_inside_subnet: Unexpected error: {e}")
+            return None
+
+    def get_preshared_key(self):
+        """
+        Get a preshared key for IPSec tunnels.
+
+        Returns:
+            str or None: The preshared key, or None if failed
+        """
+        try:
+            LOG.info("get_preshared_key: Getting preshared key")
+            response = self.api.v1_presharedkey_get(authorization=self.bearer_token)
+            psk = getattr(response, 'presharedkey', None)
+            LOG.info(f"get_preshared_key: Retrieved preshared key: {psk}")
+            return psk
+        except ApiException as e:
+            api_url = f"{self.api.api_client.configuration.host}/v1/presharedkey"
+            self._log_api_error(
+                method_name="get_preshared_key",
+                api_url=api_url,
+                exception=e
+            )
+            return None
+        except Exception as e:
+            LOG.error(f"get_preshared_key: Unexpected error: {e}")
+            return None
+
+    def get_gateway_summary(self):
+        """
+        Get gateway summary information.
+
+        Returns:
+            API response object
+        """
+        try:
+            LOG.info("get_gateway_summary: Retrieving gateway summary")
+            response = self.api.v1_gateways_summary_get(
+                authorization=self.bearer_token
+            )
+            LOG.info("get_gateway_summary: Successfully retrieved gateway summary")
+            return response
+        except ApiException as e:
+            api_url = f"{self.api.api_client.configuration.host}/v1/gateways/summary"
+            self._log_api_error(
+                method_name="get_gateway_summary",
+                api_url=api_url,
+                exception=e
+            )
+            raise e
+
+    def get_gateway_details(self, gateway_id):
+        """
+        Get detailed gateway information.
+
+        Args:
+            gateway_id (int): The gateway ID
+
+        Returns:
+            API response object
+        """
+        try:
+            LOG.info(f"get_gateway_details: Retrieving details for gateway {gateway_id}")
+            response = self.api.v1_gateways_id_details_get(
+                authorization=self.bearer_token,
+                id=gateway_id
+            )
+            LOG.info(f"get_gateway_details: Successfully retrieved details for gateway {gateway_id}")
+            return response
+        except ApiException as e:
+            api_url = f"{self.api.api_client.configuration.host}/v1/gateways/{gateway_id}/details"
+            self._log_api_error(
+                method_name="get_gateway_details",
+                api_url=api_url,
+                path_params={"gateway_id": gateway_id},
+                exception=e
+            )
+            raise e
+
+    def get_service_health(self, service_id, is_provider=False):
+        """
+        Get service health monitoring information.
+
+        Args:
+            service_id (int): The service ID
+            is_provider (bool): Whether this is a provider view
+
+        Returns:
+            API response object
+        """
+        try:
+            LOG.info(f"get_service_health: Retrieving health for service {service_id}")
+            # Create the proper request object
+            health_request = graphiant_sdk.V1ExtranetsMonitoringTrafficSecurityPolicyPostRequest(
+                id=service_id,
+                is_provider=is_provider
+            )
+            response = self.api.v1_extranet_b2b_monitoring_peering_service_service_health_post(
+                authorization=self.bearer_token,
+                v1_extranets_monitoring_traffic_security_policy_post_request=health_request
+            )
+            LOG.info(f"get_service_health: Successfully retrieved health for service {service_id}")
+            return response
+        except ApiException as e:
+            api_url = (f"{self.api.api_client.configuration.host}/"
+                       f"v1/extranet-b2b-monitoring/peering-service/service-health")
+            self._log_api_error(
+                method_name="get_service_health",
+                api_url=api_url,
+                path_params={"service_id": service_id},
+                exception=e
+            )
+            raise e
+
+    def get_regions(self):
+        """
+        Get all available regions from the API.
+
+        Returns:
+            list: List of region objects with id and name
+        """
+        try:
+            LOG.info("get_regions: Retrieving regions from API")
+            response = self.api.v1_regions_get(authorization=self.bearer_token)
+            LOG.info(f"get_regions: Successfully retrieved {len(response.regions)} regions")
+            return response.regions
+        except ApiException as e:
+            api_url = f"{self.api.api_client.configuration.host}/v1/regions"
+            self._log_api_error(
+                method_name="get_regions",
+                api_url=api_url,
+                exception=e
+            )
+            return None
+
+    def get_region_id_by_name(self, region_name):
+        """
+        Get region ID by region name using the API.
+
+        Args:
+            region_name (str): Region name to look up
+
+        Returns:
+            int: Region ID if found, None otherwise
+        """
+        try:
+            regions = self.get_regions()
+            if not regions:
+                LOG.warning("get_region_id_by_name: No regions available")
+                return None
+
+            # Log available regions for debugging
+            available_regions = [region.name for region in regions]
+            LOG.info(f"get_region_id_by_name: Looking for region '{region_name}' in {len(regions)} regions")
+            LOG.info(f"get_region_id_by_name: Available regions: {available_regions}")
+
+            for region in regions:
+                if region.name == region_name:
+                    LOG.info(f"get_region_id_by_name: Found region '{region_name}' with ID {region.id}")
+                    return region.id
+
+            LOG.warning(f"get_region_id_by_name: Region '{region_name}' not found. "
+                        f"Available regions: {available_regions}")
+            return None
+        except Exception as e:
+            LOG.error(f"get_region_id_by_name: Failed to get region ID for '{region_name}': {e}")
+            return None

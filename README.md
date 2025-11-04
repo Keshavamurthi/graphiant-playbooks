@@ -41,7 +41,7 @@ Graphiant Playbooks streamlines network infrastructure management through:
 ## ✨ Features
 
 ### Core Capabilities
-- **Edge Device Management**: Configure interfaces, BGP peering, and global objects
+- **Edge Device Management**: Configure interfaces, BGP peering, global objects and B2B data exchange peering services.
 - **Multi-Device Operations**: Apply configurations across multiple devices simultaneously
 - **Template Engine**: Jinja2-based configuration templates with dynamic rendering
 - **API Integration**: Full Graphiant SDK integration for seamless API interactions
@@ -187,7 +187,7 @@ graphiant-playbooks/
 
 ### Step 1: Define Configurations
 
-All input configs should be placed in the configs/ folder.
+All input configs should be placed in the configs/ folder/subfolder.
 
 - sample_bgp_peering.yaml
 - sample_interface_config.yaml
@@ -197,9 +197,10 @@ All input configs should be placed in the configs/ folder.
 - sample_global_ipfix_exporters.yaml
 - sample_global_vpn_profiles.yaml
 - sample_site_attachments.yaml
-- sample_data_exchange_services.yaml
-- sample_data_exchange_customers.yaml
-- sample_data_exchange_matches.yaml
+- sde_workflows_configs/ample_data_exchange_services.yaml
+- de_workflows_configs/sample_data_exchange_customers.yaml
+- de_workflows_configs/sample_data_exchange_matches.yaml
+- de_workflows_configs/sample_data_exchange_acceptance.yaml
 
 Note: Also refer the templates under templates/ dir for more details on the supported arguments.
 
@@ -405,19 +406,32 @@ graphiant_config.bgp.deconfigure("sample_bgp_peering.yaml")
 #### Create Data Exchange Services
 ```sh
 # Create Data Exchange services
-graphiant_config.data_exchange.create_services("sample_data_exchange_services.yaml")
+graphiant_config.data_exchange.create_services("de_workflows_configs/sample_data_exchange_services.yaml")
 ```
 
 #### Create Data Exchange Customers
 ```sh
 # Create Data Exchange customers
-graphiant_config.data_exchange.create_customers("sample_data_exchange_customers.yaml")
+graphiant_config.data_exchange.create_customers("de_workflows_configs/sample_data_exchange_customers.yaml")
 ```
 
 #### Match Services to Customers
 ```sh
 # Match services to customers
-graphiant_config.data_exchange.match_service_to_customers("sample_data_exchange_matches.yaml")
+graphiant_config.data_exchange.match_service_to_customers("de_workflows_configs/sample_data_exchange_matches.yaml")
+```
+
+#### Accept Data Exchange Peering Service invitation
+```sh
+config_file = "de_workflows_configs/sample_data_exchange_acceptance.yaml"
+matches_file = (
+    "ansible_collection/graphiant/graphiant_playbooks/playbooks/"
+    "de_workflows/output/sample_data_exchange_matches_responses_latest.json"
+)
+# Accept Peering Service Invitation Dry Run
+graphiant_config.data_exchange.match_service_to_customers(config_file, matches_file, dry_run=True)
+# Accept Peering Service Invitation Dry Run
+graphiant_config.data_exchange.match_service_to_customers(config_file, matches_file)
 ```
 
 #### Get Summaries
@@ -455,147 +469,8 @@ graphiant_config = GraphiantConfig(
 | **`BGPManager`** | BGP peering management | `configure()`, `detach_policies()`, `deconfigure()` |
 | **`GlobalConfigManager`** | Global object management | `configure()`, `deconfigure()` |
 | **`SiteManager`** | Site attachment management | `manage_global_system_objects_on_site()` |
-| **`DataExchangeManager`** | Data Exchange management | `create_services()`, `create_customers()`, `match_service_to_customers()` |
+| **`DataExchangeManager`** | Data Exchange management | `create_services()`, `create_customers()`, `match_service_to_customers(), accept_invitation()` |
 
-### Interface Management
-
-#### LAN Interface Configuration
-```python
-# Configure LAN interfaces
-graphiant_config.interfaces.configure_lan_interfaces("configs/sample_interface_config.yaml")
-
-# Deconfigure LAN interfaces
-graphiant_config.interfaces.deconfigure_lan_interfaces("configs/sample_interface_config.yaml")
-```
-
-#### WAN Interface Configuration
-```python
-# Configure WAN circuits and interfaces
-graphiant_config.interfaces.configure_wan_circuits_interfaces(
-    circuit_config_file="configs/sample_circuit_config.yaml",
-    interface_config_file="configs/sample_interface_config.yaml"
-)
-
-# Configure circuits only
-graphiant_config.interfaces.configure_circuits(
-    circuit_config_file="configs/sample_circuit_config.yaml",
-    interface_config_file="configs/sample_interface_config.yaml"
-)
-
-# Deconfigure circuits (removes static routes)
-graphiant_config.interfaces.deconfigure_circuits(
-    interface_config_file="configs/sample_interface_config.yaml",
-    circuit_config_file="configs/sample_circuit_config.yaml"
-)
-```
-
-#### Complete Interface Management
-```python
-# Configure all interfaces in one operation
-graphiant_config.interfaces.configure_interfaces(
-    interface_config_file="configs/sample_interface_config.yaml",
-    circuit_config_file="configs/sample_circuit_config.yaml"
-)
-
-# Deconfigure all interfaces
-graphiant_config.interfaces.deconfigure_interfaces(
-    interface_config_file="configs/sample_interface_config.yaml",
-    circuit_config_file="configs/sample_circuit_config.yaml"
-)
-```
-
-### Global Object Management
-
-#### Prefix Lists
-```python
-# Configure global prefix sets
-graphiant_config.global_config.configure("configs/sample_global_prefix_lists.yaml")
-
-# Deconfigure global prefix sets
-graphiant_config.global_config.deconfigure("configs/sample_global_prefix_lists.yaml")
-```
-
-#### BGP Filters
-```python
-# Configure global BGP filters
-graphiant_config.global_config.configure("configs/sample_global_bgp_filters.yaml")
-
-# Deconfigure global BGP filters
-graphiant_config.global_config.deconfigure("configs/sample_global_bgp_filters.yaml")
-```
-
-#### System Objects
-```python
-# SNMP Services
-graphiant_config.global_config.configure("configs/sample_global_snmp_services.yaml")
-
-# Syslog Servers
-graphiant_config.global_config.configure("configs/sample_global_syslog_servers.yaml")
-
-# IPFIX Exporters
-graphiant_config.global_config.configure("configs/sample_global_ipfix_exporters.yaml")
-
-# VPN Profiles
-graphiant_config.global_config.configure("configs/sample_global_vpn_profiles.yaml")
-
-# LAN Segments
-graphiant_config.global_config.configure("configs/sample_global_lan_segments.yaml")
-
-# Site Lists
-graphiant_config.global_config.configure("configs/sample_global_site_lists.yaml")
-```
-
-### BGP Peering Management
-
-```python
-# Configure BGP peering neighbors
-graphiant_config.bgp.configure("configs/sample_bgp_peering.yaml")
-
-# Detach policies from BGP peers
-graphiant_config.bgp.detach_policies("configs/sample_bgp_peering.yaml")
-
-# Deconfigure BGP peering
-graphiant_config.bgp.deconfigure("configs/sample_bgp_peering.yaml")
-```
-
-### Site Management
-
-```python
-# Configure sites (create sites and attach objects)
-graphiant_config.sites.configure("sample_sites.yaml")
-
-# Deconfigure sites (detach objects and delete sites)
-graphiant_config.sites.deconfigure("sample_sites.yaml")
-
-# Create sites only
-graphiant_config.sites.configure_sites("sample_sites.yaml")
-
-# Delete sites only
-graphiant_config.sites.deconfigure_sites("sample_sites.yaml")
-
-# Attach objects to existing sites
-graphiant_config.sites.attach_objects("sample_sites.yaml")
-
-# Detach objects from sites
-graphiant_config.sites.detach_objects("sample_sites.yaml")
-```
-
-### Data Exchange Management
-
-```python
-# Create Data Exchange services
-graphiant_config.data_exchange.create_services("sample_data_exchange_services.yaml")
-
-# Create Data Exchange customers
-graphiant_config.data_exchange.create_customers("sample_data_exchange_customers.yaml")
-
-# Match services to customers
-graphiant_config.data_exchange.match_service_to_customers("sample_data_exchange_matches.yaml")
-
-# Get summaries
-services_summary = graphiant_config.data_exchange.get_services_summary()
-customers_summary = graphiant_config.data_exchange.get_customers_summary()
-```
 
 ### Utility Functions
 
@@ -884,7 +759,7 @@ When reporting issues, please include:
 
 ### Resources
 - **Graphiant SDK**: [PyPI Package](https://pypi.org/project/graphiant-sdk/)
-- **API Documentation**: [Graphiant API Docs](https://docs.graphiant.com/docs/api)
+- **API Documentation**: [Graphiant API Docs](https://github.com/Graphiant-Inc/graphiant-sdk-python/tree/main/docs)
 - **Automation Guide**: [Graphiant Playbooks User Guide](https://docs.graphiant.com/docs/graphiant-playbooks)
 
 ---

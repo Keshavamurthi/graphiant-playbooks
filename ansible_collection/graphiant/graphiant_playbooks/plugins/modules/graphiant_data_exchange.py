@@ -42,6 +42,8 @@ options:
       - delete_customers: Delete Data Exchange customers from YAML configuration
       - get_customers_summary: Get summary of all Data Exchange customers with tabulated output
       - match_service_to_customers: Match services to customers from YAML configuration with status validation
+      - accept_invitation: Accept Data Exchange service invitation (Workflow 4) - requires config_file
+      - get_service_health: Get service health monitoring information
     type: str
     choices:
       - create_services
@@ -51,6 +53,8 @@ options:
       - delete_customers
       - get_customers_summary
       - match_service_to_customers
+      - accept_invitation
+      - get_service_health
     required: true
   state:
     description:
@@ -68,9 +72,23 @@ options:
     description:
       - Path to the YAML configuration file for the operation.
       - Required for create_services, delete_services, create_customers, delete_customers,
-        and match_service_to_customers operations.
+        match_service_to_customers, and accept_invitation operations.
       - The configuration file should contain the appropriate Data Exchange resource definitions.
+      - For accept_invitation operation, the file should contain data_exchange_acceptances list with acceptance details.
     type: str
+  matches_file:
+    description:
+      - Path to the matches responses JSON file for match ID lookup.
+      - Optional for accept_invitation operation.
+      - If not provided, uses default matches file.
+    type: str
+  dry_run:
+    description:
+      - Enable dry-run mode for accept_invitation operation.
+      - When enabled, validates configuration without making actual API calls.
+      - Useful for testing and validation before actual execution.
+    type: bool
+    default: false
   detailed_logs:
     description:
       - Enable detailed logging output for troubleshooting and monitoring.
@@ -95,6 +113,17 @@ options:
     type: str
     required: true
     no_log: true
+  service_name:
+    description:
+      - Service name for health monitoring operations.
+      - Required for get_service_health operations.
+    type: str
+  is_provider:
+    description:
+      - Whether to get provider view for service health monitoring.
+      - Used with get_service_health operation.
+    type: bool
+    default: false
 
 requirements:
   - python >= 3.6
@@ -257,6 +286,33 @@ EXAMPLES = r'''
         - "{{ create_services_result }}"
         - "{{ create_customers_result }}"
         - "{{ match_result }}"
+
+# Accept Data Exchange service invitation (Workflow 4)
+- name: Accept Data Exchange service invitation
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: accept_invitation
+    config_file: "sample_data_exchange_acceptance.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+  register: accept_result
+
+- name: Display acceptance result
+  debug:
+    msg: "{{ accept_result.result_msg }}"
+
+# Get service health
+- name: Get service health
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: get_service_health
+    service_name: "de-service-1"
+    is_provider: false
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+  register: service_health
 '''
 
 RETURN = r'''
@@ -334,7 +390,9 @@ def main():
                 'create_customers',
                 'delete_customers',
                 'get_customers_summary',
-                'match_service_to_customers'
+                'match_service_to_customers',
+                'accept_invitation',
+                'get_service_health'
             ]
         ),
         state=dict(
@@ -343,7 +401,11 @@ def main():
             default='present'
         ),
         config_file=dict(type='str', required=False),
-        detailed_logs=dict(type='bool', default=False)
+        matches_file=dict(type='str', required=False),
+        detailed_logs=dict(type='bool', default=False),
+        dry_run=dict(type='bool', default=False),
+        service_name=dict(type='str', required=False),
+        is_provider=dict(type='bool', default=False)
     )
 
     # Create module instance
@@ -441,11 +503,45 @@ def main():
             changed = result['changed']
             result_msg = result['result_msg']
 
+        elif operation == 'accept_invitation':
+            # accept_invitation operation supports config_file and optional matches_file, dry_run
+            if not config_file:
+                module.fail_json(msg="accept_invitation operation requires config_file parameter")
+
+            matches_file = params.get('matches_file')
+            dry_run = params.get('dry_run', False)
+
+            success_msg = f"Successfully accepted Data Exchange service invitation from {config_file}"
+            if dry_run:
+                success_msg = f"DRY-RUN: Validated Data Exchange service invitation from {config_file} " \
+                              "(API calls skipped)"
+
+            result = execute_with_logging(module, graphiant_config.data_exchange.accept_invitation,
+                                          config_file, matches_file, dry_run,
+                                          success_msg=success_msg)
+
+            changed = result['changed']
+            result_msg = result['result_msg']
+
+        elif operation == 'get_service_health':
+            service_name = params.get('service_name')
+            is_provider = params.get('is_provider', False)
+
+            if not service_name:
+                module.fail_json(msg="get_service_health operation requires service_name parameter")
+
+            result = execute_with_logging(
+              module, graphiant_config.data_exchange.get_service_health, service_name, is_provider,
+              success_msg=f"Successfully retrieved service health for service {service_name}")
+            result_msg = result['result_msg']
+            result_data = result.get('result_data', {})
+
         else:
             module.fail_json(
                 msg=f"Unsupported operation: {operation}. "
                     f"Supported operations are: create_services, delete_services, get_services_summary, "
-                    f"create_customers, delete_customers, get_customers_summary, match_service_to_customers"
+                    f"create_customers, delete_customers, get_customers_summary, match_service_to_customers, "
+                    f"accept_invitation, get_service_health"
             )
 
         # Return success
