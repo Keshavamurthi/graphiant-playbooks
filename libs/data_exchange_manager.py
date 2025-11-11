@@ -99,20 +99,21 @@ class DataExchangeManager(BaseManager):
                     skipped_count += 1
                     continue
 
-                # Resolve LAN segment ID if provided by name
-                if 'policy' in service_config and 'serviceLanSegment' in service_config['policy']:
-                    lan_segment_name = service_config['policy']['serviceLanSegment']
-                    if isinstance(lan_segment_name, str):
-                        lan_segment_id = self.gsdk.get_lan_segment_id(lan_segment_name)
-                        if lan_segment_id:
-                            service_config['policy']['serviceLanSegment'] = lan_segment_id
-                        else:
-                            raise ConfigurationError(
-                                f"LAN segment '{lan_segment_name}' not found for service '{service_name}'.")
+                if 'policy' in service_config:
+                    # Resolve LAN segment ID if provided by name
+                    if 'serviceLanSegment' in service_config['policy']:
+                        lan_segment_name = service_config['policy']['serviceLanSegment']
+                        if isinstance(lan_segment_name, str):
+                            lan_segment_id = self.gsdk.get_lan_segment_id(lan_segment_name)
+                            if lan_segment_id:
+                                service_config['policy']['serviceLanSegment'] = lan_segment_id
+                            else:
+                                raise ConfigurationError(
+                                    f"LAN segment '{lan_segment_name}' not found for service '{service_name}'.")
 
-                # Resolve site IDs if provided by names
-                if 'policy' in service_config and 'site' in service_config['policy']:
+                    # Resolve site or site list IDs if provided by names
                     self._resolve_site_ids(service_config['policy'], service_name)
+                    self._resolve_site_list_ids(service_config['policy'], service_name)
 
                 # Create service directly
                 LOG.info(f"Service configuration: {service_config}")
@@ -152,6 +153,30 @@ class DataExchangeManager(BaseManager):
                             resolved_site_ids.append(site_name)  # Already an ID
                     site_entry['sites'] = resolved_site_ids
 
+    def _resolve_site_list_ids(self, policy_config: dict, service_name: str) -> None:
+        """
+        Resolve site list names to site list IDs in the policy configuration.
+
+        Args:
+            policy_config (dict): Policy configuration to update
+            service_name (str): Service name for error reporting
+        """
+        if 'site' in policy_config and isinstance(policy_config['site'], list):
+            for site_entry in policy_config['site']:
+                if 'siteLists' in site_entry and isinstance(site_entry['siteLists'], list):
+                    resolved_site_list_ids = []
+                    for site_list_name in site_entry['siteLists']:
+                        if isinstance(site_list_name, str):
+                            site_list_id = self.gsdk.get_site_list_id(site_list_name)
+                            if site_list_id:
+                                resolved_site_list_ids.append(site_list_id)
+                            else:
+                                raise ConfigurationError(f"Site list '{site_list_name}' not found "
+                                                         f"for service '{service_name}'.")
+                        else:
+                            resolved_site_list_ids.append(site_list_name)  # Already an ID
+                    site_entry['siteLists'] = resolved_site_list_ids
+
     def get_services_summary(self) -> Dict[str, Any]:
         """
         Get summary of all Data Exchange services.
@@ -177,17 +202,17 @@ class DataExchangeManager(BaseManager):
                     matched_customers = getattr(service, 'matched_customers', 0)
 
                     service_table.append([
+                        service.id,
                         service.name,
                         service.status,
                         role,
-                        matched_customers,
-                        service.id
+                        matched_customers
                     ])
 
                 LOG.info(
                     f"Services Summary:\n"
                     f"""{tabulate(service_table,
-                                  headers=['Service Name', 'Status', 'Role', 'Matched Customers', 'ID'],
+                                  headers=['ID', 'Service Name', 'Status', 'Role', 'Matched Customers'],
                                   tablefmt='grid')}""")
 
             return response.to_dict()
@@ -291,16 +316,16 @@ class DataExchangeManager(BaseManager):
                     matched_services = getattr(customer, 'matched_services', 0)
 
                     customer_table.append([
+                        customer.id,
                         customer.name,
                         customer_type,
                         customer.status,
-                        matched_services,
-                        customer.id
+                        matched_services
                     ])
 
                 LOG.info(f"Customers Summary:\n"
                          f"""{tabulate(customer_table,
-                                       headers=['Customer Name', 'Customer Type', 'Status', 'Matched Services', 'ID'],
+                                       headers=['ID', 'Customer Name', 'Customer Type', 'Status', 'Matched Services'],
                                        tablefmt='grid')}""")
 
             return response.to_dict()
@@ -446,6 +471,100 @@ class DataExchangeManager(BaseManager):
             LOG.error(f"Failed to retrieve service details for ID {service_id}: {e}")
             raise ConfigurationError(f"Failed to retrieve service details for ID {service_id}: {e}")
 
+    def _save_match_service_to_customer_responses(self, match_responses: list, config_yaml_file: str) -> None:
+        """
+        Save match service to customer responses to JSON files.
+        Updates existing entries if they match (customer_name, service_name), otherwise appends new entries.
+
+        Args:
+            match_responses (list): List of match response dictionaries
+            config_yaml_file (str): Path to the YAML configuration file to determine output directory
+        """
+        if not match_responses:
+            return
+
+        import json
+        from datetime import datetime
+
+        # Resolve config file path using the same logic as render_config_file
+        # Handle absolute paths
+        if os.path.isabs(config_yaml_file):
+            resolved_config_file = config_yaml_file
+        else:
+            # Handle relative paths by concatenating with config_path
+            # Security: Normalize path to prevent path traversal attacks
+            resolved_config_file = os.path.normpath(os.path.join(self.config_utils.config_path, config_yaml_file))
+            # Security: Validate that resolved path is within config_path to prevent path traversal
+            config_path_real = os.path.realpath(self.config_utils.config_path)
+            resolved_config_file_real = os.path.realpath(resolved_config_file)
+            if not resolved_config_file_real.startswith(config_path_real):
+                raise ConfigurationError(
+                    f"Security: Path traversal detected. Config file path '{config_yaml_file}' "
+                    f"resolves outside config directory."
+                )
+
+        # Create output directory near the config file (same logic as render_config_file)
+        output_dir = os.path.join(os.path.dirname(resolved_config_file), "output")
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Generate output filenames based on input config
+        base_name = os.path.splitext(os.path.basename(resolved_config_file))[0]
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Create two files: one with timestamp, one with _latest suffix
+        timestamped_file = os.path.join(output_dir, f"{base_name}_responses_{timestamp}.json")
+        latest_file = os.path.join(output_dir, f"{base_name}_responses_latest.json")
+
+        # Read existing latest file if it exists
+        existing_responses = []
+        if os.path.exists(latest_file):
+            try:
+                with open(latest_file, 'r') as f:
+                    existing_responses = json.load(f)
+                LOG.info(f"Loaded {len(existing_responses)} existing entries from {latest_file}")
+            except (json.JSONDecodeError, IOError) as e:
+                LOG.warning(f"Could not read existing latest file {latest_file}: {e}. Starting fresh.")
+
+        # Create a dictionary for efficient lookup: key = (customer_name, service_name)
+        # This allows us to update existing entries or add new ones
+        response_dict = {}
+        for entry in existing_responses:
+            key = (entry.get('customer_name'), entry.get('service_name'))
+            if key[0] and key[1]:  # Only add if both keys are present
+                response_dict[key] = entry
+
+        # Update or add new match responses
+        updated_count = 0
+        added_count = 0
+        for new_response in match_responses:
+            key = (new_response.get('customer_name'), new_response.get('service_name'))
+            if key[0] and key[1]:
+                if key in response_dict:
+                    # Update existing entry
+                    response_dict[key].update(new_response)
+                    updated_count += 1
+                    LOG.debug(f"Updated entry for customer '{key[0]}' and service '{key[1]}'")
+                else:
+                    # Add new entry
+                    response_dict[key] = new_response
+                    added_count += 1
+                    LOG.debug(f"Added new entry for customer '{key[0]}' and service '{key[1]}'")
+
+        # Convert back to list for JSON serialization
+        merged_responses = list(response_dict.values())
+
+        # Save responses to both JSON files
+        with open(timestamped_file, 'w') as f:
+            json.dump(merged_responses, f, indent=2)
+
+        with open(latest_file, 'w') as f:
+            json.dump(merged_responses, f, indent=2)
+
+        LOG.info(f"Match responses saved to matches_file_with_timestamp: {timestamped_file}")
+        LOG.info(f"Latest match responses saved to matches_file: {latest_file}")
+        LOG.info(f"Updated {updated_count} existing entries, added {added_count} new entries. "
+                 f"Total entries in matches_file: {len(merged_responses)}")
+
     def match_service_to_customers(self, config_yaml_file: str) -> None:
         """
         Match Data Exchange services to customers from YAML configuration.
@@ -459,7 +578,7 @@ class DataExchangeManager(BaseManager):
 
             if not config_data or 'data_exchange_matches' not in config_data:
                 LOG.info("No data_exchange_matches configuration found in YAML file")
-                return
+                raise ConfigurationError("Configuration error: 'data_exchange_matches' key not found in YAML file.")
 
             matches = config_data['data_exchange_matches']
             if not isinstance(matches, list):
@@ -470,6 +589,7 @@ class DataExchangeManager(BaseManager):
 
             matched_count = 0
             skipped_count = 0
+            failed_count = 0
             match_responses = []
 
             for match_config in matches:
@@ -477,33 +597,26 @@ class DataExchangeManager(BaseManager):
                 service_name = match_config.get('serviceName')
 
                 if not customer_name or not service_name:
-                    raise ConfigurationError(
-                        "Configuration error: Each match must have 'customerName' and 'serviceName' fields.")
+                    LOG.error("Configuration error: Each match must have 'customerName' and 'serviceName' fields.")
+                    failed_count += 1
+                    continue
 
                 # Get customer ID
                 customer = self.gsdk.get_data_exchange_customer_by_name(customer_name)
                 if not customer:
-                    raise ConfigurationError(f"Customer '{customer_name}' not found.")
+                    LOG.error(f"Customer '{customer_name}' not found in the enterprise.")
+                    failed_count += 1
+                    continue
 
                 # Get service ID
                 service = self.gsdk.get_data_exchange_service_by_name(service_name)
                 if not service:
-                    raise ConfigurationError(f"Service '{service_name}' not found.")
-
-                # TODO: Remove me as it does not hold good for N:1 matching scenario.
-                if customer.status != "B2B_PEERING_SERVICE_STATUS_INACTIVE":
-                    LOG.warning(
-                        f"Customer '{customer_name}' status is '{customer.status}', "
-                        f"not 'B2B_PEERING_SERVICE_STATUS_INACTIVE'. "
-                        f"Skipping match to avoid 'match already exists' error.")
-                    LOG.info(
-                        f"To resolve this issue, please delete the customer "
-                        f"'{customer_name}' and run the match operation again.")
-                    skipped_count += 1
+                    LOG.error(f"Service '{service_name}' not found in the enterprise.")
+                    failed_count += 1
                     continue
 
                 '''
-                # Wait for latest sdk version to be released.
+                TODO: Uncomment. Remove this once latest sdk version 25.11.1 is released.
                 # Check if service is already matched to this customer
                 matched_services = self.gsdk.get_matched_services_for_customer(customer.id)
                 if matched_services is not None:
@@ -539,9 +652,24 @@ class DataExchangeManager(BaseManager):
                     }
                 }
 
-                # Perform the match and capture response
-                LOG.info(f"match_service_to_customer: Matching service '{service_name}' to customer '{customer_name}'")
-                response = self.gsdk.match_service_to_customer(match_payload)
+                try:
+                    # Perform the match and capture response
+                    LOG.info(f"match_service_to_customer: Matching service '{service_name}' to "
+                             f"customer '{customer_name}'")
+                    response = self.gsdk.match_service_to_customer(match_payload)
+                except Exception as e:
+                    error_msg = str(e)
+                    # Handle "match already exists" errors gracefully till new sdk version 25.11.1 is released.
+                    if "match already exists" in error_msg.lower():
+                        LOG.info(f"Service '{service_name}' is already matched to customer '{customer_name}', "
+                                 f"skipping match as it already exists.")
+                        skipped_count += 1
+                        continue
+                    else:
+                        LOG.error(f"Failed to match service '{service_name}' to customer '{customer_name}': "
+                                  f"{error_msg}")
+                        failed_count += 1
+                        continue
 
                 # Store response data for next workflow
                 match_response_data = {
@@ -559,39 +687,16 @@ class DataExchangeManager(BaseManager):
                 matched_count += 1
 
             # Save match responses to file for next workflow
-            if match_responses:
-                import json
-                from datetime import datetime
+            self._save_match_service_to_customer_responses(match_responses, config_yaml_file)
 
-                # Create output directory if it doesn't exist
-                output_dir = os.path.join(os.path.dirname(config_yaml_file), "output")
-                os.makedirs(output_dir, exist_ok=True)
-
-                # Generate output filenames based on input config
-                base_name = os.path.splitext(os.path.basename(config_yaml_file))[0]
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-                # Create two files: one with timestamp, one with _latest suffix
-                timestamped_file = os.path.join(output_dir, f"{base_name}_responses_{timestamp}.json")
-                latest_file = os.path.join(output_dir, f"{base_name}_responses_latest.json")
-
-                # Save responses to both JSON files
-                with open(timestamped_file, 'w') as f:
-                    json.dump(match_responses, f, indent=2)
-
-                with open(latest_file, 'w') as f:
-                    json.dump(match_responses, f, indent=2)
-
-                LOG.info(f"Match responses saved to: {timestamped_file}")
-                LOG.info(f"Latest match responses saved to: {latest_file}")
-
-            LOG.info(f"Data Exchange service matching completed: {matched_count} matched, {skipped_count} skipped")
-
-        except ConfigurationError:
-            raise
+            LOG.info(f"Data Exchange service matching completed: {matched_count} matched, "
+                     f"{skipped_count} skipped, {failed_count} failed")
+            if failed_count > 0:
+                raise ConfigurationError(f"Data Exchange service to customer matching had {failed_count} failures "
+                                         f"out of {matched_count + skipped_count + failed_count} total")
         except Exception as e:
             LOG.error(f"Failed to match Data Exchange services to customers: {e}")
-            raise ConfigurationError(f"Data Exchange service matching failed: {e}")
+            raise ConfigurationError(f"Data Exchange service to customer matching failed: {e}")
 
     def accept_invitation(self, config_yaml_file: str, matches_file: str = None, dry_run: bool = False) -> None:
         """
@@ -688,6 +793,23 @@ class DataExchangeManager(BaseManager):
                 else:
                     LOG.info(f"_validate_gateway_requirements_for_acceptances: Region {region_name} meets "
                              f"minimum gateway requirements")
+                # Validate tunnel terminator connection count for each gateway
+                for edge_summary in edges_summary:
+                    LOG.info(f"_validate_gateway_requirements_for_acceptances: Validating tunnel terminator "
+                             f"connection count for gateway {edge_summary.hostname}")
+                    if hasattr(edge_summary, 'tt_conn_count') and edge_summary.tt_conn_count:
+                        if edge_summary.tt_conn_count < 2:
+                            LOG.error(f"_validate_gateway_requirements_for_acceptances: Gateway "
+                                      f"{edge_summary.hostname} has only {edge_summary.tt_conn_count} "
+                                      f"tunnel terminators, minimum 2 required")
+                            raise ConfigurationError(f"Gateway {edge_summary.hostname} has only "
+                                                     f"{edge_summary.tt_conn_count} tunnel terminators, "
+                                                     f"minimum 2 required")
+                    else:
+                        LOG.error(f"_validate_gateway_requirements_for_acceptances: Gateway {edge_summary.hostname} "
+                                  f"does not have any tunnel terminators connected, minimum 2 required")
+                        raise ConfigurationError(f"Gateway {edge_summary.hostname} does not have any "
+                                                 f"tunnel terminators connected, minimum 2 required")
         except Exception as e:
             LOG.warning(f"_validate_gateway_requirements_for_acceptances: Gateway validation failed: {e}")
             raise
@@ -976,22 +1098,27 @@ class DataExchangeManager(BaseManager):
             # Use provided matches file or default
             if not matches_file:
                 # Use the same path resolution logic as render_config_file
-                # Get the project root from config_utils (same as render_config_file)
-                project_root = self.config_utils._find_project_root()
+                # Use config_path for relative path resolution
                 matches_file = os.path.join(
-                    project_root,
-                    "ansible_collection/graphiant/graphiant_playbooks/playbooks/de_workflows/",
-                    "de_workflows_configs/output",
-                    "sample_data_exchange_matches_responses_latest.json")
+                    self.config_utils.config_path,
+                    "de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json"
+                )
             else:
                 # Apply the same path resolution logic as render_config_file for provided path
                 if os.path.isabs(matches_file):
                     # Absolute path - use as is
                     pass
                 else:
-                    # Relative path - resolve using project root
-                    project_root = self.config_utils._find_project_root()
-                    matches_file = os.path.join(project_root, matches_file)
+                    # Relative path - resolve using config_path (same as render_config_file)
+                    # Security: Normalize path to prevent path traversal attacks
+                    matches_file = os.path.normpath(os.path.join(self.config_utils.config_path, matches_file))
+                    # Security: Validate that resolved path is within config_path to prevent path traversal
+                    config_path_real = os.path.realpath(self.config_utils.config_path)
+                    matches_file_real = os.path.realpath(matches_file)
+                    if not matches_file_real.startswith(config_path_real):
+                        raise ConfigurationError(
+                            "Security: Path traversal detected. Matches file path resolves outside config directory."
+                        )
 
             if os.path.exists(matches_file):
                 LOG.info(f"_get_match_id_from_customer_service: Reading matches from {matches_file}")
@@ -1016,7 +1143,7 @@ class DataExchangeManager(BaseManager):
                             f"'{customer_name}' and service '{service_name}'")
                 return None
             else:
-                LOG.warning(f"_get_match_id_from_customer_service: Matches file not found at {matches_file}")
+                LOG.error(f"_get_match_id_from_customer_service: Matches file not found at {matches_file}")
                 return None
 
         except Exception as e:

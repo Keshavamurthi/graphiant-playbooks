@@ -1,7 +1,7 @@
 ---
 # Data Exchange Management Playbook
 # This playbook demonstrates how to use the graphiant_data_exchange module
-# for managing Data Exchange services, customers, and matches.
+# for managing Data Exchange services.
 
 - name: Data Exchange Management
   hosts: localhost
@@ -21,37 +21,40 @@
       #password: "{{ graphiant_password | default(lookup('ini', 'password file=/absolute/path/test/test.ini section=credentials')) }}"
 
   tasks:
-    - name: Get Data Exchange customers summary
+    - name: Get Data Exchange services summary
       graphiant.graphiant_playbooks.graphiant_data_exchange:
         <<: *graphiant_client_params
-        operation: get_customers_summary
+        operation: get_services_summary
         detailed_logs: true
-      register: customers_summary
+      register: services_summary
 
-    - name: Display customers summary
+    - name: Display services summary
       debug:
-        msg: "{{ customers_summary.result_msg }}"
+        msg: "{{ services_summary.result_msg }}"
 
-    - name: Delete Data Exchange customers
+    - name: Create Data Exchange services
       graphiant.graphiant_playbooks.graphiant_data_exchange:
         <<: *graphiant_client_params
-        operation: delete_customers
-        config_file: "de_workflows_configs/sample_data_exchange_customers.yaml"
-        #config_file: "de_workflows_configs/sample_data_exchange_customers_scale.yaml" # Scale testing
+        operation: create_services
+        config_file: "de_workflows_configs/sample_data_exchange_services.yaml"
+        #config_file: "de_workflows_configs/sample_data_exchange_services_scale.yaml" # Scale testing
+        #config_file: "de_workflows_configs/sample_data_exchange_services_scale2.yaml" # Scale testing2
         detailed_logs: true
-      register: delete_customers_result
+      register: create_services_result
 
-    - name: Display delete customers result
+    - name: Display services creation result
       debug:
-        msg: "{{ delete_customers_result.result_msg }}"
+        msg: "{{ create_services_result.result_msg }}"
 
-    - name: Get updated customers summary
+  
+    - name: Get updated services summary
       graphiant.graphiant_playbooks.graphiant_data_exchange:
         <<: *graphiant_client_params
-        operation: get_customers_summary
+        operation: get_services_summary
         detailed_logs: true
-      register: updated_customers_summary
+      register: updated_services_summary
 
-    - name: Display updated customers count
+    - name: Display updated services count
       debug:
-        msg: "{{ updated_customers_summary.result_msg }}"
+        msg: "{{ updated_services_summary.result_msg }}"
+

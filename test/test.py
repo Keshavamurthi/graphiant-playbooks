@@ -443,7 +443,6 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         # Test accept_invitation with configuration file
         config_file = "de_workflows_configs/sample_data_exchange_acceptance.yaml"
         matches_file = (
-            "ansible_collection/graphiant/graphiant_playbooks/playbooks/"
             "de_workflows/output/sample_data_exchange_matches_responses_latest.json"
         )
 
@@ -532,11 +531,11 @@ if __name__ == '__main__':
     suite.addTest(TestGraphiantPlaybooks('test_create_data_exchange_customers'))
     suite.addTest(TestGraphiantPlaybooks('test_get_data_exchange_customers_summary'))
     suite.addTest(TestGraphiantPlaybooks('test_match_data_exchange_service_to_customers'))
-    suite.addTest(TestGraphiantPlaybooks('test_accept_data_exchange_invitation_dry_run'))
-    # suite.addTest(TestGraphiantPlaybooks('test_delete_data_exchange_customers'))
-    # suite.addTest(TestGraphiantPlaybooks('test_delete_data_exchange_services'))
     suite.addTest(TestGraphiantPlaybooks('test_get_data_exchange_customers_summary'))
     suite.addTest(TestGraphiantPlaybooks('test_get_data_exchange_services_summary'))
+    # suite.addTest(TestGraphiantPlaybooks('test_accept_data_exchange_invitation_dry_run'))
+    suite.addTest(TestGraphiantPlaybooks('test_delete_data_exchange_customers'))
+    suite.addTest(TestGraphiantPlaybooks('test_delete_data_exchange_services'))
 
     # To deconfigure all interfaces
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_circuits'))

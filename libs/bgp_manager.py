@@ -43,6 +43,10 @@ class BGPManager(BaseManager):
                 for device_name, config in device_config.items():
                     try:
                         device_id = self.gsdk.get_device_id(device_name)
+                        if device_id is None:
+                            raise DeviceNotFoundError(f"Device '{device_name}' not found in the current enterprise: "
+                                                      f"{self.gsdk.enterprise_info['company_name']}. "
+                                                      f"Please check device name and enterprise credentials.")
                         config_payload = {}
                         self.config_utils.device_bgp_peering(config_payload, **config)
 
@@ -93,6 +97,10 @@ class BGPManager(BaseManager):
                 for device_name, config in device_config.items():
                     try:
                         device_id = self.gsdk.get_device_id(device_name)
+                        if device_id is None:
+                            raise DeviceNotFoundError(f"Device '{device_name}' not found in the current enterprise: "
+                                                      f"{self.gsdk.enterprise_info['company_name']}. "
+                                                      f"Please check device name and enterprise credentials.")
                         config_payload = {}
                         self.config_utils.device_bgp_peering(config_payload, action="delete", **config)
 
@@ -143,6 +151,10 @@ class BGPManager(BaseManager):
                 for device_name, config in device_config.items():
                     try:
                         device_id = self.gsdk.get_device_id(device_name)
+                        if device_id is None:
+                            raise DeviceNotFoundError(f"Device '{device_name}' not found in the current enterprise: "
+                                                      f"{self.gsdk.enterprise_info['company_name']}. "
+                                                      f"Please check device name and enterprise credentials.")
                         config_payload = {}
                         self.config_utils.device_bgp_peering(config_payload, action="unlink", **config)
 

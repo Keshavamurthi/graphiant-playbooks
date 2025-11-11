@@ -49,6 +49,7 @@
         operation: match_service_to_customers
         config_file: "de_workflows_configs/sample_data_exchange_matches.yaml"
         #config_file: "de_workflows_configs/sample_data_exchange_matches_scale.yaml" # Scale testing
+        #config_file: "de_workflows_configs/sample_data_exchange_matches_scale2.yaml" # Scale testing2
         detailed_logs: true
       register: match_result
 

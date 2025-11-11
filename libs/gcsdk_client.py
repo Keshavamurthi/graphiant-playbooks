@@ -41,7 +41,8 @@ class GraphiantPortalClient():
                       f"Please verify crendentials are correct. {e}")
         assert v1_auth_login_post_response, 'v1_auth_login_post_response is None'
         assert v1_auth_login_post_response.token, 'bearer_token is not retrieved'
-        LOG.debug(f"GraphiantPortalClient Bearer token : {v1_auth_login_post_response.token}")
+        # Security: Do not log the actual bearer token to prevent credential exposure
+        LOG.debug("GraphiantPortalClient Bearer token retrieved successfully")
         LOG.info("Graphiant Portal Bearer token retrieved successfully !!! ")
         self.bearer_token = f'Bearer {v1_auth_login_post_response.token}'
         # Get and log enterprise information
@@ -769,16 +770,43 @@ class GraphiantPortalClient():
 
     def get_site_list_id(self, site_list_name: str):
         """
-        Get site list ID by name.
+        Get site list ID by site list name using v1/global/site-lists API.
+
+        Args:
+            site_list_name (str): The name of the site list.
+
+        Returns:
+            int or None: The site list ID if found, None otherwise.
         """
         try:
-            site_lists = self.get_global_site_lists()
+            # Get all site lists using v1/global/site-lists API
+            response = self.api.v1_global_site_lists_get(authorization=self.bearer_token)
+            site_lists = response.entries
+            if site_lists is None:
+                LOG.info("get_site_list_id: No site lists found")
+                return None
+            LOG.info(f"get_site_list_id: Looking for site_list '{site_list_name}' in {len(site_lists)}"
+                     f"site_lists using v1/global/site-lists")
+
+            # Log available site_lists for debugging
+            available_site_lists = [site_list.name for site_list in site_lists]
+            LOG.info(f"get_site_list_id: Available site_lists: {available_site_lists}")
+
             for site_list in site_lists:
                 if site_list.name == site_list_name:
+                    LOG.info(f"get_site_list_id: Found site_list '{site_list_name}' with ID {site_list.id}")
                     return site_list.id
+            LOG.warning(f"get_site_list_id: Site_list '{site_list_name}' not found. Available site_lists: "
+                        f"{available_site_lists}")
             return None
-        except Exception as e:
-            LOG.error(f"get_site_list_id: Error finding site list '{site_list_name}': {e}")
+        except ApiException as e:
+            api_url = f"{self.api.api_client.configuration.host}/v1/global/site-lists"
+            self._log_api_error(
+                method_name="get_site_list_id",
+                api_url=api_url,
+                query_params={"name": site_list_name},
+                exception=e
+            )
             return None
 
     # Data Exchange API Methods
@@ -982,7 +1010,7 @@ class GraphiantPortalClient():
             LOG.error(f"get_data_exchange_customer_by_name: Error finding customer '{customer_name}': {e}")
             return None
     '''
-    # Wait for latest sdk version to be released.
+    TODO: Uncomment. Remove this once latest sdk version 25.11.1 is released.
     def get_matched_services_for_customer(self, customer_id: int):
         """
         Get list of services already matched to a specific customer.

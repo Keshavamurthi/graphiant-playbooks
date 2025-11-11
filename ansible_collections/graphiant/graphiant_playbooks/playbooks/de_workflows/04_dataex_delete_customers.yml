@@ -1,7 +1,7 @@
 ---
 # Data Exchange Management Playbook
 # This playbook demonstrates how to use the graphiant_data_exchange module
-# for managing Data Exchange customers.
+# for managing Data Exchange services, customers, and matches.
 
 - name: Data Exchange Management
   hosts: localhost
@@ -32,18 +32,19 @@
       debug:
         msg: "{{ customers_summary.result_msg }}"
 
-    - name: Create Data Exchange customers
+    - name: Delete Data Exchange customers
       graphiant.graphiant_playbooks.graphiant_data_exchange:
         <<: *graphiant_client_params
-        operation: create_customers
+        operation: delete_customers
         config_file: "de_workflows_configs/sample_data_exchange_customers.yaml"
         #config_file: "de_workflows_configs/sample_data_exchange_customers_scale.yaml" # Scale testing
+        #config_file: "de_workflows_configs/sample_data_exchange_customers_scale2.yaml" # Scale testing2
         detailed_logs: true
-      register: create_customers_result
+      register: delete_customers_result
 
-    - name: Display customers creation result
+    - name: Display delete customers result
       debug:
-        msg: "{{ create_customers_result.result_msg }}"
+        msg: "{{ delete_customers_result.result_msg }}"
 
     - name: Get updated customers summary
       graphiant.graphiant_playbooks.graphiant_data_exchange:
@@ -55,4 +56,3 @@
     - name: Display updated customers count
       debug:
         msg: "{{ updated_customers_summary.result_msg }}"
-
