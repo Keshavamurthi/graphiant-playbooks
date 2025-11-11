@@ -14,18 +14,20 @@ Graphiant Playbooks is a comprehensive automation framework for managing Graphia
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Directory Structure](#directory-structure)
-- [Usage Examples](#usage-examples)
+- [Getting Started](#getting-started)
 - [API Reference](#api-reference)
 - [Development](#development)
 - [Contributing](#contributing)
 - [Support](#support)
+
+**Note:** Usage examples are included in the [Getting Started](#getting-started) section.
 
 ### 📚 Additional Documentation
 - [🐳 Docker Support](Docker.md) - Docker setup and usage
 - [🏗️ Terraform Infrastructure](terraform/README.md) - Infrastructure as Code with cloud authentication
 - [🔄 CI/CD Pipelines](pipelines/README.md) - CI/CD configuration
 - [☁️ Cloud-Init Generator](scripts/cloud-init-generator/README.md) - Device onboarding
-- [📦 Ansible Collection](ansible_collection/graphiant/graphiant_playbooks/README.md) - Ansible automation
+- [📦 Ansible Collection](ansible_collections/graphiant/graphiant_playbooks/README.md) - Ansible automation
 
 ## 🎯 Overview
 
@@ -44,6 +46,9 @@ Graphiant Playbooks streamlines network infrastructure management through:
 - **Edge Device Management**: Configure interfaces, BGP peering, global objects and B2B data exchange peering services.
 - **Multi-Device Operations**: Apply configurations across multiple devices simultaneously
 - **Template Engine**: Jinja2-based configuration templates with dynamic rendering
+  - **Configuration File Templating**: All YAML configuration files support Jinja2 syntax for dynamic generation
+  - **Scale Testing**: Generate hundreds of configurations using loops and variables
+  - **Automatic Rendering**: Templates are automatically detected and rendered before parsing
 - **API Integration**: Full Graphiant SDK integration for seamless API interactions
 
 ### Infrastructure Management
@@ -161,7 +166,7 @@ graphiant-playbooks/
 │   ├── docker.yml              # Docker build pipeline
 │   ├── lint.yml                # Code quality pipeline
 │   └── run.yml                 # Test execution pipeline
-├── 📁 ansible_collection/        # Ansible collection
+├── 📁 ansible_collections/        # Ansible collection
 │   └── graphiant/
 │       └── graphiant_playbooks/
 │           └── README.md        # Ansible documentation
@@ -180,7 +185,7 @@ graphiant-playbooks/
 | **`terraform/`** | Infrastructure as Code | `README.md`, `azure-expressroute/` |
 | **`scripts/`** | Standalone utilities | `cloud-init-generator/README.md` |
 | **`pipelines/`** | CI/CD definitions | `README.md`, `docker.yml`, `lint.yml`, `run.yml` |
-| **`ansible_collection/`** | Ansible automation | `graphiant/graphiant_playbooks/README.md` |
+| **`ansible_collections/`** | Ansible automation | `graphiant/graphiant_playbooks/README.md` |
 | **`test/`** | Testing framework | `test.py`, `test.ini` |
 
 ## 🚀 Getting Started
@@ -197,12 +202,70 @@ All input configs should be placed in the configs/ folder/subfolder.
 - sample_global_ipfix_exporters.yaml
 - sample_global_vpn_profiles.yaml
 - sample_site_attachments.yaml
-- sde_workflows_configs/ample_data_exchange_services.yaml
+- de_workflows_configs/sample_data_exchange_services.yaml
 - de_workflows_configs/sample_data_exchange_customers.yaml
 - de_workflows_configs/sample_data_exchange_matches.yaml
 - de_workflows_configs/sample_data_exchange_acceptance.yaml
 
 Note: Also refer the templates under templates/ dir for more details on the supported arguments.
+
+#### Jinja2 Template Support in Configuration Files
+
+**All configuration files now support Jinja2 templating syntax**, allowing you to dynamically generate configurations using loops, conditionals, and variables. This is particularly useful for:
+- **Scale Testing**: Generate multiple similar configurations (e.g., 50 customers, 100 services)
+- **Dynamic Configuration**: Use variables and expressions to create configurations based on patterns
+- **Environment-Specific Configs**: Use conditionals to generate different configs for different environments
+
+**How It Works:**
+1. The configuration file is read as a Jinja2 template
+2. The template is rendered (processed) to generate the final YAML content
+3. The rendered YAML is then parsed and used for the operation
+
+**Example: Creating Multiple Customers with Jinja2**
+
+```yaml
+# sample_data_exchange_customers_scale2.yaml
+data_exchange_customers:
+  {% for i in range(1, 51) %}
+  - name: "FinanceBank-{{ 100 + i }}"
+    type: "non_graphiant_peer"
+    invite:
+      adminEmail: 
+        - "admin{{ 100 + i }}@financebank.com"
+        - "support{{ 100 + i }}@financebank.com"
+      maximumNumberOfSites: 4
+  {% endfor %}
+```
+
+This template will generate 50 customer configurations (FinanceBank-101 through FinanceBank-150) automatically.
+
+**Supported Jinja2 Features:**
+- **Loops**: `{% for item in list %}...{% endfor %}`
+- **Conditionals**: `{% if condition %}...{% endif %}`
+- **Variables**: `{{ variable_name }}`
+- **Expressions**: `{{ 100 + i }}`, `{{ item.name }}`
+- **Filters**: `{{ value | upper }}`, `{{ value | default('default') }}`
+
+**Usage:**
+Simply use Jinja2 syntax in your YAML configuration files. The system automatically detects and renders templates before parsing:
+
+```python
+# Works with any manager that uses render_config_file
+graphiant_config.data_exchange.create_customers("de_workflows_configs/sample_data_exchange_customers_scale2.yaml")
+graphiant_config.global_config.configure("sample_global_objects_scale.yaml")
+```
+
+**Important Notes:**
+- Jinja2 syntax must be valid - syntax errors will cause the operation to fail
+- The rendered output must be valid YAML
+- Regular YAML files (without Jinja2 syntax) continue to work as before
+- Template rendering happens automatically - no special configuration needed
+
+**Best Practices:**
+- Use Jinja2 for repetitive configurations (scale testing)
+- Keep templates readable with proper indentation
+- Test templates with small ranges first before scaling up
+- Use comments to document template logic
 
 ### Step 2: Import and Use graphiant-playbooks
 ```sh
@@ -403,35 +466,197 @@ graphiant_config.bgp.deconfigure("sample_bgp_peering.yaml")
 
 ### Step 7: Data Exchange Management
 
-#### Create Data Exchange Services
+Graphiant Playbooks provides comprehensive support for Data Exchange workflows, enabling B2B peering service management through Graphiant's Data Exchange platform. The Data Exchange system supports four main workflows for managing services, customers, matches, and invitation acceptance.
+
+#### Overview of Data Exchange Workflows
+
+**Workflow 1: Create New Peering Service** - Create Data Exchange Peering Services that can be shared with customers  
+**Workflow 2: Create New Customer** - Create Data Exchange customers  
+**Workflow 3: Match Services to Customer** - Match services to customers   
+**Workflow 4: Accept Invitation** - Accept service invitations for non Graphiant customers with gateway service deployment
+
+#### Workflow 1: Create Data Exchange Services
+
+Create Data Exchange services that define peering services with LAN segments, sites, and service prefixes.
+
 ```sh
 # Create Data Exchange services
 graphiant_config.data_exchange.create_services("de_workflows_configs/sample_data_exchange_services.yaml")
 ```
 
-#### Create Data Exchange Customers
+**Configuration File Structure:**
+```yaml
+data_exchange_services:
+  - serviceName: "de-service-1"
+    type: "peering_service"
+    policy:
+      serviceLanSegment: "lan-segment-3"  # Resolved to ID automatically
+      type: "peering_service"
+      site:
+        - sites: ["Wales-sdktest"]  # Site names resolved to IDs
+          siteLists: []
+      description: "de_service_1_description"
+      prefixTags:
+        - prefix: "10.1.1.0/24"
+          tag: "s-1-prefix1"
+```
+
+#### Workflow 2: Create Data Exchange Customers
+
+Create Data Exchange customers (non Graphiant customers) that can be invited to connect to services.
+
 ```sh
 # Create Data Exchange customers
 graphiant_config.data_exchange.create_customers("de_workflows_configs/sample_data_exchange_customers.yaml")
 ```
 
-#### Match Services to Customers
+**Configuration File Structure:**
+```yaml
+data_exchange_customers:
+  - name: "FinanceInc"
+    type: "non_graphiant_peer"
+    invite:
+      adminEmail: 
+        - "finance@financeinc.com"
+      maximumNumberOfSites: 2
+```
+
+**Scale Testing Example:**
+```yaml
+data_exchange_customers:
+  {% for i in range(1, 51) %}
+  - name: "FinanceBank-{{ 100 + i }}"
+    type: "non_graphiant_peer"
+    invite:
+      adminEmail: 
+        - "admin{{ 100 + i }}@financebank.com"
+      maximumNumberOfSites: 4
+  {% endfor %}
+```
+
+#### Workflow 3: Match Services to Customers
+
+Match Data Exchange services to customers, establishing peering relationships with selected service prefixes.
+
 ```sh
 # Match services to customers
 graphiant_config.data_exchange.match_service_to_customers("de_workflows_configs/sample_data_exchange_matches.yaml")
 ```
 
-#### Accept Data Exchange Peering Service invitation
+**Configuration File Structure:**
+```yaml
+data_exchange_matches:
+  - customerName: "FinanceInc"
+    serviceName: "de-service-1"
+    servicePrefixes:  # Select specific service prefixes to include
+      - prefix: "10.1.1.0/24" 
+        tag: "s-1-prefix1"
+    nat:  # Optional NAT configuration
+      - prefix: "10.101.1.0/24"
+        outsideNatPrefix: "170.101.1.0/24"
+```
+
+**Match Response File:**
+After successful matching, responses are saved to:
+- `de_workflows_configs/output/sample_data_exchange_matches_responses_<timestamp>.json`
+- `de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json`
+
+The response file contains match details including `customer_id`, `service_id`, `match_id`, and `status`, which are used in Workflow 4.
+
+#### Workflow 4: Accept Invitation (Non Graphiant Customer)
+
+Accept Data Exchange service invitations for non Graphiant customers with gateway service deployment VPN configuration.
+
 ```sh
 config_file = "de_workflows_configs/sample_data_exchange_acceptance.yaml"
-matches_file = (
-    "ansible_collection/graphiant/graphiant_playbooks/playbooks/"
-    "de_workflows/output/sample_data_exchange_matches_responses_latest.json"
+matches_file = "de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json"
+
+# Dry run mode (validation only, no API calls)
+graphiant_config.data_exchange.accept_invitation(config_file, matches_file, dry_run=True)
+
+# Accept invitation (actual API calls)
+graphiant_config.data_exchange.accept_invitation(config_file, matches_file, dry_run=False)
+```
+
+**Configuration File Structure:**
+```yaml
+data_exchange_acceptances:
+  - customerName: "FinanceInc"
+    serviceName: "de-service-1"
+    
+    # Site Information
+    siteInformation:
+      - sites: ["site-sjc-sdktest"]
+        siteLists: []
+    
+    # NAT Configuration (optional)
+    nat:
+      - prefix: "10.1.1.0/24"
+        tag: "s-1-prefix1"
+    
+    # Policy Configuration
+    policy:
+      - lanSegment: "customer-1-segment"
+        consumerPrefixes:
+          - "10.101.0.0/24"
+    
+    # Site-to-Site VPN Configuration
+    siteToSiteVpn:
+      ipsecGatewayDetails:
+        name: "s2s-FinanceInc"
+        destinationAddress: "204.137.1.1"
+        ikeInitiator: false
+        tunnel1: {}
+        tunnel2: {}
+        routing:
+          static:
+            destinationPrefix:
+              - "10.101.0.0/24"
+        vpnProfile: "GlobalVpnProfile-joule-smoke"
+      region: "us-central-1 (Chicago)"
+      emails: ["finance@financeinc.com"]
+```
+
+**Prerequisites:**
+- **Prerequisite Global Objects**: Before running Data Exchange workflows, ensure the following are configured:
+  - LAN segments (required for services)
+  - LAN interfaces (required for services)
+  - VPN profiles (required for Workflow 4 - accept invitation)
+- **Workflow Dependencies**: 
+  - Workflow 3 must be completed first (match services to customers)
+  - Matches response file must exist with valid match IDs
+- **Gateway Requirements**: Minimum 2 gateways required per region for redundancy
+
+
+
+#### Complete Data Exchange Workflow Example
+
+```python
+from libs.graphiant_config import GraphiantConfig
+
+# Initialize
+graphiant_config = GraphiantConfig(
+    base_url="https://api.graphiant.com",
+    username="your_username",
+    password="your_password"
 )
-# Accept Peering Service Invitation Dry Run
-graphiant_config.data_exchange.match_service_to_customers(config_file, matches_file, dry_run=True)
-# Accept Peering Service Invitation Dry Run
-graphiant_config.data_exchange.match_service_to_customers(config_file, matches_file)
+
+# Workflow 1: Create services
+graphiant_config.data_exchange.create_services("de_workflows_configs/sample_data_exchange_services.yaml")
+
+# Workflow 2: Create customers
+graphiant_config.data_exchange.create_customers("de_workflows_configs/sample_data_exchange_customers.yaml")
+
+# Workflow 3: Match services to customers
+graphiant_config.data_exchange.match_service_to_customers("de_workflows_configs/sample_data_exchange_matches.yaml")
+
+# Workflow 4: Accept invitations (after customer accepts email invitation)
+matches_file = "de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json"
+graphiant_config.data_exchange.accept_invitation(
+    "de_workflows_configs/sample_data_exchange_acceptance.yaml",
+    matches_file,
+    dry_run=False
+)
 ```
 
 #### Get Summaries
@@ -439,9 +664,12 @@ graphiant_config.data_exchange.match_service_to_customers(config_file, matches_f
 # Get services summary
 services_summary = graphiant_config.data_exchange.get_services_summary()
 
-# Get customers summary
-customers_summary = graphiant_config.data_exchange.get_customers_summary()
-```
+**Available Configuration Files:**
+- `sample_data_exchange_services.yaml` - Service definitions
+- `sample_data_exchange_customers.yaml` - Customer definitions
+- `sample_data_exchange_matches.yaml` - Service-to-customer matches
+- `sample_data_exchange_acceptance.yaml` - Invitation acceptance configuration
+- `sample_data_exchange_*_scale.yaml` - Scale testing configurations
 
 ## 📚 API Reference
 
@@ -469,7 +697,7 @@ graphiant_config = GraphiantConfig(
 | **`BGPManager`** | BGP peering management | `configure()`, `detach_policies()`, `deconfigure()` |
 | **`GlobalConfigManager`** | Global object management | `configure()`, `deconfigure()` |
 | **`SiteManager`** | Site attachment management | `manage_global_system_objects_on_site()` |
-| **`DataExchangeManager`** | Data Exchange management | `create_services()`, `create_customers()`, `match_service_to_customers(), accept_invitation()` |
+| **`DataExchangeManager`** | Data Exchange management | `create_services()`, `create_customers()`, `match_service_to_customers()`, `accept_invitation()`, `delete_services()`, `delete_customers()`, `get_services_summary()`, `get_customers_summary()` |
 
 
 ### Utility Functions
@@ -543,7 +771,7 @@ The cloud-init generator is an interactive tool for creating device onboarding c
 
 The project includes a comprehensive Ansible collection for automation workflows.
 
-**📖 [Ansible Collection Documentation](ansible_collection/graphiant/graphiant_playbooks/README.md)** - Complete Ansible automation guide.
+**📖 [Ansible Collection Documentation](ansible_collections/graphiant/graphiant_playbooks/README.md)** - Complete Ansible automation guide.
 
 ## Source code linter checks
 

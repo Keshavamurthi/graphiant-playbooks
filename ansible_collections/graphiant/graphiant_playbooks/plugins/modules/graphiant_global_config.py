@@ -24,6 +24,208 @@ from ansible_collections.graphiant.graphiant_playbooks.plugins.module_utils.logg
     capture_library_logs
 )
 
+DOCUMENTATION = r'''
+---
+module: graphiant_global_config
+short_description: Manage Graphiant global configuration objects
+description:
+  - This module provides comprehensive global configuration object management for Graphiant devices.
+  - >
+    Supports multiple global object types: prefix sets, BGP filters, SNMP services,
+    syslog services, IPFIX services, VPN profiles, and LAN segments.
+  - Can manage all object types together using general operations or specific object types individually.
+  - All operations use Jinja2 templates for consistent configuration deployment.
+version_added: "1.0.0"
+notes:
+  - "Global Configuration Operations:"
+  - "  - General operations (C(configure), C(deconfigure)):
+  - Automatically detect and process all configuration types in the YAML file."
+  - "  - Specific operations (C(configure_*), C(deconfigure_*)):
+  - Process only the specific configuration type."
+  - "Configuration files support Jinja2 templating syntax for dynamic configuration generation."
+  - "The module automatically resolves names to IDs for sites, LAN segments, and other referenced objects."
+  - "All operations are idempotent and safe to run multiple times."
+  - "Global objects can be referenced by other modules (BGP, Sites, Data Exchange) after creation."
+options:
+  host:
+    description:
+      - Graphiant portal host URL for API connectivity.
+      - 'Example: "https://api.graphiant.com"'
+    type: str
+    required: true
+    aliases: [ base_url ]
+  username:
+    description:
+      - Graphiant portal username for authentication.
+    type: str
+    required: true
+  password:
+    description:
+      - Graphiant portal password for authentication.
+    type: str
+    required: true
+  config_file:
+    description:
+      - Path to the global configuration YAML file.
+      - Required for all operations.
+      - Can be an absolute path or relative path. Relative paths are resolved using the configured config_path.
+      - Configuration files support Jinja2 templating syntax for dynamic generation.
+      - File must contain the appropriate global object definitions based on the operation type.
+    type: str
+    required: true
+  operation:
+    description: "The specific global configuration operation to perform. C(configure): Configure all global objects (automatically detects all types in the file). C(deconfigure): Deconfigure all global objects (automatically detects all types in the file). C(configure_prefix_sets): Configure global prefix sets only. C(deconfigure_prefix_sets): Deconfigure global prefix sets only. C(configure_bgp_filters): Configure global BGP filters (routing policies) only. C(deconfigure_bgp_filters): Deconfigure global BGP filters only. C(configure_snmp_services): Configure global SNMP services only. C(deconfigure_snmp_services): Deconfigure global SNMP services only. C(configure_syslog_services): Configure global syslog services only. C(deconfigure_syslog_services): Deconfigure global syslog services only. C(configure_ipfix_services): Configure global IPFIX services only. C(deconfigure_ipfix_services): Deconfigure global IPFIX services only. C(configure_vpn_profiles): Configure global VPN profiles only. C(deconfigure_vpn_profiles): Deconfigure global VPN profiles only. C(configure_lan_segments): Configure global LAN segments only. C(deconfigure_lan_segments): Deconfigure global LAN segments only. C(configure_site_lists): Configure global site lists only. C(deconfigure_site_lists): Deconfigure global site lists only."
+    type: str
+    choices:
+      - configure
+      - deconfigure
+      - configure_prefix_sets
+      - deconfigure_prefix_sets
+      - configure_bgp_filters
+      - deconfigure_bgp_filters
+      - configure_snmp_services
+      - deconfigure_snmp_services
+      - configure_syslog_services
+      - deconfigure_syslog_services
+      - configure_ipfix_services
+      - deconfigure_ipfix_services
+      - configure_vpn_profiles
+      - deconfigure_vpn_profiles
+      - configure_lan_segments
+      - deconfigure_lan_segments
+      - configure_site_lists
+      - deconfigure_site_lists
+  state:
+    description: "The desired state of the global configuration objects. C(present): Maps to C(configure) when operation not specified. C(absent): Maps to C(deconfigure) when operation not specified."
+    type: str
+    choices: [ present, absent ]
+    default: present
+  detailed_logs:
+    description:
+      - Enable detailed logging output for troubleshooting and monitoring.
+      - When enabled, provides comprehensive logs of all global configuration operations.
+      - Logs are captured and included in the result_msg for display using debug module.
+    type: bool
+    default: false
+
+requirements:
+  - python >= 3.12
+  - graphiant-sdk >= 25.10.2
+
+seealso:
+  - module: graphiant.graphiant_playbooks.graphiant_bgp
+    description: Attach global BGP filters to BGP peers
+  - module: graphiant.graphiant_playbooks.graphiant_sites
+    description: Attach global objects to sites
+  - module: graphiant.graphiant_playbooks.graphiant_data_exchange
+    description: Use global LAN segments and VPN profiles in Data Exchange workflows
+
+author:
+  - Graphiant Team (@graphiant)
+
+'''
+
+EXAMPLES = r'''
+- name: Configure all global objects (general operation)
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    operation: configure
+    config_file: "sample_global_prefix_lists.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+
+- name: Configure global prefix sets (specific operation)
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    operation: configure_prefix_sets
+    config_file: "sample_global_prefix_lists.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+
+- name: Configure global BGP filters
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    operation: configure_bgp_filters
+    config_file: "sample_global_bgp_filters.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+
+- name: Configure global LAN segments
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    operation: configure_lan_segments
+    config_file: "sample_global_lan_segments.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+
+- name: Configure global VPN profiles
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    operation: configure_vpn_profiles
+    config_file: "sample_global_vpn_profiles.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+
+- name: Configure global site lists
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    operation: configure_site_lists
+    config_file: "sample_global_site_lists.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+
+- name: Deconfigure global prefix sets
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    operation: deconfigure_prefix_sets
+    config_file: "sample_global_prefix_lists.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+
+- name: Deconfigure all global objects using state parameter
+  graphiant.graphiant_playbooks.graphiant_global_config:
+    state: absent
+    config_file: "sample_global_prefix_lists.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+'''
+
+RETURN = r'''
+msg:
+  description:
+    - Result message from the operation, including detailed logs when C(detailed_logs) is enabled.
+  type: str
+  returned: always
+  sample: "Successfully configured all global objects"
+changed:
+  description:
+    - Whether the operation made changes to the system.
+    - C(true) for all configure/deconfigure operations.
+  type: bool
+  returned: always
+  sample: true
+operation:
+  description:
+    - The operation that was performed.
+    - One of configure, deconfigure, or a specific configure_*/deconfigure_* operation.
+  type: str
+  returned: always
+  sample: "configure_prefix_sets"
+config_file:
+  description:
+    - The configuration file used for the operation.
+  type: str
+  returned: always
+  sample: "sample_global_prefix_lists.yaml"
+'''
+
 
 @capture_library_logs
 def execute_with_logging(module, func, *args, **kwargs):

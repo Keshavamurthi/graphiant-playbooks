@@ -26,31 +26,10 @@ IPSEC_INTEGRITY_MAPPINGS = {
 DH_GROUP_MAPPINGS = {
     'Group 19': 'ecp256',
     'Group 20': 'ecp384',
+    'Group 21': 'ecp521',
     'Group 14': 'modp2048',
     'Group 24': 'modp2048s256',
     'None': 'pfs_none'
-}
-
-# Combined IPSec cipher mappings (encryption + integrity)
-IPSEC_CIPHER_MAPPINGS = {
-    'aes256gcm': 'AES 256 GCM',
-    'aes128gcm': 'AES 128 GCM',
-    'aes256cbcsha512': 'AES 256 CBC + SHA 512',
-    'aes256cbcsha384': 'AES 256 CBC + SHA 384',
-    'aes256cbcsha256': 'AES 256 CBC + SHA 256',
-    'aes128cbcsha512': 'AES 128 CBC + SHA 512',
-    'aes128cbcsha384': 'AES 128 CBC + SHA 384',
-    'aes128cbcsha256': 'AES 128 CBC + SHA 256',
-    'ipsec_no_encryption_sha512': 'No encryption + SHA 512',
-    'ipsec_no_encryption_sha384': 'No encryption + SHA 384',
-    'ipsec_no_encryption_sha256': 'No encryption + SHA 256'
-}
-
-# Connection status mappings
-CONNECTION_STATUS_MAPPINGS = {
-    'offline': 'Down',
-    'online': 'Up',
-    'unknown': '@:oss.commonTerms.unknown'
 }
 
 

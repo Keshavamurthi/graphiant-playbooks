@@ -2,6 +2,7 @@ import os
 import yaml
 from concurrent.futures import wait
 from concurrent.futures.thread import ThreadPoolExecutor
+from jinja2 import Template, TemplateError as Jinja2TemplateError
 from libs.logger import setup_logger
 from libs.gcsdk_client import GraphiantPortalClient
 from libs.exceptions import ConfigurationError
@@ -153,6 +154,7 @@ class PortalUtils(object):
     def render_config_file(self, yaml_file):
         """
         Load a YAML configuration file from the config path.
+        Supports both regular YAML files and Jinja2-templated YAML files.
 
         Args:
             yaml_file (str): The filename of the YAML config (can be absolute or relative).
@@ -160,22 +162,55 @@ class PortalUtils(object):
         Returns:
             dict: Parsed configuration data.
 
-        Logs Warning:
-            FileNotFoundError: If the file doesn't exist.
+        Raises:
+            ConfigurationError: If file cannot be read, Jinja2 rendering fails, or YAML parsing fails.
         """
         # Handle absolute paths
         if os.path.isabs(yaml_file):
             input_file_path = yaml_file
         else:
             # Handle relative paths by concatenating with config_path
-            input_file_path = self.config_path + yaml_file
+            # Security: Normalize path to prevent path traversal attacks
+            input_file_path = os.path.normpath(os.path.join(self.config_path, yaml_file))
+            # Security: Validate that resolved path is within config_path to prevent path traversal
+            config_path_real = os.path.realpath(self.config_path)
+            input_file_path_real = os.path.realpath(input_file_path)
+            if not input_file_path_real.startswith(config_path_real):
+                raise ConfigurationError(
+                    f"Security: Path traversal detected. File path '{yaml_file}' resolves outside config directory."
+                )
 
         try:
+            # Read the file content
             with open(input_file_path, "r") as file:
-                config_data = yaml.safe_load(file)
+                file_content = file.read()
+
+            # Try to render as Jinja2 template first (works for both templated and non-templated files)
+            try:
+                template = Template(file_content)
+                rendered_content = template.render()
+                LOG.debug(f"Successfully rendered Jinja2 template for '{input_file_path}'")
+            except Jinja2TemplateError as e:
+                # If Jinja2 rendering fails, check if it's because of actual template syntax errors
+                # or just because the file doesn't contain Jinja2 syntax
+                # For now, we'll treat any Jinja2 error as a real error and raise it
+                error_msg = f"Jinja2 template error in '{input_file_path}': {str(e)}"
+                LOG.error(error_msg)
+                raise ConfigurationError(error_msg) from e
+            except Exception as e:
+                # For other exceptions during rendering, log and re-raise
+                error_msg = f"Error rendering Jinja2 template in '{input_file_path}': {str(e)}"
+                LOG.error(error_msg)
+                raise ConfigurationError(error_msg) from e
+
+            # Parse the rendered YAML content
+            config_data = yaml.safe_load(rendered_content)
             return config_data
+
         except FileNotFoundError:
-            LOG.warning(f"File not found : {input_file_path}")
+            error_msg = f"File not found: {input_file_path}"
+            LOG.error(error_msg)
+            raise ConfigurationError(error_msg)
         except yaml.YAMLError as e:
             # Provide user-friendly YAML error messages
             if hasattr(e, 'problem_mark'):
@@ -188,5 +223,10 @@ class PortalUtils(object):
                 raise ConfigurationError(error_msg)
             else:
                 raise ConfigurationError(f"YAML parsing error in '{input_file_path}': {str(e)}")
+        except ConfigurationError:
+            # Re-raise ConfigurationError as-is
+            raise
         except Exception as e:
-            raise ConfigurationError(f"Error reading configuration file '{input_file_path}': {str(e)}")
+            error_msg = f"Error reading configuration file '{input_file_path}': {str(e)}"
+            LOG.error(error_msg)
+            raise ConfigurationError(error_msg) from e

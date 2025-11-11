@@ -23,7 +23,7 @@ cd graphiant-playbooks
 export PYTHONPATH=$(pwd):$PYTHONPATH
 
 # Install the collection directly from source directory
-ansible-galaxy collection install ansible_collection/graphiant/graphiant_playbooks/ --force
+ansible-galaxy collection install ansible_collections/graphiant/graphiant_playbooks/ --force
 ```
 
 #### Method 2: Build and Install from Archive
@@ -33,7 +33,7 @@ git clone https://github.com/graphiant/graphiant-playbooks.git
 cd graphiant-playbooks
 
 # Build the collection
-python ansible_collection/graphiant/graphiant_playbooks/build_collection.py
+python ansible_collections/graphiant/graphiant_playbooks/build_collection.py
 
 # Install from built archive
 ansible-galaxy collection install build/graphiant-graphiant_playbooks-1.0.0.tar.gz --force
@@ -80,6 +80,10 @@ Test the collection with a simple playbook:
 # Set PYTHONPATH (required for library access)
 export PYTHONPATH=$(pwd):$PYTHONPATH
 
+# Optional: Enable debug output callback for better log formatting
+# This makes detailed_logs output more readable (removes \n characters)
+export ANSIBLE_STDOUT_CALLBACK=debug
+
 # Set Graphiant portal client parameters
 export GRAPHIANT_HOST="https://api.graphiant.com"
 export GRAPHIANT_USERNAME="username"
@@ -90,8 +94,10 @@ export GRAPHIANT_PASSWORD="password"
 export GRAPHIANT_PLAYBOOKS_PATH="/path/to/your/graphiant-playbooks"
 
 # Run a test playbook in check mode
-ansible-playbook --check ansible_collection/graphiant/graphiant_playbooks/playbooks/final_test.yml
+ansible-playbook --check ansible_collections/graphiant/graphiant_playbooks/playbooks/final_test.yml
 ```
+
+**Note:** Setting `ANSIBLE_STDOUT_CALLBACK=debug` is recommended when using `detailed_logs: true` as it formats multi-line log output properly, making it easier to read detailed operation logs.
 
 ## Uninstallation
 
@@ -472,21 +478,33 @@ Manages Graphiant site creation, deletion, and object attachments/detachments.
 
 ### graphiant_data_exchange
 
-Manages Graphiant Data Exchange services, customers, and service-to-customer matches.
+Manages Graphiant Data Exchange services, customers, service-to-customer matches, and invitation acceptance workflows.
+
+**Overview of Data Exchange Workflows:**
+
+The Data Exchange module supports four main workflows:
+- **Workflow 1: Create New Service** - Create Data Exchange services that can be shared with customers
+- **Workflow 2: Create New Customer** - Create Data Exchange customers (non Graphiant peers)
+- **Workflow 3: Match Services to Customer** - Match services to customers and establish peering relationships
+- **Workflow 4: Accept Invitation** - Accept service invitations for non Graphiant customers with gateway service deployment
 
 **Parameters:**
 - `host` (required): Graphiant API host URL
 - `username` (required): Username for authentication
 - `password` (required): Password for authentication
-- `config_file` (required for create/delete/match operations): Path to Data Exchange configuration YAML file
+- `config_file` (required for create/delete/match/accept operations): Path to Data Exchange configuration YAML file
+- `matches_file` (optional for accept_invitation): Path to matches responses JSON file for match ID lookup. If not provided, uses default path.
+- `dry_run` (optional for accept_invitation): Enable dry-run mode for accept_invitation operation (default: false)
 - `operation` (optional): Operation to perform (at least one of operation or state required)
-  - `create_services`: Create Data Exchange services from YAML configuration
+  - `create_services`: Create Data Exchange services from YAML configuration (Workflow 1)
   - `delete_services`: Delete Data Exchange services from YAML configuration
-  - `get_services_summary`: Get summary of all Data Exchange services
-  - `create_customers`: Create Data Exchange customers from YAML configuration
+  - `get_services_summary`: Get summary of all Data Exchange services with tabulated output
+  - `create_customers`: Create Data Exchange customers from YAML configuration (Workflow 2)
   - `delete_customers`: Delete Data Exchange customers from YAML configuration
-  - `get_customers_summary`: Get summary of all Data Exchange customers
-  - `match_service_to_customers`: Match services to customers from YAML configuration
+  - `get_customers_summary`: Get summary of all Data Exchange customers with tabulated output
+  - `match_service_to_customers`: Match services to customers from YAML configuration (Workflow 3)
+  - `accept_invitation`: Accept Data Exchange service invitation (Workflow 4) - requires config_file
+  - `get_service_health`: Get service health monitoring information
 - `state` (optional): Desired state (present/absent/query, default: present)
   - `present`: Maps to `create_services` when operation not specified
   - `absent`: Maps to `delete_services` when operation not specified
@@ -494,27 +512,253 @@ Manages Graphiant Data Exchange services, customers, and service-to-customer mat
 - `detailed_logs` (optional): Enable detailed logging output from library operations (default: false)
   - `true`: Show detailed library logs in the task output
   - `false`: Show only basic success/error messages
+- `service_name` (optional): Service name for health monitoring operations (required for get_service_health)
+- `is_provider` (optional): Whether to get provider view for service health monitoring (default: false)
 
-**Examples:**
+**Workflow 1: Create Data Exchange Services**
+
 ```yaml
-# Create Data Exchange services
 - name: Create Data Exchange services
   graphiant.graphiant_playbooks.graphiant_data_exchange:
     operation: create_services
-    config_file: "sample_data_exchange_services.yaml"
+    config_file: "de_workflows_configs/sample_data_exchange_services.yaml"
     host: "{{ graphiant_host }}"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
+    detailed_logs: true
+  register: create_services_result
 
-# Delete Data Exchange services
-- name: Delete Data Exchange services
+- name: Display services creation result
+  debug:
+    msg: "{{ create_services_result.msg }}"
+```
+
+**Configuration File Structure:**
+```yaml
+data_exchange_services:
+  - serviceName: "de-service-1"
+    type: "peering_service"
+    policy:
+      serviceLanSegment: "lan-segment-3"  # Resolved to ID automatically
+      type: "peering_service"
+      site:
+        - sites: ["Wales-sdktest"]  # Site names resolved to IDs
+          siteLists: []
+      description: "de_service_1_description"
+      prefixTags:
+        - prefix: "10.1.1.0/24"
+          tag: "s-1-prefix1"
+```
+
+**Workflow 2: Create Data Exchange Customers**
+
+```yaml
+- name: Create Data Exchange customers
   graphiant.graphiant_playbooks.graphiant_data_exchange:
-    operation: delete_services
-    config_file: "sample_data_exchange_services.yaml"
+    operation: create_customers
+    config_file: "de_workflows_configs/sample_data_exchange_customers.yaml"
     host: "{{ graphiant_host }}"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
+    detailed_logs: true
+  register: create_customers_result
 
+- name: Display customers creation result
+  debug:
+    msg: "{{ create_customers_result.msg }}"
+```
+
+**Configuration File Structure:**
+```yaml
+data_exchange_customers:
+  - name: "FinanceInc"
+    type: "non_graphiant_peer"
+    invite:
+      adminEmail: 
+        - "finance@financeinc.com"
+      maximumNumberOfSites: 2
+```
+
+**Note:** Configuration files support Jinja2 templates for scale testing. See `sample_data_exchange_customers_scale2.yaml` for examples.
+
+**Workflow 3: Match Services to Customers**
+
+```yaml
+- name: Match Data Exchange services to customers
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: match_service_to_customers
+    config_file: "de_workflows_configs/sample_data_exchange_matches.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+  register: match_result
+
+- name: Display match result
+  debug:
+    msg: "{{ match_result.msg }}"
+```
+
+**Configuration File Structure:**
+```yaml
+data_exchange_matches:
+  - customerName: "FinanceInc"
+    serviceName: "de-service-1"
+    servicePrefixes:  # Select specific service prefixes to include
+      - prefix: "10.1.1.0/24" 
+        tag: "s-1-prefix1"
+    nat:  # Optional NAT configuration
+      - prefix: "10.101.1.0/24"
+        outsideNatPrefix: "170.101.1.0/24"
+```
+
+**Important:** After successful matching, responses are automatically saved to:
+- `de_workflows_configs/output/sample_data_exchange_matches_responses_<timestamp>.json`
+- `de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json`
+
+The response file contains match details (`customer_id`, `service_id`, `match_id`, `status`) required for Workflow 4.
+
+**Workflow 4: Accept Invitation (Non-Graphiant Customer)**
+
+```yaml
+- name: Accept Data Exchange service invitation (Dry Run)
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: accept_invitation
+    config_file: "de_workflows_configs/sample_data_exchange_acceptance.yaml"
+    matches_file: "de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json"
+    dry_run: true
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+  register: accept_result_dry_run
+
+- name: Display dry run result
+  debug:
+    msg: "{{ accept_result_dry_run.msg }}"
+
+- name: Accept Data Exchange service invitation
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: accept_invitation
+    config_file: "de_workflows_configs/sample_data_exchange_acceptance.yaml"
+    matches_file: "de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json"
+    dry_run: false
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+  register: accept_result
+
+- name: Display acceptance result
+  debug:
+    msg: "{{ accept_result.msg }}"
+```
+
+**Configuration File Structure:**
+```yaml
+data_exchange_acceptances:
+  - customerName: "FinanceInc"
+    serviceName: "de-service-1"
+    siteInformation:
+      - sites: ["site-sjc-sdktest"]
+        siteLists: []
+    nat:
+      - prefix: "10.1.1.0/24"
+        tag: "s-1-prefix1"
+    policy:
+      - lanSegment: "customer-1-segment"
+        consumerPrefixes:
+          - "10.101.0.0/24"
+    siteToSiteVpn:
+      ipsecGatewayDetails:
+        name: "s2s-FinanceInc"
+        destinationAddress: "204.137.1.1"
+        ikeInitiator: false
+        tunnel1: {}
+        tunnel2: {}
+        routing:
+          static:
+            destinationPrefix:
+              - "10.101.0.0/24"
+        vpnProfile: "GlobalVpnProfile-joule-smoke"
+      region: "us-central-1 (Chicago)"
+      emails: ["finance@financeinc.com"]
+```
+
+**Prerequisites for Data Exchange Workflows:**
+
+Before running Data Exchange workflows, ensure prerequisites are met:
+
+1. **Prerequisite Playbooks** (run in order):
+   ```bash
+   # 1. Configure LAN segments (required for services)
+   ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/00_dataex_lan_segments_prerequisites.yml
+   
+   # 2. Configure LAN interfaces (required for services)
+   ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/00_dataex_lan_interface_prerequisites.yml
+   
+   # 3. Configure VPN profiles (required for Workflow 4 - accept invitation)
+   ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/00_dataex_vpn_profile_prerequisites.yml
+   ```
+
+2. **Workflow 4 Specific Prerequisites:**
+   - Workflow 3 must be completed first (match services to customers)
+   - Matches response file must exist with valid match IDs
+   - Required global objects (LAN segments, VPN profiles) must exist
+   - Minimum 2 gateways required per region for redundancy
+
+**Complete Data Exchange Workflow Example:**
+
+```yaml
+---
+- name: Complete Data Exchange Workflow
+  hosts: localhost
+  gather_facts: false
+  vars:
+    graphiant_client_params: &graphiant_client_params
+      host: "{{ graphiant_host }}"
+      username: "{{ graphiant_username }}"
+      password: "{{ graphiant_password }}"
+  
+  tasks:
+    # Workflow 1: Create services
+    - name: Create Data Exchange services
+      graphiant.graphiant_playbooks.graphiant_data_exchange:
+        <<: *graphiant_client_params
+        operation: create_services
+        config_file: "de_workflows_configs/sample_data_exchange_services.yaml"
+        detailed_logs: true
+    
+    # Workflow 2: Create customers
+    - name: Create Data Exchange customers
+      graphiant.graphiant_playbooks.graphiant_data_exchange:
+        <<: *graphiant_client_params
+        operation: create_customers
+        config_file: "de_workflows_configs/sample_data_exchange_customers.yaml"
+        detailed_logs: true
+    
+    # Workflow 3: Match services to customers
+    - name: Match Data Exchange services to customers
+      graphiant.graphiant_playbooks.graphiant_data_exchange:
+        <<: *graphiant_client_params
+        operation: match_service_to_customers
+        config_file: "de_workflows_configs/sample_data_exchange_matches.yaml"
+        detailed_logs: true
+    
+    # Workflow 4: Accept invitations
+    - name: Accept Data Exchange service invitation
+      graphiant.graphiant_playbooks.graphiant_data_exchange:
+        <<: *graphiant_client_params
+        operation: accept_invitation
+        config_file: "de_workflows_configs/sample_data_exchange_acceptance.yaml"
+        matches_file: "de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json"
+        dry_run: false
+        detailed_logs: true
+```
+
+**Query Operations:**
+
+```yaml
 # Get services summary
 - name: Get Data Exchange services summary
   graphiant.graphiant_playbooks.graphiant_data_exchange:
@@ -522,40 +766,82 @@ Manages Graphiant Data Exchange services, customers, and service-to-customer mat
     host: "{{ graphiant_host }}"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
+  register: services_summary
 
-# Create Data Exchange customers
-- name: Create Data Exchange customers
+- name: Display services summary
+  debug:
+    msg: "{{ services_summary.msg }}"
+
+# Get customers summary
+- name: Get Data Exchange customers summary
   graphiant.graphiant_playbooks.graphiant_data_exchange:
-    operation: create_customers
-    config_file: "sample_data_exchange_customers.yaml"
+    operation: get_customers_summary
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+  register: customers_summary
+
+- name: Display customers summary
+  debug:
+    msg: "{{ customers_summary.msg }}"
+```
+
+**Delete Operations:**
+
+```yaml
+# Delete customers (must be deleted before services)
+- name: Delete Data Exchange customers
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: delete_customers
+    config_file: "de_workflows_configs/sample_data_exchange_customers.yaml"
     host: "{{ graphiant_host }}"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
 
-# Match services to customers
-- name: Match Data Exchange services to customers
+# Delete services
+- name: Delete Data Exchange services
   graphiant.graphiant_playbooks.graphiant_data_exchange:
-    operation: match_service_to_customers
-    config_file: "sample_data_exchange_matches.yaml"
+    operation: delete_services
+    config_file: "de_workflows_configs/sample_data_exchange_services.yaml"
     host: "{{ graphiant_host }}"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
+```
 
-# Using state parameter
-- name: Create services using state parameter
-  graphiant.graphiant_playbooks.graphiant_data_exchange:
-    state: present
-    config_file: "sample_data_exchange_services.yaml"
-    host: "{{ graphiant_host }}"
-    username: "{{ graphiant_username }}"
-    password: "{{ graphiant_password }}"
+**Service Health Monitoring:**
 
-- name: Query services using state parameter
+```yaml
+# Get service health (consumer view)
+- name: Get Data Exchange service health
   graphiant.graphiant_playbooks.graphiant_data_exchange:
-    state: query
+    operation: get_service_health
+    service_name: "de-service-1"
+    is_provider: false
     host: "{{ graphiant_host }}"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
+    detailed_logs: true
+  register: service_health
+
+- name: Display service health
+  debug:
+    msg: "{{ service_health.msg }}"
+
+# Get service health (provider view)
+- name: Get Data Exchange service health (provider view)
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: get_service_health
+    service_name: "de-service-1"
+    is_provider: true
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+  register: service_health_provider
+
+- name: Display service health (provider view)
+  debug:
+    msg: "{{ service_health_provider.msg }}"
 ```
 
 ## Detailed Logging
@@ -837,7 +1123,7 @@ ansible-playbook playbook.yml
       graphiant.graphiant_playbooks.graphiant_sites:
         <<: *graphiant_client_params
         site_config_file: "sample_site_attachments.yaml"
-        operation: "attach_object"
+        operation: "attach_objects"
         state: present
 ```
 
@@ -885,12 +1171,75 @@ The collection uses the same YAML configuration files as the standalone Graphian
 - `sample_global_site_lists.yaml`: Global site list configurations
 - `sample_site_attachments.yaml`: Site attachment configurations
 - `sample_sites.yaml`: Site creation and object attachment configurations
-- `sample_data_exchange_services.yaml`: Data Exchange service configurations
-- `sample_data_exchange_customers.yaml`: Data Exchange customer configurations
-- `sample_data_exchange_matches.yaml`: Data Exchange service-to-customer match configurations
-- `sample_data_exchange_services_scale_10.yaml`: Scale test configuration for 10 services
-- `sample_data_exchange_customers_scale_50.yaml`: Scale test configuration for 50 customers
-- `sample_data_exchange_matches_scale_50.yaml`: Scale test configuration for 50 matches
+- `sample_data_exchange_services.yaml`: Data Exchange service configurations (Workflow 1)
+- `sample_data_exchange_customers.yaml`: Data Exchange customer configurations (Workflow 2)
+- `sample_data_exchange_matches.yaml`: Data Exchange service-to-customer match configurations (Workflow 3)
+- `sample_data_exchange_acceptance.yaml`: Data Exchange invitation acceptance configurations (Workflow 4)
+- `sample_data_exchange_services_scale.yaml`: Scale test configuration for services
+- `sample_data_exchange_customers_scale.yaml`: Scale test configuration for customers
+- `sample_data_exchange_customers_scale2.yaml`: Scale test configuration with Jinja2 templates for customers
+- `sample_data_exchange_matches_scale.yaml`: Scale test configuration for matches
+- `sample_data_exchange_acceptance_scale.yaml`: Scale test configuration for invitation acceptance
+
+### Jinja2 Template Support in Configuration Files
+
+**All configuration files support Jinja2 templating syntax**, allowing dynamic generation of configurations. This feature is automatically enabled - simply use Jinja2 syntax in your YAML files.
+
+**Key Features:**
+- **Automatic Rendering**: Jinja2 templates are automatically detected and rendered before YAML parsing
+- **Works with All Managers**: Supported by all operations that use configuration files
+- **Scale Testing**: Perfect for generating multiple similar configurations
+- **Backward Compatible**: Regular YAML files (without Jinja2) continue to work as before
+
+**Example: Scale Testing with Jinja2**
+
+```yaml
+# sample_data_exchange_customers_scale2.yaml
+data_exchange_customers:
+  {% for i in range(1, 51) %}
+  - name: "FinanceBank-{{ 100 + i }}"
+    type: "non_graphiant_peer"
+    invite:
+      adminEmail: 
+        - "admin{{ 100 + i }}@financebank.com"
+        - "support{{ 100 + i }}@financebank.com"
+      maximumNumberOfSites: 4
+  {% endfor %}
+```
+
+This generates 50 customer configurations automatically (FinanceBank-101 through FinanceBank-150).
+
+**Supported Jinja2 Features:**
+- **Loops**: `{% for item in list %}...{% endfor %}`
+- **Conditionals**: `{% if condition %}...{% endif %}`
+- **Variables**: `{{ variable_name }}`
+- **Expressions**: `{{ 100 + i }}`, `{{ item.name }}`
+- **Filters**: `{{ value | upper }}`, `{{ value | default('default') }}`
+
+**Usage in Ansible Playbooks:**
+
+```yaml
+- name: Create Data Exchange customers with Jinja2 template
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: create_customers
+    config_file: "de_workflows_configs/sample_data_exchange_customers_scale2.yaml"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+    detailed_logs: true
+```
+
+**Error Handling:**
+- Jinja2 syntax errors are caught and reported with file location
+- YAML parsing errors after rendering include line numbers for debugging
+- Both templated and non-templated files are handled seamlessly
+
+**Best Practices:**
+- Use Jinja2 for repetitive configurations (scale testing, bulk operations)
+- Test templates with small ranges first (e.g., `range(1, 6)` for 5 items)
+- Keep template logic simple and readable
+- Use comments to document template purpose and logic
+- Verify rendered output before scaling to large numbers
 
 ## Configuration Format Examples
 
@@ -968,7 +1317,7 @@ All modules support Ansible's check mode (`--check`), which allows you to see wh
 #### Issue: "Collection does not contain the required file MANIFEST.json"
 **Solution**: Use Method 1 (Direct Directory Installation) instead of the tar.gz archive:
 ```bash
-ansible-galaxy collection install ansible_collection/graphiant/graphiant_playbooks/ --force
+ansible-galaxy collection install ansible_collections/graphiant/graphiant_playbooks/ --force
 ```
 
 #### Issue: "Could not import Graphiant library: No module named 'libs'"
@@ -988,7 +1337,7 @@ ansible-config dump | grep COLLECTIONS_PATHS
 ansible-galaxy collection list | grep graphiant
 
 # Reinstall if necessary
-ansible-galaxy collection install ansible_collection/graphiant/graphiant_playbooks/ --force
+ansible-galaxy collection install ansible_collections/graphiant/graphiant_playbooks/ --force
 ```
 
 #### Issue: "Module failed: Configuration file not found"
@@ -1011,6 +1360,182 @@ ansible-playbook --check your_playbook.yml
 ansible-playbook --check your_playbook.yml -e "graphiant_username=test" -e "graphiant_password=test"
 ```
 
+### Common Runtime Errors
+
+#### Issue: "Graphiant SDK not available. Please install graphiant-sdk package"
+**Error Message:**
+```
+Module failed: Configuration error during get_services_summary: Failed to initialize Graphiant connection: Graphiant SDK not available. Please install graphiant-sdk package.
+```
+
+**Solution**: Install the Graphiant SDK package:
+```bash
+# Activate your virtual environment (if using one)
+source venv/bin/activate  # or source venv_pb/bin/activate
+```
+
+**Prevention**: Always install dependencies from `requirements.txt`:
+```bash
+pip install -r requirements.txt
+```
+
+#### Issue: "No host specified"
+**Error Message:**
+```
+Module failed: Graphiant playbook error during get_services_summary: Failed to initialize Graphiant connection: GraphiantConfig initialization failed: No host specified.
+```
+
+**Solution**: Set the `GRAPHIANT_HOST` environment variable or provide `host` parameter in the playbook:
+```bash
+# Option 1: Set environment variable
+export GRAPHIANT_HOST="https://api.graphiant.com"
+# or for test environment
+export GRAPHIANT_HOST="https://api.test.graphiant.io"
+
+# Option 2: Provide in playbook
+- name: Get services summary
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    host: "https://api.graphiant.com"
+    operation: get_services_summary
+```
+
+**Note**: The `host` parameter in the playbook takes precedence over the environment variable.
+
+#### Issue: "v1_auth_login_post_response is None"
+**Error Message:**
+```
+Module failed: Graphiant playbook error during get_services_summary: Failed to initialize Graphiant connection: GraphiantConfig initialization failed: v1_auth_login_post_response is None
+```
+
+**Solution**: Provide authentication credentials:
+```bash
+# Set environment variables
+export GRAPHIANT_HOST="https://api.graphiant.com"
+export GRAPHIANT_USERNAME="your_username@graphiant.com"
+export GRAPHIANT_PASSWORD="your_password"
+
+# Or provide in playbook
+- name: Get services summary
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    host: "https://api.graphiant.com"
+    username: "{{ vault_graphiant_username }}"
+    password: "{{ vault_graphiant_password }}"
+    operation: get_services_summary
+```
+
+**Common Causes:**
+- Missing `GRAPHIANT_USERNAME` or `GRAPHIANT_PASSWORD` environment variables
+- Incorrect credentials
+- Network connectivity issues to Graphiant API
+
+#### Issue: "Matches file not found" (Data Exchange Workflow 4)
+**Error Message:**
+```
+WARNING - _get_match_id_from_customer_service: Matches file not found at /path/to/de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json
+ERROR - Failed to resolve names to IDs: No match found for customer 'FinanceInc' and service 'de-service-1'
+```
+
+**Solution**: Ensure Workflow 3 (Match Services to Customers) has been completed first:
+```bash
+# Step 1: Run Workflow 3 to create matches
+ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/03_dataex_match_services_to_customers.yml
+
+# Step 2: Verify matches file was created
+ls -la configs/de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json
+
+# Step 3: Then run Workflow 4
+ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/06_dataex_accept_invitation_dry_run.yml
+```
+
+**Alternative Solution**: If matches file exists in a different location, specify it explicitly:
+```yaml
+- name: Accept Data Exchange service invitation
+  graphiant.graphiant_playbooks.graphiant_data_exchange:
+    operation: accept_invitation
+    config_file: "de_workflows_configs/sample_data_exchange_acceptance.yaml"
+    matches_file: "/custom/path/to/matches_responses_latest.json"
+    host: "{{ graphiant_host }}"
+    username: "{{ graphiant_username }}"
+    password: "{{ graphiant_password }}"
+```
+
+**Note**: The matches file is automatically created by Workflow 3 and contains the `match_id` required for Workflow 4.
+
+### Environment Setup Checklist
+
+Before running Ansible playbooks, ensure all required environment variables are set:
+
+```bash
+# Required: Python path for library access
+export PYTHONPATH=$(pwd):$PYTHONPATH
+
+# Required: Graphiant API credentials
+export GRAPHIANT_HOST="https://api.graphiant.com"
+export GRAPHIANT_USERNAME="your_username@graphiant.com"
+export GRAPHIANT_PASSWORD="your_password"
+
+# Optional: Better log formatting
+export ANSIBLE_STDOUT_CALLBACK=debug
+
+# Optional: Custom playbooks path (if not running from project root)
+export GRAPHIANT_PLAYBOOKS_PATH="/path/to/your/graphiant-playbooks"
+```
+
+**Quick Verification:**
+```bash
+# Check environment variables
+echo "PYTHONPATH: $PYTHONPATH"
+echo "GRAPHIANT_HOST: $GRAPHIANT_HOST"
+echo "GRAPHIANT_USERNAME: $GRAPHIANT_USERNAME"
+
+# Test connection with a simple query
+ansible-playbook --check ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/01_dataex_create_services.yml
+```
+
+### Data Exchange Workflow Troubleshooting
+
+#### Workflow 4 Fails: "No match found for customer and service"
+**Symptoms:**
+- Workflow 4 (accept invitation) fails with "No match found"
+- Matches file not found error
+
+**Solution Steps:**
+1. **Verify Workflow 3 completed successfully:**
+   ```bash
+   # Check if matches file exists
+   ls -la configs/de_workflows_configs/output/*matches*latest.json
+   ```
+
+2. **Verify match exists in the file:**
+   ```bash
+   # Check match entries
+   cat configs/de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json | jq '.[] | select(.customer_name=="FinanceInc" and .service_name=="de-service-1")'
+   ```
+
+3. **Verify customer and service names match exactly:**
+   - Customer name in acceptance config must match customer name in matches file
+   - Service name in acceptance config must match service name in matches file
+   - Names are case-sensitive
+
+4. **Re-run Workflow 3 if needed:**
+   ```bash
+   ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/03_dataex_match_services_to_customers.yml
+   ```
+
+#### Workflow 4 Fails: "Region does not meet minimum gateway requirements"
+**Error Message:**
+```
+ERROR - Region us-central-1 (Chicago) does not meet minimum gateway requirements (found 1, required 2)
+```
+
+**Solution**: Ensure at least 2 active gateways exist in the specified region:
+```bash
+# Check gateway status (requires Graphiant API access)
+# Or configure additional gateways in the Graphiant portal
+```
+
+**Note**: Gateway requirements are validated during dry-run mode, so you'll see this error even in validation.
+
 ### Virtual Environment Setup
 For isolated installation, use a virtual environment:
 
@@ -1023,7 +1548,7 @@ source ~/venv_pb/bin/activate
 pip install -r requirements.txt
 
 # Install collection
-ansible-galaxy collection install ansible_collection/graphiant/graphiant_playbooks/ --force
+ansible-galaxy collection install ansible_collections/graphiant/graphiant_playbooks/ --force
 ```
 
 ### Collection Validation
@@ -1031,7 +1556,7 @@ Validate the collection structure:
 
 ```bash
 # Run validation script
-python ansible_collection/graphiant/graphiant_playbooks/validate_collection.py
+python ansible_collections/graphiant/graphiant_playbooks/validate_collection.py
 
 # Expected output: "Collection structure validation passed!"
 ```
@@ -1047,13 +1572,13 @@ ansible-config dump | grep COLLECTIONS_PATHS
 ansible-galaxy collection list | grep graphiant
 
 # Install collection
-ansible-galaxy collection install ansible_collection/graphiant/graphiant_playbooks/ --force
+ansible-galaxy collection install ansible_collections/graphiant/graphiant_playbooks/ --force
 
 # Uninstall collection
 rm -rf ~/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks
 
 # Test collection
-ansible-playbook --check ansible_collection/graphiant/graphiant_playbooks/playbooks/final_test.yml
+ansible-playbook --check ansible_collections/graphiant/graphiant_playbooks/playbooks/final_test.yml
 ```
 
 ### Environment Variables

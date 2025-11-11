@@ -2,27 +2,27 @@ vpn_profiles:
   # Global VPN Profile Configuration
   - name: vpnprofile-global-test
     vpnProfile:
-      ikeEncryptionAlg: AES 128 GCM
-      ikeDhGroup: Group 19
-      ikeIntegrity: SHA384
+      ikeEncryptionAlg: "AES 128 GCM"
+      ikeDhGroup: "Group 19"
+      ikeIntegrity: None
       reauthInterval: 3600
-      ipsecEncryptionAlg: AES 256 CBC
-      perfectForwardSecrecy: Group 20
-      ipsecIntegrity: SHA256
+      ipsecEncryptionAlg: "AES 256 CBC"
+      perfectForwardSecrecy: "Group 21"
+      ipsecIntegrity: "SHA256"
       rekeyInterval: 3600
       antiReplayWindowSize: 64
       esn: false
-      dpdInterval: 30
+      dpdInterval: 30 
 
   - name: vpnprofile-global-test-2
     vpnProfile:
-      ikeEncryptionAlg: AES 128 GCM
-      ikeDhGroup: Group 19
-      ikeIntegrity: SHA384
+      ikeEncryptionAlg: "AES 128 GCM"
+      ikeDhGroup: "Group 19"
+      ikeIntegrity: None
       reauthInterval: 3600
-      ipsecEncryptionAlg: AES 256 CBC
-      perfectForwardSecrecy: Group 20
-      ipsecIntegrity: SHA256
+      ipsecEncryptionAlg: "AES 256 CBC"
+      perfectForwardSecrecy: "Group 20"
+      ipsecIntegrity: "SHA256"
       rekeyInterval: 3600
       antiReplayWindowSize: 64
       esn: false

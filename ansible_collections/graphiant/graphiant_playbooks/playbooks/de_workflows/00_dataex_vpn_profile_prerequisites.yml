@@ -17,16 +17,16 @@
       #password: "{{ graphiant_password | default(lookup('ini', 'password file=/absolute/path/test/test.ini section=credentials')) }}"
 
   tasks:
-    - name: Configure Global LAN Segments
+    - name: Configure Global VPN Profiles
       graphiant.graphiant_playbooks.graphiant_global_config:
         <<: *graphiant_client_params
-        config_file: "de_workflows_configs/sample_global_lan_segments.yaml"
-        operation: "configure_lan_segments"
+        config_file: "sample_global_vpn_profiles.yaml"
+        operation: "configure_vpn_profiles"
         detailed_logs: true  
         state: present
-      register: configure_lan_segments_result
-      tags: ['prerequisites', 'lan_segments']
+      register: configure_vpn_profiles_result
+      tags: ['prerequisites', 'vpn_profiles']
 
     - name: Display Configuration Results
       debug:
-        msg: "{{ configure_lan_segments_result.msg }}"
+        msg: "{{ configure_vpn_profiles_result.msg }}"

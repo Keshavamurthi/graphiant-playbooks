@@ -8,7 +8,7 @@ We have successfully created a comprehensive Ansible collection for Graphiant Na
 
 ### Collection Structure
 ```
-ansible_collection/graphiant/graphiant_playbooks/
+ansible_collections/graphiant/graphiant_playbooks/
 ├── meta/
 │   ├── galaxy.yml          # Collection metadata
 │   └── runtime.yml         # Runtime requirements
@@ -162,7 +162,7 @@ ansible-playbook -i inventory playbook.yml
 ### From Source
 ```bash
 # Build the collection
-python ansible_collection/graphiant/graphiant_playbooks/build_collection.py
+python ansible_collections/graphiant/graphiant_playbooks/build_collection.py
 
 # Install the built collection
 ansible-galaxy collection install build/graphiant-graphiant_playbooks-1.0.0.tar.gz
@@ -172,16 +172,16 @@ ansible-galaxy collection install build/graphiant-graphiant_playbooks-1.0.0.tar.
 
 ### Collection Validation
 ```bash
-python ansible_collection/graphiant/graphiant_playbooks/validate_collection.py
+python ansible_collections/graphiant/graphiant_playbooks/validate_collection.py
 ```
 
 ### Test Playbooks
 ```bash
 # Test with check mode
-ansible-playbook --check ansible_collection/graphiant/graphiant_playbooks/playbooks/test_collection.yml
+ansible-playbook --check ansible_collections/graphiant/graphiant_playbooks/playbooks/test_collection.yml
 
 # Run complete network setup
-ansible-playbook ansible_collection/graphiant/graphiant_playbooks/playbooks/complete_network_setup.yml
+ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/complete_network_setup.yml
 ```
 
 ## 📚 Documentation

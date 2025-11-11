@@ -70,6 +70,9 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+# Ansible collection documentation (auto-generated)
+ansible_collections/**/docs/rst/
+ansible_collections/**/docs/build/
 
 # PyBuilder
 .pybuilder/
@@ -213,6 +216,13 @@ terraform.rc
 # Terraform lock files (optional - some teams prefer to commit these)
 # .terraform.lock.hcl
 
+# macOS system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
 # IDE files
 .idea/
 
@@ -222,3 +232,7 @@ terraform/azure-expressroute/tfplan
 
 # Output files
 output/
+
+# Test configuration files (may contain credentials)
+test/test.ini
+

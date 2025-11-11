@@ -1,9 +1,9 @@
 ---
-# Data Exchange Management Playbook
-# This playbook demonstrates how to use the graphiant_data_exchange module
-# for managing Data Exchange services, customers, and matches.
+# Data Exchange Accept Invitation Playbook (Workflow 4)
+# This playbook demonstrates how to accept Data Exchange service invitations
+# for non-Graphiant customers with gateway deployment and VPN configuration
 
-- name: Data Exchange Management
+- name: Data Exchange Accept Invitation (Workflow 4)
   hosts: localhost
   gather_facts: false
   vars:
@@ -21,6 +21,7 @@
       #password: "{{ graphiant_password | default(lookup('ini', 'password file=/absolute/path/test/test.ini section=credentials')) }}"
 
   tasks:
+
     - name: Get Data Exchange services summary
       graphiant.graphiant_playbooks.graphiant_data_exchange:
         <<: *graphiant_client_params
@@ -32,27 +33,34 @@
       debug:
         msg: "{{ services_summary.result_msg }}"
 
-    - name: Delete Data Exchange services
+
+    - name: Accept Data Exchange service invitation
       graphiant.graphiant_playbooks.graphiant_data_exchange:
         <<: *graphiant_client_params
-        operation: delete_services
-        config_file: "de_workflows_configs/sample_data_exchange_services.yaml"
-        #config_file: "de_workflows_configs/sample_data_exchange_services_scale.yaml" # Scale testing
+        operation: accept_invitation
+        config_file: "de_workflows_configs/sample_data_exchange_acceptance.yaml"
+        matches_file: "de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json"
+        # Scale testing
+        #config_file: "de_workflows_configs/sample_data_exchange_acceptance_scale.yaml"
+        #matches_file: "de_workflows_configs/output/sample_data_exchange_matches_scale_responses_latest.json"
+        # Scale testing2
+        #config_file: "de_workflows_configs/sample_data_exchange_acceptance_scale2.yaml" 
+        #matches_file: "de_workflows_configs/output/sample_data_exchange_matches_scale2_responses_latest.json"
+        dry_run: false
         detailed_logs: true
-      register: delete_services_result
+      register: accept_result
 
-    - name: Display delete services result
+    - name: Display acceptance result
       debug:
-        msg: "{{ delete_services_result.result_msg }}"
+        msg: "{{ accept_result.result_msg }}"
 
-    - name: Get updated services summary
+    - name: Get updated Data Exchange services summary
       graphiant.graphiant_playbooks.graphiant_data_exchange:
         <<: *graphiant_client_params
         operation: get_services_summary
         detailed_logs: true
       register: updated_services_summary
 
-    - name: Display updated services count
+    - name: Display updated services summary
       debug:
         msg: "{{ updated_services_summary.result_msg }}"
-

@@ -2,7 +2,7 @@
 # Sample Data Exchange Service Acceptance Configuration - Scale Test (100 Acceptances)
 # This file demonstrates accepting all Data Exchange service invitations at scale
 # Used in Workflow 4: Data Exchange - Accept Invitation (Non-Graphiant Customer)
-# Covers all 100 matches from sample_data_exchange_matches_scale_50.yaml
+# Covers all 100 matches from sample_data_exchange_matches_scale.yaml
 
 # All configurations are under 'data_exchange_acceptances' key
 # Each acceptance uses human-readable names that will be resolved to IDs by the data exchange manager
