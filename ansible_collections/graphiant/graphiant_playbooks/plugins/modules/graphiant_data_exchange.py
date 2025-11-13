@@ -135,7 +135,7 @@ options:
 
 requirements:
   - python >= 3.12
-  - graphiant-sdk >= 25.10.2
+  - graphiant-sdk >= 25.11.1
   - tabulate
 
 seealso:

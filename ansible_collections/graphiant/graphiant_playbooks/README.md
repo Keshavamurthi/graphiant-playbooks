@@ -6,7 +6,7 @@ This Ansible collection provides modules for automating Graphiant NaaS (Network 
 
 - Ansible >= 2.15
 - Python >= 3.12
-- Graphiant SDK >= 25.6.2
+- Graphiant SDK >= 25.11.1
 - Access to Graphiant NaaS platform
 
 ## Installation

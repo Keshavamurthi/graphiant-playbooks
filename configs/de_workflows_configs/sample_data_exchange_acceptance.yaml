@@ -83,7 +83,7 @@ data_exchange_acceptances:
           #         outboundPolicy: {}
 
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
