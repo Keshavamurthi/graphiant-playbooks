@@ -615,8 +615,6 @@ class DataExchangeManager(BaseManager):
                     failed_count += 1
                     continue
 
-                '''
-                TODO: Uncomment. Remove this once latest sdk version 25.11.1 is released.
                 # Check if service is already matched to this customer
                 matched_services = self.gsdk.get_matched_services_for_customer(customer.id)
                 if matched_services is not None:
@@ -626,7 +624,8 @@ class DataExchangeManager(BaseManager):
                         if matched_service.name == service_name:
                             LOG.warning(
                                 f"Service '{service_name}' is already matched to customer '{customer_name}'. "
-                                f"Match ID: {matched_service.id}, Status: {matched_service.status}. "
+                                f"Service ID: {matched_service.id}, "
+                                f"Matched Customers: {matched_service.matched_customers}. "
                                 f"Skipping to avoid 'match already exists' error.")
                             already_matched = True
                             skipped_count += 1
@@ -634,7 +633,7 @@ class DataExchangeManager(BaseManager):
 
                     if already_matched:
                         continue
-                '''
+
                 # Use configured service prefixes (user-selected)
                 service_prefixes = match_config.get('servicePrefixes', [])
                 if not service_prefixes:

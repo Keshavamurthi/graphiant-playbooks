@@ -9,6 +9,11 @@ from graphiant_sdk.exceptions import (
     NotFoundException,
     ServiceException,
 )
+try:
+    from pydantic import ValidationError
+except ImportError:
+    # Fallback for older pydantic versions
+    ValidationError = None
 
 from libs.logger import setup_logger
 from libs.poller import poller
@@ -58,12 +63,46 @@ class GraphiantPortalClient():
         """
         try:
             # First get the current user's enterprise ID
-            user_response = self.api.v1_auth_user_get(authorization=self.bearer_token)
-            if not user_response or not hasattr(user_response, 'enterprise_id'):
+            current_enterprise_id = None
+            try:
+                user_response = self.api.v1_auth_user_get(authorization=self.bearer_token)
+                if user_response and hasattr(user_response, 'enterprise_id'):
+                    current_enterprise_id = user_response.enterprise_id
+            except Exception as e:
+                # TODO: Remove Workaround for enum mismatch once API Spec/SDK is updated. QA-11449
+                # Check if it's a Pydantic validation error (enum mismatch)
+                error_str = str(e)
+                is_validation_error = (
+                    (ValidationError and isinstance(e, ValidationError)) or
+                    'validation error' in error_str.lower() or
+                    'must be one of enum values' in error_str
+                )
+                if is_validation_error:
+                    # Try to get raw response data to bypass validation
+                    try:
+                        # Use without_preload_content to get raw response data
+                        raw_response = self.api.v1_auth_user_get_without_preload_content(
+                            authorization=self.bearer_token
+                        )
+                        # Parse JSON manually to extract enterprise_id
+                        response_data = json.loads(raw_response.data.decode('utf-8'))
+                        current_enterprise_id = response_data.get('enterpriseId')
+                        if current_enterprise_id:
+                            LOG.info(f"get_enterprise_info: Successfully extracted enterprise_id "
+                                     f"from raw response: {current_enterprise_id}")
+                        else:
+                            LOG.warning("get_enterprise_info: Could not extract enterprise_id from raw response")
+                            return None
+                    except Exception as raw_error:
+                        LOG.error(f"get_enterprise_info: Failed to get raw response: {raw_error}")
+                        return None
+                else:
+                    # Re-raise if it's not a validation error we can handle
+                    raise
+
+            if not current_enterprise_id:
                 LOG.warning("get_enterprise_info: Could not get enterprise ID from user info")
                 return None
-
-            current_enterprise_id = user_response.enterprise_id
 
             # Now get all enterprises to find the one matching the current user's enterprise ID
             enterprises_response = self.api.v1_enterprises_get(authorization=self.bearer_token)
@@ -632,7 +671,7 @@ class GraphiantPortalClient():
             return True
         except Exception as e:
             # Check if it's a validation error that we can ignore
-            if "validation error" in str(e) and "V1GlobalLanSegmentsPost200Response" in str(e):
+            if "validation error" in str(e) and "V1GlobalLanSegmentsIdDeleteResponse" in str(e):
                 LOG.info(f"delete_global_lan_segments: Delete operation completed "
                          f"(validation error can be ignored): {lan_segment_id}")
                 return True
@@ -726,7 +765,7 @@ class GraphiantPortalClient():
             return True
         except Exception as e:
             # Handle validation errors for DELETE operations (often return empty responses)
-            if "validation error" in str(e) and "V1GlobalLanSegmentsPost200Response" in str(e):
+            if "validation error" in str(e) and "V1GlobalSiteListsIdDeleteResponse" in str(e):
                 LOG.info(f"delete_global_site_list: "
                          f"Delete operation completed (validation error can be ignored): {site_list_id}")
                 return True
@@ -1009,8 +1048,7 @@ class GraphiantPortalClient():
         except Exception as e:
             LOG.error(f"get_data_exchange_customer_by_name: Error finding customer '{customer_name}': {e}")
             return None
-    '''
-    TODO: Uncomment. Remove this once latest sdk version 25.11.1 is released.
+
     def get_matched_services_for_customer(self, customer_id: int):
         """
         Get list of services already matched to a specific customer.
@@ -1023,7 +1061,7 @@ class GraphiantPortalClient():
         """
         try:
             LOG.info(f"get_matched_services_for_customer: Retrieving matched services for customer ID: {customer_id}")
-            response = self.api.v1_extranets_b2b_peering_match_services_summary_get(
+            response = self.api.v1_extranets_b2b_peering_match_services_summary_id_get(
                 authorization=self.bearer_token,
                 id=customer_id
             )
@@ -1048,7 +1086,7 @@ class GraphiantPortalClient():
         except Exception as e:
             LOG.error(f"get_matched_services_for_customer: Unexpected error: {e}")
             return None
-    '''
+
     def delete_data_exchange_customer(self, customer_id: int):
         """
         Delete a Data Exchange customer.
@@ -1336,13 +1374,13 @@ class GraphiantPortalClient():
         try:
             LOG.info(f"get_service_health: Retrieving health for service {service_id}")
             # Create the proper request object
-            health_request = graphiant_sdk.V1ExtranetsMonitoringTrafficSecurityPolicyPostRequest(
+            health_request = graphiant_sdk.V1ExtranetB2bMonitoringPeeringServiceServiceHealthPostRequest(
                 id=service_id,
                 is_provider=is_provider
             )
             response = self.api.v1_extranet_b2b_monitoring_peering_service_service_health_post(
                 authorization=self.bearer_token,
-                v1_extranets_monitoring_traffic_security_policy_post_request=health_request
+                v1_extranet_b2b_monitoring_peering_service_service_health_post_request=health_request,
             )
             LOG.info(f"get_service_health: Successfully retrieved health for service {service_id}")
             return response

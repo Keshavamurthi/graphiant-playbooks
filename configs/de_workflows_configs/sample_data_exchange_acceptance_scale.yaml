@@ -62,7 +62,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.101.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -129,7 +129,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.102.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -196,7 +196,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.103.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -263,7 +263,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.104.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -330,7 +330,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.105.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -397,7 +397,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.106.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -464,7 +464,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.107.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -531,7 +531,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.108.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -598,7 +598,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.109.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -664,7 +664,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.110.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -907,7 +907,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.114.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -973,7 +973,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.115.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1041,7 +1041,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.116.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1109,7 +1109,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.117.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1177,7 +1177,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.118.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1245,7 +1245,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.119.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1313,7 +1313,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.120.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1381,7 +1381,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.121.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1449,7 +1449,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.122.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1517,7 +1517,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.123.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1585,7 +1585,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.124.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1653,7 +1653,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.125.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1721,7 +1721,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.126.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1789,7 +1789,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.127.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1857,7 +1857,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.128.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1925,7 +1925,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.129.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -1993,7 +1993,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.130.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2061,7 +2061,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.131.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2129,7 +2129,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.132.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2197,7 +2197,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.133.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2265,7 +2265,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.134.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2333,7 +2333,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.135.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2401,7 +2401,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.136.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2469,7 +2469,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.137.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2537,7 +2537,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.138.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2605,7 +2605,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.139.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2673,7 +2673,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.140.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2741,7 +2741,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.141.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2809,7 +2809,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.142.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2877,7 +2877,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.143.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -2945,7 +2945,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.144.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3013,7 +3013,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.145.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3081,7 +3081,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.146.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3149,7 +3149,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.147.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3217,7 +3217,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.148.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3285,7 +3285,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.149.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3353,7 +3353,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.150.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3421,7 +3421,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.151.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3489,7 +3489,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.152.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3557,7 +3557,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.153.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3625,7 +3625,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.154.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3693,7 +3693,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.155.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3761,7 +3761,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.156.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3829,7 +3829,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.157.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3897,7 +3897,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.158.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -3965,7 +3965,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.159.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4033,7 +4033,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.160.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4101,7 +4101,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.161.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4169,7 +4169,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.162.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4237,7 +4237,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.163.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4305,7 +4305,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.164.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4373,7 +4373,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.165.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4441,7 +4441,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.166.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4509,7 +4509,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.167.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4577,7 +4577,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.168.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4645,7 +4645,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.169.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4713,7 +4713,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.170.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4781,7 +4781,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.171.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4849,7 +4849,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.172.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4917,7 +4917,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.173.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -4985,7 +4985,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.174.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5053,7 +5053,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.175.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5121,7 +5121,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.176.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5189,7 +5189,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.177.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5257,7 +5257,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.178.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5325,7 +5325,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.179.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5393,7 +5393,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.180.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5461,7 +5461,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.181.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5529,7 +5529,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.182.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5597,7 +5597,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.183.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5665,7 +5665,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.184.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5733,7 +5733,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.185.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5801,7 +5801,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.186.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5869,7 +5869,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.187.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -5937,7 +5937,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.188.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6005,7 +6005,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.189.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6073,7 +6073,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.190.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6141,7 +6141,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.191.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6209,7 +6209,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.192.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6277,7 +6277,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.193.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6345,7 +6345,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.194.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6413,7 +6413,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.195.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6481,7 +6481,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.196.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6549,7 +6549,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.197.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6617,7 +6617,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.198.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6685,7 +6685,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.199.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
@@ -6753,7 +6753,7 @@ data_exchange_acceptances:
             destinationPrefix:
               - "10.200.0.0/24"                    # Customer's own /24 network
         # VPN Profile Selection
-        vpnProfile: "GlobalVpnProfile-joule-smoke"  # System VPN profile name
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
 
       # Selected Region (by name)
       region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
