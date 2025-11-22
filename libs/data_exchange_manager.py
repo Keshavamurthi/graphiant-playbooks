@@ -89,6 +89,8 @@ class DataExchangeManager(BaseManager):
 
             for service_config in services:
                 service_name = service_config.get('serviceName')
+                LOG.info("--------------------------------")
+                LOG.info(f"create_services: Creating service '{service_name}'")
                 if not service_name:
                     raise ConfigurationError("Configuration error: Each service must have a 'serviceName' field.")
 
@@ -265,6 +267,8 @@ class DataExchangeManager(BaseManager):
 
             for customer_config in customers:
                 customer_name = customer_config.get('name')
+                LOG.info("--------------------------------")
+                LOG.info(f"create_customers: Creating customer '{customer_name}'")
                 if not customer_name:
                     raise ConfigurationError("Configuration error: Each customer must have a 'name' field.")
 
@@ -378,6 +382,8 @@ class DataExchangeManager(BaseManager):
 
             for customer_config in customers:
                 customer_name = customer_config.get('name')
+                LOG.info("--------------------------------")
+                LOG.info(f"delete_customers: Deleting customer '{customer_name}'")
                 if not customer_name:
                     raise ConfigurationError("Configuration error: Each customer must have a 'name' field.")
 
@@ -429,6 +435,8 @@ class DataExchangeManager(BaseManager):
 
             for service_config in services:
                 service_name = service_config.get('serviceName')
+                LOG.info("--------------------------------")
+                LOG.info(f"delete_services: Deleting service '{service_name}'")
                 if not service_name:
                     raise ConfigurationError("Configuration error: Each service must have a 'serviceName' field.")
 
@@ -595,7 +603,8 @@ class DataExchangeManager(BaseManager):
             for match_config in matches:
                 customer_name = match_config.get('customerName')
                 service_name = match_config.get('serviceName')
-
+                LOG.info("--------------------------------")
+                LOG.info(f"match_service_to_customers: Matching service '{service_name}' to customer '{customer_name}'")
                 if not customer_name or not service_name:
                     LOG.error("Configuration error: Each match must have 'customerName' and 'serviceName' fields.")
                     failed_count += 1
@@ -730,6 +739,9 @@ class DataExchangeManager(BaseManager):
             # Validate gateway requirements before processing acceptances
             self._validate_gateway_requirements_for_acceptances(acceptances)
 
+            # Validate VPN profile existence before processing acceptances
+            self._validate_vpn_profiles_for_acceptances(acceptances)
+
             # Process acceptances and log results
             result = self._process_multiple_acceptances(acceptances, matches_file, dry_run)
 
@@ -743,11 +755,16 @@ class DataExchangeManager(BaseManager):
 
             # Check if there were any failures
             if total_failed > 0:
-                LOG.warning(f"accept_invitation: {total_failed} "
-                            f"out of {total_processed} invitation acceptances failed")
-                # TODO:Optionally raise an exception for partial failures
-                # raise ConfigurationError(f"Data Exchange invitation acceptance had {total_failed} failures "
-                #                         f"out of {total_processed} total")
+                if dry_run:
+                    LOG.error(f"[DRY-RUN] accept_invitation: {total_failed} "
+                              f"out of {total_processed} invitation acceptances failed")
+                    raise ConfigurationError(f"[DRY-RUN] Data Exchange invitation acceptance had {total_failed} "
+                                             f"failures out of {total_processed} total")
+                else:
+                    LOG.error(f"accept_invitation: {total_failed} "
+                              f"out of {total_processed} invitation acceptances failed")
+                    raise ConfigurationError(f"Data Exchange invitation acceptance had {total_failed} failures "
+                                             f"out of {total_processed} total")
             return result
         except ConfigurationError:
             raise
@@ -814,6 +831,65 @@ class DataExchangeManager(BaseManager):
             raise
             # TODO: Don't fail the entire operation for validation issues ?
 
+    def _validate_vpn_profiles_for_acceptances(self, acceptances):
+        """
+        Validate VPN profile existence for all acceptances.
+
+        Args:
+            acceptances (list): List of acceptance configurations
+        """
+        try:
+            LOG.info(f"_validate_vpn_profiles_for_acceptances: Validating VPN profiles for "
+                     f"{len(acceptances)} acceptances")
+
+            # Collect unique VPN profile names from acceptances
+            vpn_profiles_to_validate = set()
+            for acceptance in acceptances:
+                if 'siteToSiteVpn' in acceptance:
+                    site_to_site_vpn = acceptance['siteToSiteVpn']
+                    if 'ipsecGatewayDetails' in site_to_site_vpn:
+                        ipsec_gateway_details = site_to_site_vpn['ipsecGatewayDetails']
+                        if 'vpnProfile' in ipsec_gateway_details:
+                            vpn_profile_name = ipsec_gateway_details['vpnProfile']
+                            if vpn_profile_name:
+                                vpn_profiles_to_validate.add(vpn_profile_name)
+
+            if not vpn_profiles_to_validate:
+                LOG.info("_validate_vpn_profiles_for_acceptances: No VPN profiles found in acceptances")
+                raise ConfigurationError("No VPN profiles found in acceptances")
+
+            LOG.info(f"_validate_vpn_profiles_for_acceptances: Validating {len(vpn_profiles_to_validate)} VPN profiles")
+            # Get all VPN profiles from portal
+            portal_vpn_profiles = self.gsdk.get_global_ipsec_profiles()
+            if not portal_vpn_profiles:
+                LOG.error("_validate_vpn_profiles_for_acceptances: No VPN profiles found in portal")
+                raise ConfigurationError("No VPN profiles found in portal")
+
+            # Validate each VPN profile
+            missing_profiles = []
+            for vpn_profile_name in vpn_profiles_to_validate:
+                if vpn_profile_name not in portal_vpn_profiles:
+                    LOG.error(f"_validate_vpn_profiles_for_acceptances: VPN profile "
+                              f"'{vpn_profile_name}' not found in portal")
+                    missing_profiles.append(vpn_profile_name)
+                else:
+                    LOG.info(f"_validate_vpn_profiles_for_acceptances: VPN profile "
+                             f"'{vpn_profile_name}' exists in portal")
+
+            if missing_profiles:
+                error_msg = (f"The following VPN profiles are not found in the portal: "
+                             f"{', '.join(missing_profiles)}")
+                LOG.error(f"_validate_vpn_profiles_for_acceptances: {error_msg}")
+                raise ConfigurationError(error_msg)
+
+            LOG.info(f"_validate_vpn_profiles_for_acceptances: All VPN profiles existence validated successfully for "
+                     f"{len(acceptances)} acceptances")
+        except ConfigurationError:
+            raise
+        except Exception as e:
+            LOG.warning(f"_validate_vpn_profiles_for_acceptances: VPN profile validation failed: {e}")
+            raise
+
     def _process_multiple_acceptances(self, acceptances_config, matches_file=None, dry_run=False):
         """
         Process multiple invitation acceptances from configuration.
@@ -833,12 +909,37 @@ class DataExchangeManager(BaseManager):
 
             LOG.info(f"_process_multiple_acceptances: Processing {len(acceptances_config)} invitation acceptances")
 
+            # Pre-fetch all sites, site_lists, regions, and LAN segments once for faster lookups
+            LOG.info("_process_multiple_acceptances: Pre-fetching sites, site_lists, regions, and LAN segments")
+            sites = self.gsdk.get_sites_details()
+            site_lists = self.gsdk.get_global_site_lists()
+            regions = self.gsdk.get_regions()
+            lan_segments = self.gsdk.get_global_lan_segments()
+
+            # Create lookup dictionaries (name -> id) for O(1) lookups
+            sites_lookup = {site.name: site.id for site in sites} if sites else {}
+            site_lists_lookup = {site_list.name: site_list.id for site_list in site_lists} if site_lists else {}
+            regions_lookup = {region.name: region.id for region in regions} if regions else {}
+            lan_segments_lookup = {segment.name: segment.id for segment in lan_segments} if lan_segments else {}
+
+            LOG.info(f"_process_multiple_acceptances: Pre-fetched {len(sites_lookup)} sites, "
+                     f"{len(site_lists_lookup)} site_lists, {len(regions_lookup)} regions, "
+                     f"and {len(lan_segments_lookup)} LAN segments")
+
             for i, acceptance_config in enumerate(acceptances_config):
                 try:
+                    LOG.info("--------------------------------")
                     LOG.info(f"_process_multiple_acceptances: Processing acceptance {i+1}/{len(acceptances_config)}")
-
+                    LOG.info(f"_process_multiple_acceptances: Customer: '{acceptance_config.get('customerName')}' "
+                             f"Service: '{acceptance_config.get('serviceName')}'")
                     # Resolve names to IDs (returns direct API payload structure)
-                    resolved_config = self._resolve_acceptance_names_to_ids(acceptance_config, matches_file)
+                    resolved_config = self._resolve_acceptance_names_to_ids(
+                        acceptance_config, matches_file,
+                        sites_lookup=sites_lookup,
+                        site_lists_lookup=site_lists_lookup,
+                        regions_lookup=regions_lookup,
+                        lan_segments_lookup=lan_segments_lookup
+                    )
 
                     # Extract service ID and match ID from resolved configuration
                     service_id = resolved_config['id']  # Service ID is 'id' in API payload
@@ -925,13 +1026,13 @@ class DataExchangeManager(BaseManager):
 
             # Fill in missing tunnel1 values
             tunnel1 = ipsec_gateway_details.get('tunnel1', {})
-            if tunnel1.get('insideIpv4Cidr') is None:
+            if 'insideIpv4Cidr' in tunnel1 and tunnel1['insideIpv4Cidr'] is None:
                 ipv4_subnet = self.gsdk.get_ipsec_inside_subnet(region_id, lan_segment_id, 'ipv4')
                 if ipv4_subnet:
                     tunnel1['insideIpv4Cidr'] = ipv4_subnet
                     LOG.info(f"_fill_missing_tunnel_values: Filled tunnel1 insideIpv4Cidr: {ipv4_subnet}")
 
-            if tunnel1.get('insideIpv6Cidr') is None:
+            if 'insideIpv6Cidr' in tunnel1 and tunnel1['insideIpv6Cidr'] is None:
                 ipv6_subnet = self.gsdk.get_ipsec_inside_subnet(region_id, lan_segment_id, 'ipv6')
                 if ipv6_subnet:
                     tunnel1['insideIpv6Cidr'] = ipv6_subnet
@@ -941,17 +1042,17 @@ class DataExchangeManager(BaseManager):
                 psk = self.gsdk.get_preshared_key()
                 if psk:
                     tunnel1['psk'] = psk
-                    LOG.info(f"_fill_missing_tunnel_values: Filled tunnel1 psk: {psk}")
+                    LOG.info("_fill_missing_tunnel_values: Filled tunnel1 psk")
 
             # Fill in missing tunnel2 values
             tunnel2 = ipsec_gateway_details.get('tunnel2', {})
-            if tunnel2.get('insideIpv4Cidr') is None:
+            if 'insideIpv4Cidr' in tunnel2 and tunnel2['insideIpv4Cidr'] is None:
                 ipv4_subnet = self.gsdk.get_ipsec_inside_subnet(region_id, lan_segment_id, 'ipv4')
                 if ipv4_subnet:
                     tunnel2['insideIpv4Cidr'] = ipv4_subnet
                     LOG.info(f"_fill_missing_tunnel_values: Filled tunnel2 insideIpv4Cidr: {ipv4_subnet}")
 
-            if tunnel2.get('insideIpv6Cidr') is None:
+            if 'insideIpv6Cidr' in tunnel2 and tunnel2['insideIpv6Cidr'] is None:
                 ipv6_subnet = self.gsdk.get_ipsec_inside_subnet(region_id, lan_segment_id, 'ipv6')
                 if ipv6_subnet:
                     tunnel2['insideIpv6Cidr'] = ipv6_subnet
@@ -961,7 +1062,7 @@ class DataExchangeManager(BaseManager):
                 psk = self.gsdk.get_preshared_key()
                 if psk:
                     tunnel2['psk'] = psk
-                    LOG.info(f"_fill_missing_tunnel_values: Filled tunnel2 psk: {psk}")
+                    LOG.info("_fill_missing_tunnel_values: Filled tunnel2 psk")
 
             return acceptance_config
 
@@ -969,13 +1070,19 @@ class DataExchangeManager(BaseManager):
             LOG.error(f"_fill_missing_tunnel_values: Error filling tunnel values: {e}")
             return acceptance_config
 
-    def _resolve_acceptance_names_to_ids(self, acceptance_config, matches_file=None):
+    def _resolve_acceptance_names_to_ids(self, acceptance_config, matches_file=None,
+                                         sites_lookup=None, site_lists_lookup=None,
+                                         regions_lookup=None, lan_segments_lookup=None):
         """
         Resolve names to IDs for acceptance configuration.
 
         Args:
             acceptance_config (dict): Acceptance configuration with names
             matches_file (str, optional): Path to matches responses JSON file for match ID lookup
+            sites_lookup (dict, optional): Pre-fetched dictionary mapping site names to IDs
+            site_lists_lookup (dict, optional): Pre-fetched dictionary mapping site list names to IDs
+            regions_lookup (dict, optional): Pre-fetched dictionary mapping region names to IDs
+            lan_segments_lookup (dict, optional): Pre-fetched dictionary mapping LAN segment names to IDs
 
         Returns:
             dict: Resolved configuration with IDs
@@ -1004,39 +1111,51 @@ class DataExchangeManager(BaseManager):
                 raise ConfigurationError(f"Invalid match data for customer "
                                          f"'{customer_name}' and service '{service_name}'")
 
-            # Resolve site names to IDs
+            # Resolve site names to IDs using pre-fetched lookup or API call
             site_names = acceptance_config.get('siteInformation', [{}])[0].get('sites', [])
             site_ids = []
             for site_name in site_names:
-                site_id = self.gsdk.get_site_id(site_name)
+                if sites_lookup and site_name in sites_lookup:
+                    site_id = sites_lookup[site_name]
+                else:
+                    site_id = self.gsdk.get_site_id(site_name)
                 if site_id:
                     site_ids.append(site_id)
                 else:
                     raise ConfigurationError(f"Site '{site_name}' not found")
 
-            # Resolve site list names to IDs
+            # Resolve site list names to IDs using pre-fetched lookup or API call
             site_list_names = acceptance_config.get('siteInformation', [{}])[0].get('siteLists', [])
             site_list_ids = []
             for site_list_name in site_list_names:
-                site_list_id = self.gsdk.get_site_list_id(site_list_name)
+                if site_lists_lookup and site_list_name in site_lists_lookup:
+                    site_list_id = site_lists_lookup[site_list_name]
+                else:
+                    site_list_id = self.gsdk.get_site_list_id(site_list_name)
                 if site_list_id:
                     site_list_ids.append(site_list_id)
                 else:
                     raise ConfigurationError(f"Site list '{site_list_name}' not found")
 
-            # Resolve LAN segment name to ID
+            # Resolve LAN segment name to ID using pre-fetched lookup or API call
             lan_segment_name = acceptance_config.get('policy', [{}])[0].get('lanSegment')
             lan_segment_id = None
             if lan_segment_name:
-                lan_segment_id = self.gsdk.get_lan_segment_id(lan_segment_name)
+                if lan_segments_lookup and lan_segment_name in lan_segments_lookup:
+                    lan_segment_id = lan_segments_lookup[lan_segment_name]
+                else:
+                    lan_segment_id = self.gsdk.get_lan_segment_id(lan_segment_name)
                 if not lan_segment_id:
                     raise ConfigurationError(f"LAN segment '{lan_segment_name}' not found")
 
-            # Resolve region name to ID
+            # Resolve region name to ID using pre-fetched lookup or API call
             region_name = acceptance_config.get('siteToSiteVpn', {}).get('region')
             region_id = None
             if region_name:
-                region_id = self._get_region_id_from_name(region_name)
+                if regions_lookup and region_name in regions_lookup:
+                    region_id = regions_lookup[region_name]
+                else:
+                    region_id = self.gsdk.get_region_id_by_name(region_name)
                 if not region_id:
                     raise ConfigurationError(f"Region '{region_name}' not found")
 
@@ -1147,30 +1266,6 @@ class DataExchangeManager(BaseManager):
 
         except Exception as e:
             LOG.error(f"_get_match_id_from_customer_service: Error reading matches file: {e}")
-            return None
-
-    def _get_region_id_from_name(self, region_name):
-        """
-        Get region ID from region name using the API.
-
-        Args:
-            region_name (str): Region name
-
-        Returns:
-            int: Region ID if found, None otherwise
-        """
-        try:
-            LOG.info(f"_get_region_id_from_name: Looking up region ID for '{region_name}'")
-            region_id = self.gsdk.get_region_id_by_name(region_name)
-
-            if region_id is None:
-                LOG.warning(f"_get_region_id_from_name: Region '{region_name}' not found")
-            else:
-                LOG.info(f"_get_region_id_from_name: Found region '{region_name}' with ID {region_id}")
-
-            return region_id
-        except Exception as e:
-            LOG.error(f"_get_region_id_from_name: Failed to get region ID for '{region_name}': {e}")
             return None
 
     def get_service_health(self, service_name, is_provider=False):

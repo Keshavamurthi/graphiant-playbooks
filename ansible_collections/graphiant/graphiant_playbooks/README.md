@@ -19,6 +19,13 @@ This Ansible collection provides modules for automating Graphiant NaaS (Network 
 git clone https://github.com/graphiant/graphiant-playbooks.git
 cd graphiant-playbooks
 
+# Create virtual environment
+python3.12 -m venv venv_pb
+source venv_pb/bin/activate
+
+# Install requirements
+pip install -r requirements.txt
+
 # Set PYTHONPATH to include the project directory
 export PYTHONPATH=$(pwd):$PYTHONPATH
 
@@ -199,18 +206,10 @@ The Graphiant Playbooks collection includes different managers that use differen
 | **BGPManager** | `configure`, `detach_policies`, `deconfigure` | ✅ **Uses Templates** | Uses Jinja2 templates for BGP peering configurations |
 | **GlobalConfigManager** | `configure`, `deconfigure`, `configure_*`, `deconfigure_*` | ✅ **Uses Templates** | Uses Jinja2 templates for global object configurations |
 | **SiteManager** | `configure`, `deconfigure`, `configure_sites`, `attach_objects` | ✅ **Uses Templates** | Uses Jinja2 templates for site and attachment configurations |
-| **DataExchangeManager** | `create_services`, `create_customers`, `match_service_to_customers`, `delete_services`, `delete_customers`, `accept_invitation` | ❌ **Direct API Calls** | Uses direct API calls without template rendering |
+| **DataExchangeManager** | `create_services`, `create_customers`, `match_service_to_customers`, `delete_services`, `delete_customers`, `accept_invitation` | ❌ **Direct API Payload Structure** | Uses direct API payload structure without template rendering |
 
-### Template-Based Managers
-- **InterfaceManager**: Uses `interface_template.yaml` and `circuit_template.yaml`
-- **BGPManager**: Uses `bgp_peering_template.yaml`
-- **GlobalConfigManager**: Uses various global templates (`global_*_template.yaml`)
-- **SiteManager**: Uses site and attachment templates
 
-### Direct API Managers
-- **DataExchangeManager**: Processes YAML configuration directly and makes API calls without template rendering
-
-**Note**: The Data Exchange manager was designed to work directly with the existing YAML configuration structure, avoiding the complexity of template rendering for Data Exchange operations.
+**Note**: The Data Exchange manager was designed to work directly with the existing API configuration structure, avoiding the complexity of template rendering for Data Exchange operations.
 
 ## Modules
 
@@ -522,6 +521,8 @@ The Data Exchange module supports four main workflows:
   graphiant.graphiant_playbooks.graphiant_data_exchange:
     operation: create_services
     config_file: "de_workflows_configs/sample_data_exchange_services.yaml"
+    #config_file: "de_workflows_configs/sample_data_exchange_services_scale.yaml" # Scale testing
+    #config_file: "de_workflows_configs/sample_data_exchange_services_scale2.yaml" # Scale testing2
     host: "{{ graphiant_host }}"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
@@ -550,6 +551,11 @@ data_exchange_services:
           tag: "s-1-prefix1"
 ```
 
+**Example playbook:**
+```bash
+ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/01_dataex_create_services.yml
+```
+
 **Workflow 2: Create Data Exchange Customers**
 
 ```yaml
@@ -557,6 +563,8 @@ data_exchange_services:
   graphiant.graphiant_playbooks.graphiant_data_exchange:
     operation: create_customers
     config_file: "de_workflows_configs/sample_data_exchange_customers.yaml"
+    #config_file: "de_workflows_configs/sample_data_exchange_customers_scale.yaml" # Scale testing
+    #config_file: "de_workflows_configs/sample_data_exchange_customers_scale2.yaml" # Scale testing2
     host: "{{ graphiant_host }}"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
@@ -581,6 +589,11 @@ data_exchange_customers:
 
 **Note:** Configuration files support Jinja2 templates for scale testing. See `sample_data_exchange_customers_scale2.yaml` for examples.
 
+**Example Playbook:**
+```bash
+ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/02_dataex_create_customers.yml
+```
+
 **Workflow 3: Match Services to Customers**
 
 ```yaml
@@ -588,6 +601,8 @@ data_exchange_customers:
   graphiant.graphiant_playbooks.graphiant_data_exchange:
     operation: match_service_to_customers
     config_file: "de_workflows_configs/sample_data_exchange_matches.yaml"
+    #config_file: "de_workflows_configs/sample_data_exchange_matches_scale.yaml" # Scale testing
+    #config_file: "de_workflows_configs/sample_data_exchange_matches_scale2.yaml" # Scale testing2
     host: "{{ graphiant_host }}"
     username: "{{ graphiant_username }}"
     password: "{{ graphiant_password }}"
@@ -618,6 +633,13 @@ data_exchange_matches:
 
 The response file contains match details (`customer_id`, `service_id`, `match_id`, `status`) required for Workflow 4.
 
+**Note:** This matches_file logic will be deprecated as we have now API to retrieve match_id given service name and customer name. 
+
+**Example Playbook:**
+```bash
+ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/03_dataex_match_services_to_customers.yml
+```
+
 **Workflow 4: Accept Invitation (Non-Graphiant Customer)**
 
 ```yaml
@@ -626,6 +648,12 @@ The response file contains match details (`customer_id`, `service_id`, `match_id
     operation: accept_invitation
     config_file: "de_workflows_configs/sample_data_exchange_acceptance.yaml"
     matches_file: "de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json"
+    # Scale testing
+    #config_file: "de_workflows_configs/sample_data_exchange_acceptance_scale.yaml"
+    #matches_file: "de_workflows_configs/output/sample_data_exchange_matches_scale_responses_latest.json"
+    # Scale testing2
+    #config_file: "de_workflows_configs/sample_data_exchange_acceptance_scale2.yaml" 
+    #matches_file: "de_workflows_configs/output/sample_data_exchange_matches_scale2_responses_latest.json"
     dry_run: true
     host: "{{ graphiant_host }}"
     username: "{{ graphiant_username }}"
@@ -642,6 +670,12 @@ The response file contains match details (`customer_id`, `service_id`, `match_id
     operation: accept_invitation
     config_file: "de_workflows_configs/sample_data_exchange_acceptance.yaml"
     matches_file: "de_workflows_configs/output/sample_data_exchange_matches_responses_latest.json"
+    # Scale testing
+    #config_file: "de_workflows_configs/sample_data_exchange_acceptance_scale.yaml"
+    #matches_file: "de_workflows_configs/output/sample_data_exchange_matches_scale_responses_latest.json"
+    # Scale testing2
+    #config_file: "de_workflows_configs/sample_data_exchange_acceptance_scale2.yaml" 
+    #matches_file: "de_workflows_configs/output/sample_data_exchange_matches_scale2_responses_latest.json"
     dry_run: false
     host: "{{ graphiant_host }}"
     username: "{{ graphiant_username }}"
@@ -663,26 +697,89 @@ data_exchange_acceptances:
       - sites: ["site-sjc-sdktest"]
         siteLists: []
     nat:
-      - prefix: "10.1.1.0/24"
-        tag: "s-1-prefix1"
+      - prefix: "10.1.1.0/24"                    # Producer service prefix
+        tag: "s-1-prefix1"                       # Corresponding tag from service prefixes
+        # translatedPrefix: null                 # Optional: NAT producer prefix if needed to avoid overlap
+        # outsideNatPrefix: null                 # Optional: Outside NAT prefix
+
+    # Policy Configuration (by name)
     policy:
-      - lanSegment: "customer-1-segment"
-        consumerPrefixes:
-          - "10.101.0.0/24"
+      - lanSegment: "customer-1-segment"       # LAN segment name (will be resolved to ID)
+        consumerPrefixes:                      # Customer/Consumer's own prefixes that will be advertised
+          - "10.101.0.0/24"                    # Customer's own /24 network
+    # Site-to-Site VPN Configuration
     siteToSiteVpn:
+      # IPSec Gateway Details
       ipsecGatewayDetails:
-        name: "s2s-FinanceInc"
-        destinationAddress: "204.137.1.1"
-        ikeInitiator: false
-        tunnel1: {}
-        tunnel2: {}
+        name: "s2s-FinanceInc"                 # Gateway name
+        destinationAddress: "0.0.0.0"          # Customer's VPN Device (Peer IP)
+        mtu: null                              # Optional MTU setting
+        tcpMss: null                           # Optional TCP MSS setting
+        remoteIkePeerIdentity: null            # Optional remote IKE peer identity
+        ikeInitiator: false                    # IKE initiation mode (false = responder)
+        # Tunnel 1 Configuration
+        tunnel1:
+          localIkePeerIdentity: null            # Optional local IKE peer identity
+          insideIpv4Cidr: null                  # Optional Inside IPv4 subnet for tunnel 1 (will be auto filled by Graphiant portal APIs if null)
+          insideIpv6Cidr: null                  # Optional Inside IPv6 subnet for tunnel 1 (will be auto filled by Graphiant portal APIs if null)
+          psk: null                             # Optional Preshared key for tunnel 1 (will be auto filled by Graphiant portal APIs if null)
+        # Tunnel 2 Configuration
+        tunnel2:
+          localIkePeerIdentity: null            # Optional local IKE peer identity
+          insideIpv4Cidr: null                  # Optional Inside IPv4 subnet for tunnel 2 (will be auto filled by Graphiant portal APIs)
+          insideIpv6Cidr: null                  # Optional Inside IPv6 subnet for tunnel 2 (will be auto filled by Graphiant portal APIs)
+          psk: null                             # Optional Preshared key for tunnel 2 (will be auto filled by Graphiant portal APIs)
+        # BGP Routing Configuration
         routing:
           static:
             destinationPrefix:
-              - "10.101.0.0/24"
-        vpnProfile: "GlobalVpnProfile-joule-smoke"
-      region: "us-central-1 (Chicago)"
-      emails: ["finance@financeinc.com"]
+              - "10.101.0.0/24"                    # Customer's own /24 network
+          # bgp:
+          #   peerAsn: 65501
+          #   holdTimer: 180
+          #   keepaliveTimer: 60
+          #   md5Password: { "md5_password" : "bgppassword"}
+          #   sendCommunity: true
+          #   addressFamilies:
+          #     ipv4:
+          #       family:
+          #         addressFamily: "ipv4"
+          #         inboundPolicy:
+          #           policy: "test_bgp_inbound_filter"
+          #         outboundPolicy:
+          #           policy: "test_bgp_outbound_filter"
+          #     ipv6:
+          #       family:
+          #         addressFamily: "ipv6"
+          #         inboundPolicy: {}
+          #         outboundPolicy: {}
+
+        # VPN Profile Selection
+        vpnProfile: "vpnprofile-global-test"  # System VPN profile name
+
+      # Selected Region (by name)
+      region: "us-central-1 (Chicago)"       # Region name (will be resolved to regionId)
+
+      # Email notifications
+      emails: ["finance@financeinc.com"]       # Email addresses for notifications
+
+    # Global Object Operations (optional)
+    globalObjectOps: {}
+    # Routing Policy Table (optional)
+    routingPolicyTable: []
+
+```
+
+**Note:** While executing playbooks for this workflow, makesure correct credentials are updated to connect to proxy tenant.
+
+**Example Playbooks:**
+
+Run the Dry Run Playbook to catch any potential issue (e.g. config file syntax error, lan segment not found, gateway availability, VPN Profile existence check etc. )
+
+```bash
+ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/06_dataex_accept_invitation_dry_run.yml
+
+ansible-playbook ansible_collections/graphiant/graphiant_playbooks/playbooks/de_workflows/07_dataex_accept_invitation.yml
 ```
 
 **Prerequisites for Data Exchange Workflows:**
@@ -853,13 +950,6 @@ All Graphiant Ansible modules support detailed logging through the `detailed_log
 - **Operation Progress**: Real-time updates on what the library is doing
 - **Debugging Information**: Detailed error messages and troubleshooting data
 - **Success/Failure Details**: Specific information about what succeeded or failed
-
-### When to Use Detailed Logging
-
-- **Development and Testing**: When developing new playbooks or troubleshooting issues
-- **Debugging**: When operations fail and you need to understand why
-- **Monitoring**: When you want to see exactly what changes are being made
-- **Auditing**: When you need detailed records of what operations were performed
 
 ### Output Formatting
 

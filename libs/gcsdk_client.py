@@ -594,14 +594,13 @@ class GraphiantPortalClient():
             sites = response.sites
             LOG.info(f"get_site_id: Looking for site '{site_name}' in {len(sites)} sites using v1/sites/details")
 
-            # Log available sites for debugging
-            available_sites = [site.name for site in sites]
-            LOG.info(f"get_site_id: Available sites: {available_sites}")
-
             for site in sites:
                 if site.name == site_name:
                     LOG.info(f"get_site_id: Found site '{site_name}' with ID {site.id}")
                     return site.id
+
+            # Log available sites for debugging
+            available_sites = [site.name for site in sites]
             LOG.warning(f"get_site_id: Site '{site_name}' not found. Available sites: {available_sites}")
             return None
         except ApiException as e:
@@ -1295,7 +1294,7 @@ class GraphiantPortalClient():
             LOG.info("get_preshared_key: Getting preshared key")
             response = self.api.v1_presharedkey_get(authorization=self.bearer_token)
             psk = getattr(response, 'presharedkey', None)
-            LOG.info(f"get_preshared_key: Retrieved preshared key: {psk}")
+            LOG.info("get_preshared_key: Retrieved preshared key")
             return psk
         except ApiException as e:
             api_url = f"{self.api.api_client.configuration.host}/v1/presharedkey"
@@ -1432,19 +1431,57 @@ class GraphiantPortalClient():
                 LOG.warning("get_region_id_by_name: No regions available")
                 return None
 
-            # Log available regions for debugging
-            available_regions = [region.name for region in regions]
-            LOG.info(f"get_region_id_by_name: Looking for region '{region_name}' in {len(regions)} regions")
-            LOG.info(f"get_region_id_by_name: Available regions: {available_regions}")
-
             for region in regions:
                 if region.name == region_name:
                     LOG.info(f"get_region_id_by_name: Found region '{region_name}' with ID {region.id}")
                     return region.id
 
+            # Log available regions for debugging
+            available_regions = [region.name for region in regions]
             LOG.warning(f"get_region_id_by_name: Region '{region_name}' not found. "
                         f"Available regions: {available_regions}")
             return None
         except Exception as e:
             LOG.error(f"get_region_id_by_name: Failed to get region ID for '{region_name}': {e}")
             return None
+
+    def get_global_ipsec_profiles(self):
+        """
+        Get all global IPsec (VPN) profiles from the portal.
+
+        Returns:
+            dict: Dictionary mapping VPN profile names to their configurations, or empty dict if failed
+        """
+        try:
+            LOG.info("get_global_ipsec_profiles: Retrieving all global IPsec profiles")
+            response = self.api.v1_global_ipsec_profile_get(authorization=self.bearer_token)
+            profiles = {}
+            ipsec_profiles = None
+            if hasattr(response, 'ipsec_profiles'):
+                ipsec_profiles = response.ipsec_profiles
+
+            if ipsec_profiles:
+                for profile_entry in ipsec_profiles:
+                    profile_name = None
+                    if hasattr(profile_entry, 'ipsec_profile_name'):
+                        profile_name = profile_entry.ipsec_profile_name
+                    if profile_name:
+                        profiles[profile_name] = profile_entry
+                        LOG.debug(f"get_global_ipsec_profiles: Found VPN profile '{profile_name}'")
+
+                LOG.info(f"get_global_ipsec_profiles: Successfully retrieved {len(profiles)} VPN profiles")
+                return profiles
+            else:
+                LOG.info("get_global_ipsec_profiles: No VPN profiles found in response")
+                return {}
+        except ApiException as e:
+            api_url = f"{self.api.api_client.configuration.host}/v1/global/ipsec-profile"
+            self._log_api_error(
+                method_name="get_global_ipsec_profiles",
+                api_url=api_url,
+                exception=e
+            )
+            return {}
+        except Exception as e:
+            LOG.error(f"get_global_ipsec_profiles: Unexpected error: {e}")
+            return {}

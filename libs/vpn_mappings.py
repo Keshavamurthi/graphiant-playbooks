@@ -9,8 +9,8 @@ and the full format names expected by the Graphiant system.
 IPSEC_ENCRYPTION_MAPPINGS = {
     'AES 256 CBC': 'aes256',
     'AES 128 CBC': 'aes128',
-    'AES 256 GCM': 'aes256gcm',
-    'AES 128 GCM': 'aes128gcm',
+    'AES 256 GCM': 'aes256gcm128',
+    'AES 128 GCM': 'aes128gcm128',
     'None': 'encryption_none'
 }
 
