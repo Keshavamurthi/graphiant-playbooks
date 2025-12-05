@@ -77,6 +77,36 @@ variable "existing_route_table_name" {
   default     = null
 }
 
+variable "deploy_vm" {
+  type        = bool
+  default     = true
+  description = "Set to true to deploy the VM, false to skip."
+}
+
+variable "ami" {
+  type    = string
+  default = "ami-0f9fc25dd2506cf6d" # Amazon Linux 2023, us-east-1
+}
+
+variable "instance_type" {
+  type    = string
+  default = "t3.micro"
+}
+
+variable "key_name" {
+  type = string
+}
+
+variable "ssh_allowed_cidr" {
+  type    = string
+  default = "your-management-ip/32" # Replace with your management IP or VPN CIDR
+}
+
+variable "deploy_connect_endpoint" {
+  type    = bool
+  default = true
+}
+
 variable "tgw_description" {
   description = "Description for transit gateway"
   type        = string

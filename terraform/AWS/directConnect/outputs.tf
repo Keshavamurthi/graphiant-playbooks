@@ -118,3 +118,14 @@ output "amazon_router_peer_ip" {
   value       = var.skip_manual_steps ? aws_dx_transit_virtual_interface.transit_vif[0].amazon_address : "Run Step 2 with skip_manual_steps = true"
 }
 
+# --------------------------------
+#    VM Instance
+# --------------------------------
+
+output "VM-instance_id" {
+  value = var.deploy_vm ? aws_instance.vm[0].id : null
+}
+
+output "VM-private_ip" {
+  value = var.deploy_vm ? aws_instance.vm[0].private_ip : null
+}

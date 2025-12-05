@@ -98,6 +98,83 @@ resource "aws_route_table_association" "private_subnet_assoc" {
   route_table_id = local.private_route_table_id
 }
 
+# Create a VM and Security group within VPC
+resource "aws_security_group" "vm_sg" {
+  count = var.deploy_vm ? 1 : 0
+
+  name        = "${var.project_name}-sg"
+  description = "Security group for EC2 instance"
+  vpc_id      = local.vpc_id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.ssh_allowed_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "vm" {
+  count = var.deploy_vm ? 1 : 0
+
+  ami                         = var.ami
+  instance_type               = var.instance_type
+  subnet_id                   = local.subnet_ids[0]
+  vpc_security_group_ids      = [aws_security_group.vm_sg[0].id]
+  key_name                    = var.key_name
+  associate_public_ip_address = false # Private subnet
+
+  tags = {
+    Name = "${var.project_name}-vm"
+  }
+}
+
+# EC2 Instance Connect Endpoint
+resource "aws_security_group" "connect_endpoint_sg" {
+  count       = var.deploy_connect_endpoint ? 1 : 0
+  name        = "${var.project_name}-connect-endpoint-sg"
+  description = "SG for EC2 Instance Connect Endpoint"
+  vpc_id      = local.vpc_id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.ssh_allowed_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.project_name}-connect-endpoint-sg"
+    Environment = var.environment
+  }
+}
+
+resource "aws_ec2_instance_connect_endpoint" "connect_endpoint" {
+  count              = var.deploy_connect_endpoint ? 1 : 0
+  subnet_id          = local.subnet_ids[0]
+  security_group_ids = [aws_security_group.connect_endpoint_sg[0].id]
+
+  tags = {
+    Name        = "${var.project_name}-connect-endpoint"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
 # Create a Transit Gateway
 resource "aws_ec2_transit_gateway" "tgw" {
   description = var.tgw_description
@@ -213,11 +290,11 @@ resource "aws_dx_transit_virtual_interface" "transit_vif" {
   connection_id = var.dx_connection_id
   dx_gateway_id = aws_dx_gateway.dxgw.id
 
-  name          = var.dx_vif_name
+  name           = var.dx_vif_name
   address_family = "ipv4"
-  vlan          = var.dx_connection_vlan
-  bgp_asn       = var.customer_bgp_asn
-  mtu           = var.transit_vif_mtu
+  vlan           = var.dx_connection_vlan
+  bgp_asn        = var.customer_bgp_asn
+  mtu            = var.transit_vif_mtu
 
   tags = {
     Name        = var.dx_vif_name

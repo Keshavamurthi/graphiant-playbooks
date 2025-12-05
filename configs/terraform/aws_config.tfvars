@@ -54,6 +54,15 @@ use_existing_route_table   = false
 # use_existing_route_table = true
 #  existing_route_table_name = "direct-connect_dry_run-private-rt"
 
+# --------------------------------
+#    VM Instance
+# --------------------------------
+deploy_vm       = true
+ami             = "ami-0f9fc25dd2506cf6d"   # Amazon Linux 2023 (us-east-1)
+instance_type   = "t3.micro"
+key_name        = "nermin-key"
+ssh_allowed_cidr = "0.0.0.0/0"
+
 # -----------------------
 #    Transit Gateway
 # -----------------------
