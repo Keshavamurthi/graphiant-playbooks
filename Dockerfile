@@ -34,7 +34,6 @@ ENV GRAPHIANT_PLAYBOOKS_VERSION=$COMMIT_SHA
 
 # Copy additional project files
 COPY README.md LICENSE ./
-COPY scripts ./scripts/
 COPY terraform ./terraform/
 COPY pipelines ./pipelines/
 
