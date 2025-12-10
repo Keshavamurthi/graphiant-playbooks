@@ -1,31 +1,41 @@
 # Stage 1: Build stage
-FROM python:3.11.5 AS builder
-WORKDIR /home/graphiant-playbooks
-## Copy files
-COPY configs /home/graphiant-playbooks/configs
-COPY libs /home/graphiant-playbooks/libs
-COPY scripts /home/graphiant-playbooks/scripts
-COPY templates /home/graphiant-playbooks/templates
-COPY test /home/graphiant-playbooks/test
-COPY README.md /home/graphiant-playbooks/README.md
-COPY LICENSE /home/graphiant-playbooks/LICENSE
-## Install dependencies
+FROM python:3.12-slim AS builder
+WORKDIR /app
+
+# Copy collection and install dependencies
+COPY ansible_collections /app/ansible_collections
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-COPY requirements.txt /home/graphiant-playbooks/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r /app/ansible_collections/graphiant/graphiant_playbooks/requirements.txt
+
+# Install the Ansible collection
+RUN ansible-galaxy collection install /app/ansible_collections/graphiant/graphiant_playbooks/ --force
 
 # Stage 2: Final stage
-FROM python:3.11.5-slim
+FROM python:3.12-slim
 ARG COMMIT_SHA=dev
-WORKDIR /home/graphiant-playbooks
-COPY --from=builder /home/graphiant-playbooks /home/graphiant-playbooks
+WORKDIR /app
+
+# Copy virtual environment and collection
 COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /root/.ansible/collections /root/.ansible/collections
+COPY --from=builder /app/ansible_collections /app/ansible_collections
+
+# Install system tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     vim \
     git \
     sshpass \
     && rm -rf /var/lib/apt/lists/*
+
+# Set environment
 ENV PATH="/opt/venv/bin:$PATH"
 ENV GRAPHIANT_PLAYBOOKS_VERSION=$COMMIT_SHA
+
+# Copy additional project files
+COPY README.md LICENSE ./
+COPY scripts ./scripts/
+COPY terraform ./terraform/
+COPY pipelines ./pipelines/
+
 CMD ["/bin/bash"]

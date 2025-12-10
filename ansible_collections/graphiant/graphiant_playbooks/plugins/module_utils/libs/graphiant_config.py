@@ -4,14 +4,14 @@ Graphiant network configurations using composition and proper separation of conc
 """
 
 from typing import Optional, Dict
-from libs.config_utils import ConfigUtils
-from libs.interface_manager import InterfaceManager
-from libs.bgp_manager import BGPManager
-from libs.global_config_manager import GlobalConfigManager
-from libs.site_manager import SiteManager
-from libs.data_exchange_manager import DataExchangeManager
-from libs.logger import setup_logger
-from libs.exceptions import GraphiantPlaybookError
+from .config_utils import ConfigUtils
+from .interface_manager import InterfaceManager
+from .bgp_manager import BGPManager
+from .global_config_manager import GlobalConfigManager
+from .site_manager import SiteManager
+from .data_exchange_manager import DataExchangeManager
+from .logger import setup_logger
+from .exceptions import GraphiantPlaybookError
 
 LOG = setup_logger()
 

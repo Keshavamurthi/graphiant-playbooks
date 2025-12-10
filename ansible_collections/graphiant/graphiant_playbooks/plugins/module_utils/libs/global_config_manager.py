@@ -5,9 +5,9 @@ This module handles global configuration management including
 prefix sets, routing policies, SNMP, syslog, IPFIX, and VPN profiles.
 """
 
-from libs.base_manager import BaseManager
-from libs.logger import setup_logger
-from libs.exceptions import ConfigurationError
+from .base_manager import BaseManager
+from .logger import setup_logger
+from .exceptions import ConfigurationError
 
 LOG = setup_logger()
 

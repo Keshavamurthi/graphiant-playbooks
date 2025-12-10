@@ -5,9 +5,9 @@ This module handles interface and circuit configuration management,
 including both regular interfaces and sub-interfaces.
 """
 
-from libs.base_manager import BaseManager
-from libs.logger import setup_logger
-from libs.exceptions import ConfigurationError, DeviceNotFoundError
+from .base_manager import BaseManager
+from .logger import setup_logger
+from .exceptions import ConfigurationError, DeviceNotFoundError
 
 LOG = setup_logger()
 

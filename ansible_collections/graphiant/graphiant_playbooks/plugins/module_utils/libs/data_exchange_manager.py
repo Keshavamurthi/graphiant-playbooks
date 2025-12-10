@@ -9,9 +9,9 @@ This module provides functionality for managing Data Exchange workflows includin
 
 import os
 from typing import Dict, Any, Optional
-from libs.base_manager import BaseManager
-from libs.logger import setup_logger
-from libs.exceptions import ConfigurationError
+from .base_manager import BaseManager
+from .logger import setup_logger
+from .exceptions import ConfigurationError
 
 from tabulate import tabulate
 

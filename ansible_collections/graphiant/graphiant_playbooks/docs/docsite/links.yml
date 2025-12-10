@@ -4,7 +4,7 @@
 
 # Edit on GitHub links - allows users to create PRs directly from the documentation
 edit_on_github:
-  repository: graphiant/graphiant-playbooks
+  repository: Graphiant-Inc/graphiant-playbooks
   branch: main
   # Collection root is in ansible_collections/graphiant/graphiant_playbooks
   path_prefix: 'ansible_collections/graphiant/graphiant_playbooks'
@@ -12,9 +12,9 @@ edit_on_github:
 # Extra links that appear on the collection page
 extra_links:
   - description: Report an issue
-    url: https://github.com/graphiant/graphiant-playbooks/issues/new/choose
+    url: https://github.com/Graphiant-Inc/graphiant-playbooks/issues/new/choose
   - description: View source code
-    url: https://github.com/graphiant/graphiant-playbooks
+    url: https://github.com/Graphiant-Inc/graphiant-playbooks
 
 # Communication channels for the collection
 # Specify where users can get help and discuss the collection

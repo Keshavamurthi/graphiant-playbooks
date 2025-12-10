@@ -23,8 +23,9 @@ terraform/
 │   ├── outputs.tf                # Output values
 │   └── README.md                 # Azure-specific documentation
 
-configs/terraform/
+terraform/configs/
 ├── azure_config.tfvars           # Azure variable configuration
+├── aws_config.tfvars             # AWS variable configuration
 ```
 
 ## 🔧 Prerequisites
@@ -204,10 +205,10 @@ az account set --subscription "your-subscription-id"
 #### 2. Configure Variables
 ```bash
 # Edit the configuration file
-nano configs/terraform/azure_config.tfvars
+nano terraform/configs/azure_config.tfvars
 
 # Or copy and modify if needed
-cp configs/terraform/azure_config.tfvars configs/terraform/my-azure-config.tfvars
+cp terraform/configs/azure_config.tfvars terraform/configs/my-azure-config.tfvars
 ```
 
 #### 3. Deploy Infrastructure
@@ -221,7 +222,7 @@ terraform init
 terraform validate
 
 # Create and review plan
-terraform plan -var-file="../../configs/terraform/azure_config.tfvars" -out=tfplan
+terraform plan -var-file="../../terraform/configs/azure_config.tfvars" -out=tfplan
 
 # Apply the configuration
 terraform apply tfplan
@@ -270,7 +271,7 @@ terraform init
 terraform validate
 
 # Plan
-terraform plan -var-file="../../configs/terraform/azure_config.tfvars" -out=tfplan
+terraform plan -var-file="../../terraform/configs/azure_config.tfvars" -out=tfplan
 
 # Apply
 terraform apply tfplan
@@ -279,13 +280,13 @@ terraform apply tfplan
 terraform output
 
 # Destroy (cleanup)
-terraform destroy -var-file="../../configs/terraform/azure_config.tfvars"
+terraform destroy -var-file="../../terraform/configs/azure_config.tfvars"
 ```
 
 ## Key Configuration Variables
 
 ### Azure ExpressRoute
-Update these in `configs/terraform/azure_config.tfvars`:
+Update these in `terraform/configs/azure_config.tfvars`:
 
 - **`project_name`** - Your project name for resource naming
 - **`azure_region`** - Azure region for deployment
@@ -365,7 +366,7 @@ aws ec2 describe-regions --query 'Regions[].RegionName'
 To destroy all Azure Terraform-managed resources:
 ```bash
 cd terraform/azure-expressroute
-terraform destroy -var-file="../../configs/terraform/azure_config.tfvars"
+terraform destroy -var-file="../../terraform/configs/azure_config.tfvars"
 ```
 
 **⚠️ Warning**: These commands will permanently delete all created resources!

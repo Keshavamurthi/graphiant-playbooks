@@ -23,7 +23,7 @@ This configuration requires a **two-step deployment process** due to AWS Direct 
 
 This step creates all infrastructure that doesn't require the Direct Connect connection to be accepted.
 
-1. **Configure variables** in `configs/terraform/aws_config.tfvars`:
+1. **Configure variables** in `terraform/configs/aws_config.tfvars`:
    ```hcl
    skip_manual_steps = false
    ```
@@ -36,12 +36,12 @@ This step creates all infrastructure that doesn't require the Direct Connect con
 
 3. **Review the plan**:
    ```bash
-   terraform plan -var-file="../../../configs/terraform/aws_config.tfvars"
+   terraform plan -var-file="../../../terraform/configs/aws_config.tfvars"
    ```
 
 4. **Apply Step 1**:
    ```bash
-   terraform apply -var-file="../../../configs/terraform/aws_config.tfvars"
+   terraform apply -var-file="../../../terraform/configs/aws_config.tfvars"
    ```
 
    **This creates:**
@@ -86,19 +86,19 @@ This step creates all infrastructure that doesn't require the Direct Connect con
 
 This step creates resources that require the Direct Connect connection to be accepted.
 
-1. **Update configuration** in `configs/terraform/aws_config.tfvars`:
+1. **Update configuration** in `terraform/configs/aws_config.tfvars`:
    ```hcl
    skip_manual_steps = true  # ⚠️ Change to true after accepting connection
    ```
 
 2. **Review the plan**:
    ```bash
-   terraform plan -var-file="../../../configs/terraform/aws_config.tfvars"
+   terraform plan -var-file="../../../terraform/configs/aws_config.tfvars"
    ```
 
 3. **Apply Step 2**:
    ```bash
-   terraform apply -var-file="../../../configs/terraform/aws_config.tfvars"
+   terraform apply -var-file="../../../terraform/configs/aws_config.tfvars"
    ```
 
    **This creates:**
@@ -200,13 +200,13 @@ To destroy all resources:
 1. **Destroy Step 2 resources first**:
    ```bash
    # Set skip_manual_steps = true
-   terraform destroy -var-file="../../../configs/terraform/aws_config.tfvars"
+   terraform destroy -var-file="../../../terraform/configs/aws_config.tfvars"
    ```
 
 2. **Then destroy Step 1 resources**:
    ```bash
    # Set skip_manual_steps = false
-   terraform destroy -var-file="../../../configs/terraform/aws_config.tfvars"
+   terraform destroy -var-file="../../../terraform/configs/aws_config.tfvars"
    ```
 
 ---

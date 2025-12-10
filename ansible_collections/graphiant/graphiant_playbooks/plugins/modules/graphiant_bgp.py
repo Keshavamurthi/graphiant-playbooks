@@ -13,8 +13,7 @@ This module provides BGP management capabilities including:
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.graphiant.graphiant_playbooks.plugins.module_utils.graphiant_utils import (
     get_graphiant_connection,
-    handle_graphiant_exception,
-    validate_config_file
+    handle_graphiant_exception
 )
 from ansible_collections.graphiant.graphiant_playbooks.plugins.module_utils.logging_decorator import (
     capture_library_logs
@@ -267,12 +266,6 @@ def main():
 
     # If operation is specified, it takes precedence over state
     # No additional mapping needed as operation is explicit
-
-    # Validate configuration file
-    if not validate_config_file(bgp_config_file):
-        module.fail_json(
-            msg=f"BGP configuration file not found or not readable: {bgp_config_file}"
-        )
 
     # Handle check mode
     if module.check_mode:

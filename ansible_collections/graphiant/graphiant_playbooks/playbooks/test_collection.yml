@@ -6,7 +6,7 @@
     graphiant_host: "https://api.graphiant.com"
     graphiant_username: "{{ vault_graphiant_username }}"
     graphiant_password: "{{ vault_graphiant_password }}"
-  
+
   tasks:
     - name: Test global prefix sets configuration (check mode)
       graphiant.graphiant_playbooks.graphiant_global_config:
@@ -18,7 +18,7 @@
         state: present
       check_mode: true
       tags: ['test', 'global_config']
-    
+
     - name: Test BGP peering configuration (check mode)
       graphiant.graphiant_playbooks.graphiant_bgp:
         host: "{{ graphiant_host }}"
@@ -29,7 +29,7 @@
         state: present
       check_mode: true
       tags: ['test', 'bgp']
-    
+
     - name: Test interface configuration (check mode)
       graphiant.graphiant_playbooks.graphiant_interfaces:
         host: "{{ graphiant_host }}"
@@ -41,16 +41,14 @@
         state: present
       check_mode: true
       tags: ['test', 'interfaces']
-    
+
     - name: Test site attachments (check mode)
       graphiant.graphiant_playbooks.graphiant_sites:
         host: "{{ graphiant_host }}"
         username: "{{ graphiant_username }}"
         password: "{{ graphiant_password }}"
         site_config_file: "sample_site_attachments.yaml"
-        operation: "attach"
+        operation: "attach_objects"
         state: present
       check_mode: true
       tags: ['test', 'sites']
-
-

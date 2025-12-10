@@ -14,8 +14,7 @@ This module provides comprehensive interface management capabilities including:
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.graphiant.graphiant_playbooks.plugins.module_utils.graphiant_utils import (
     get_graphiant_connection,
-    handle_graphiant_exception,
-    validate_config_file
+    handle_graphiant_exception
 )
 from ansible_collections.graphiant.graphiant_playbooks.plugins.module_utils.logging_decorator import (
     capture_library_logs
@@ -355,17 +354,6 @@ def main():
 
     # If operation is specified, it takes precedence over state
     # No additional mapping needed as operation is explicit
-
-    # Validate configuration files
-    if not validate_config_file(interface_config_file):
-        module.fail_json(
-            msg=f"Interface configuration file not found or not readable: {interface_config_file}"
-        )
-
-    if circuit_config_file and not validate_config_file(circuit_config_file):
-        module.fail_json(
-            msg=f"Circuit configuration file not found or not readable: {circuit_config_file}"
-        )
 
     # Validate operation-specific requirements
     circuit_operations = [

@@ -3,10 +3,10 @@ This module provides standardized utility methods for building configuration pay
 using Jinja2 templates. All methods follow consistent patterns for better maintainability.
 """
 
-from libs.portal_utils import PortalUtils
-from libs.config_templates import ConfigTemplates
-from libs.logger import setup_logger
-from libs.exceptions import ConfigurationError
+from .portal_utils import PortalUtils
+from .config_templates import ConfigTemplates
+from .logger import setup_logger
+from .exceptions import ConfigurationError
 
 LOG = setup_logger()
 
@@ -22,7 +22,7 @@ class ConfigUtils(PortalUtils):
     def __init__(self, base_url=None, username=None, password=None, **kwargs):
         """Initialize ConfigUtils with portal connection and template renderer."""
         super().__init__(base_url=base_url, username=username, password=password, **kwargs)
-        self.template = ConfigTemplates(self.templates)
+        self.template = ConfigTemplates(self.template_path)
 
     def _validate_required_params(self, kwargs, required_params):
         """
