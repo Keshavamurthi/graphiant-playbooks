@@ -1,79 +1,64 @@
 # Docker Support
 
-Graphiant Playbooks includes Docker support for consistent development and deployment environments.
+Run Graphiant Playbooks in a containerized environment.
 
-## Building the Docker Image
+## Building
 
 ```bash
-# Build the Docker image
+# Build the image
 docker build -t graphiant-playbooks .
 
-# Build with specific commit SHA
+# Build with version tag
 docker build --build-arg COMMIT_SHA=$(git rev-parse HEAD) -t graphiant-playbooks .
 ```
 
-## Running with Docker
+## Running
 
 ```bash
-# Run interactive container
+# Interactive shell
 docker run -it graphiant-playbooks
 
-# Run with volume mount for development
-docker run -it -v $(pwd):/home/graphiant-playbooks graphiant-playbooks
-
-# Run with environment variables
-docker run -it -e GRAPHIANT_API_URL=https://api.graphiant.com graphiant-playbooks
-```
-
-## Docker Features
-
-- **Multi-stage build** for optimized image size
-- **Python 3.11.5** runtime environment
-- **Pre-installed dependencies** from requirements.txt
-- **Development tools** (vim, git, sshpass)
-- **Version tracking** via COMMIT_SHA build arg
-
-## Development with Docker
-
-### Interactive Development
-```bash
-# Run with volume mount for live development
-docker run -it -v $(pwd):/home/graphiant-playbooks graphiant-playbooks
-
-# Inside the container, you can:
-# - Edit files with vim
-# - Run tests
-# - Install additional packages
-```
-
-### Environment Variables
-```bash
-# Set Graphiant API URL
-docker run -it -e GRAPHIANT_API_URL=https://api.graphiant.com graphiant-playbooks
-
-# Set multiple environment variables
+# With environment variables
 docker run -it \
-  -e GRAPHIANT_API_URL=https://api.graphiant.com \
-  -e GRAPHIANT_USERNAME=your_username \
-  -e GRAPHIANT_PASSWORD=your_password \
+  -e GRAPHIANT_HOST=https://api.graphiant.com \
+  -e GRAPHIANT_USERNAME=user \
+  -e GRAPHIANT_PASSWORD=pass \
+  graphiant-playbooks
+
+# With custom configs directory (override collection's built-in configs)
+docker run -it \
+  -e GRAPHIANT_CONFIGS_PATH=/app/my-configs \
+  -v $(pwd)/my-configs:/app/my-configs \
+  graphiant-playbooks
+
+# With custom templates directory
+docker run -it \
+  -e GRAPHIANT_TEMPLATES_PATH=/app/my-templates \
+  -v $(pwd)/my-templates:/app/my-templates \
   graphiant-playbooks
 ```
 
-### Volume Mounts
-```bash
-# Mount current directory for development
-docker run -it -v $(pwd):/home/graphiant-playbooks graphiant-playbooks
+## Running Playbooks
 
-# Mount specific directories
+```bash
+# Test the collection installation
 docker run -it \
-  -v $(pwd)/configs:/home/graphiant-playbooks/configs \
-  -v $(pwd)/logs:/home/graphiant-playbooks/logs \
-  graphiant-playbooks
+  -e GRAPHIANT_HOST=https://api.graphiant.com \
+  -e GRAPHIANT_USERNAME=user \
+  -e GRAPHIANT_PASSWORD=pass \
+  graphiant-playbooks \
+  ansible-playbook /root/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks/playbooks/hello_test.yml
+
+# Run any playbook from the installed collection
+docker run -it \
+  -e GRAPHIANT_HOST=https://api.graphiant.com \
+  -e GRAPHIANT_USERNAME=user \
+  -e GRAPHIANT_PASSWORD=pass \
+  graphiant-playbooks \
+  ansible-playbook /root/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks/playbooks/complete_network_setup.yml
 ```
 
-## Docker Compose (Optional)
-
-Create a `docker-compose.yml` for easier management:
+## Docker Compose
 
 ```yaml
 version: '3.8'
@@ -81,49 +66,42 @@ services:
   graphiant-playbooks:
     build: .
     container_name: graphiant-playbooks
-    volumes:
-      - .:/home/graphiant-playbooks
     environment:
-      - GRAPHIANT_API_URL=https://api.graphiant.com
+      - GRAPHIANT_HOST=https://api.graphiant.com
+      - GRAPHIANT_USERNAME=${GRAPHIANT_USERNAME}
+      - GRAPHIANT_PASSWORD=${GRAPHIANT_PASSWORD}
     stdin_open: true
     tty: true
 ```
 
-Then run:
 ```bash
 docker-compose up -d
 docker-compose exec graphiant-playbooks bash
 ```
 
+## Container Contents
+
+- **Python 3.12** runtime
+- **Ansible collection** installed at `/root/.ansible/collections/`
+- **Source collection** at `/app/ansible_collections/`
+- **Tools**: vim, git, sshpass
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `GRAPHIANT_HOST` | Graphiant API host URL |
+| `GRAPHIANT_USERNAME` | API username |
+| `GRAPHIANT_PASSWORD` | API password |
+| `GRAPHIANT_CONFIGS_PATH` | Custom configs directory path (optional) |
+| `GRAPHIANT_TEMPLATES_PATH` | Custom templates directory path (optional) |
+
 ## Troubleshooting
 
-### Common Issues
-
-1. **Permission Issues**: Ensure Docker has access to mounted volumes
-2. **Build Failures**: Check Dockerfile syntax and dependencies
-3. **Network Issues**: Verify internet connectivity for package downloads
-
-### Useful Commands
-
 ```bash
-# Check Docker version
-docker --version
-
-# List running containers
-docker ps
-
-# View container logs
+# Check container logs
 docker logs graphiant-playbooks
 
-# Remove unused images
-docker image prune
-
-# Remove all unused resources
-docker system prune
+# Verify collection
+docker run -it graphiant-playbooks ansible-galaxy collection list graphiant.graphiant_playbooks
 ```
-
-## Additional Resources
-
-- [Docker Documentation](https://docs.docker.com/)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Graphiant Playbooks Main Documentation](README.md)

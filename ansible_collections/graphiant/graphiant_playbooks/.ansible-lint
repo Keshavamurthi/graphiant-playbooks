@@ -1,0 +1,25 @@
+---
+# Ansible Lint Configuration for Graphiant Playbooks Collection
+# https://ansible-lint.readthedocs.io/
+
+# Exclude paths from linting
+exclude_paths:
+  - test/
+  - tests/
+  - .github/
+  - build/
+  - docs/
+  - __pycache__/
+  - .pytest_cache/
+
+# Skip specific rules (if needed)
+skip_list:
+  - yaml[line-length]  # Allow longer lines for documentation
+  - name[casing]       # Allow flexible naming conventions
+
+# Use default rules
+use_default_rules: true
+
+# Verbosity level
+verbosity: 1
+

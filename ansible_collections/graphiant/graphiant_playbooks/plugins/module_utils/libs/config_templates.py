@@ -6,8 +6,8 @@ with proper error handling, type hints, and reduced code duplication.
 import yaml
 from typing import Dict, Any
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound, TemplateSyntaxError
-from libs.logger import setup_logger
-from libs.exceptions import TemplateError, ConfigurationError
+from .logger import setup_logger
+from .exceptions import TemplateError, ConfigurationError
 
 LOG = setup_logger()
 

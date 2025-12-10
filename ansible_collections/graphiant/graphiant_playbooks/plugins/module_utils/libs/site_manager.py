@@ -6,9 +6,9 @@ attachment and detachment of global system objects to/from sites.
 """
 
 from typing import Dict, Any, Union
-from libs.base_manager import BaseManager
-from libs.logger import setup_logger
-from libs.exceptions import ConfigurationError, SiteNotFoundError, ValidationError
+from .base_manager import BaseManager
+from .logger import setup_logger
+from .exceptions import ConfigurationError, SiteNotFoundError, ValidationError
 
 LOG = setup_logger()
 

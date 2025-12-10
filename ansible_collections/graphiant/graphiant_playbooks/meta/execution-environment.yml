@@ -1,0 +1,16 @@
+---
+# Execution Environment definition for Ansible Automation Platform
+# This file enables the collection to be used in containerized execution environments
+version: 1
+
+dependencies:
+  # Galaxy collections (if any dependencies)
+  galaxy:
+    collections: []
+  
+  # Python dependencies from requirements.txt
+  python: requirements.txt
+  
+  # System packages (none required for this collection)
+  system: []
+

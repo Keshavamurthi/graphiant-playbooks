@@ -3,19 +3,19 @@
   hosts: localhost
   gather_facts: false
   vars:
-    #graphiant_host: "https://api.graphiant.com"
-    #graphiant_username: "{{ vault_graphiant_username }}"
-    #graphiant_password: "{{ vault_graphiant_password }}"
-    
+    # graphiant_host: "https://api.graphiant.com"
+    # graphiant_username: "{{ vault_graphiant_username }}"
+    # graphiant_password: "{{ vault_graphiant_password }}"
+
     # Use YAML anchors to avoid repetition
     graphiant_client_params: &graphiant_client_params
       host: "{{ graphiant_host | default(lookup('env', 'GRAPHIANT_HOST')) }}"
       username: "{{ graphiant_username | default(lookup('env', 'GRAPHIANT_USERNAME')) }}"
       password: "{{ graphiant_password | default(lookup('env', 'GRAPHIANT_PASSWORD')) }}"
-      #host: "{{ graphiant_host | default(lookup('ini', 'url file=/absolute/path/test/test.ini section=host')) }}"
-      #username: "{{ graphiant_username | default(lookup('ini', 'username file=/absolute/path/test/test.ini section=credentials')) }}"
-      #password: "{{ graphiant_password | default(lookup('ini', 'password file=/absolute/path/test/test.ini section=credentials')) }}"
-  
+      # host: "{{ graphiant_host | default(lookup('ini', 'url file=/absolute/path/test/test.ini section=host')) }}"
+      # username: "{{ graphiant_username | default(lookup('ini', 'username file=/absolute/path/test/test.ini section=credentials')) }}"
+      # password: "{{ graphiant_password | default(lookup('ini', 'password file=/absolute/path/test/test.ini section=credentials')) }}"
+
   tasks:
     - name: Configure global prefix sets
       graphiant.graphiant_playbooks.graphiant_global_config:
@@ -24,7 +24,7 @@
         operation: "configure"
         state: present
       tags: ['global_config', 'prefix_sets']
-  
+
     - name: Configure global BGP filters
       graphiant.graphiant_playbooks.graphiant_global_config:
         <<: *graphiant_client_params
@@ -32,7 +32,7 @@
         operation: "configure"
         state: present
       tags: ['global_config', 'bgp_filters']
-    
+
     - name: Configure global SNMP services
       graphiant.graphiant_playbooks.graphiant_global_config:
         <<: *graphiant_client_params
@@ -40,7 +40,7 @@
         operation: "configure"
         state: present
       tags: ['global_config', 'snmp']
-    
+
     - name: Configure global syslog services
       graphiant.graphiant_playbooks.graphiant_global_config:
         <<: *graphiant_client_params
@@ -48,7 +48,7 @@
         operation: "configure"
         state: present
       tags: ['global_config', 'syslog']
-    
+
     - name: Configure global IPFIX services
       graphiant.graphiant_playbooks.graphiant_global_config:
         <<: *graphiant_client_params
@@ -56,7 +56,7 @@
         operation: "configure"
         state: present
       tags: ['global_config', 'ipfix']
-    
+
     - name: Configure global VPN profiles
       graphiant.graphiant_playbooks.graphiant_global_config:
         <<: *graphiant_client_params
@@ -64,7 +64,7 @@
         operation: "configure"
         state: present
       tags: ['global_config', 'vpn']
-    
+
     # - name: Configure interfaces and circuits
     #   graphiant.graphiant_playbooks.graphiant_interfaces:
     #     <<: *graphiant_client_params
@@ -73,14 +73,14 @@
     #     operation: "configure_interfaces"
     #     state: present
     #   tags: ['interfaces', 'circuits']
-    
-    #- name: Attach global objects to sites
-    #  graphiant.graphiant_playbooks.graphiant_sites:
-    #    <<: *graphiant_client_params
-    #    site_config_file: "sample_site_attachments.yaml"
-    #    operation: "attach"
-    #    state: present
-    #  tags: ['sites', 'attachments']
+
+    # - name: Attach global objects to sites
+    #   graphiant.graphiant_playbooks.graphiant_sites:
+    #     <<: *graphiant_client_params
+    #     site_config_file: "sample_site_attachments.yaml"
+    #     operation: "attach"
+    #     state: present
+    #   tags: ['sites', 'attachments']
 
     # - name: Configure BGP peering
     #   graphiant.graphiant_playbooks.graphiant_bgp:
@@ -89,4 +89,3 @@
     #     operation: "configure"
     #     state: present
     #   tags: ['bgp', 'peering']
-    

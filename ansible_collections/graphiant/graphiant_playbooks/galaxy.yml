@@ -1,16 +1,16 @@
 ---
 namespace: graphiant
 name: graphiant_playbooks
-version: 1.0.0
+version: 25.11.1
 readme: README.md
 authors:
   - Graphiant Team <support@graphiant.com>
 description: Ansible collection for Graphiant NaaS network automation
 license_file: LICENSE
 homepage: https://www.graphiant.com
-repository: https://github.com/graphiant/graphiant-playbooks
+repository: https://github.com/Graphiant-Inc/graphiant-playbooks
 documentation: https://docs.graphiant.com/docs/graphiant-playbooks
-issues: https://github.com/graphiant/graphiant-playbooks/issues
+issues: https://github.com/Graphiant-Inc/graphiant-playbooks/issues
 tags:
   - networking
   - naas
@@ -20,7 +20,7 @@ tags:
   - circuits
   - bgp
   - routing
-dependencies: {}
-collections: []
+dependencies:
+  ansible.posix: ">=1.5.0"
 
 

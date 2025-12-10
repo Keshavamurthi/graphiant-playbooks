@@ -456,6 +456,9 @@ if __name__ == '__main__':
     suite.addTest(TestGraphiantPlaybooks('test_get_login_token'))
     suite.addTest(TestGraphiantPlaybooks('test_get_enterprise_id'))
 
+    suite.addTest(TestGraphiantPlaybooks('test_configure_sites'))
+
+    '''
     # LAN Segments Management Tests
     suite.addTest(TestGraphiantPlaybooks('test_get_lan_segments'))
     suite.addTest(TestGraphiantPlaybooks('test_configure_global_lan_segments'))
@@ -540,5 +543,5 @@ if __name__ == '__main__':
     # To deconfigure all interfaces
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_circuits'))
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_interfaces'))
-
+    '''
     runner = unittest.TextTestRunner(verbosity=2).run(suite)

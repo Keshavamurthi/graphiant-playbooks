@@ -3,9 +3,9 @@ import yaml
 from concurrent.futures import wait
 from concurrent.futures.thread import ThreadPoolExecutor
 from jinja2 import Template, TemplateError as Jinja2TemplateError
-from libs.logger import setup_logger
-from libs.gcsdk_client import GraphiantPortalClient
-from libs.exceptions import ConfigurationError
+from .logger import setup_logger
+from .gcsdk_client import GraphiantPortalClient
+from .exceptions import ConfigurationError
 
 LOG = setup_logger()
 
@@ -13,77 +13,106 @@ LOG = setup_logger()
 class PortalUtils(object):
 
     def __init__(self, base_url=None, username=None, password=None):
-        # Find the project root directory by looking for the libs directory
-        project_root = self._find_project_root()
+        # Logs: Use current working directory (where playbook is run from)
+        self.logs_path = os.path.join(os.getcwd(), "logs") + "/"    # Default logs path
+        self.config_path = None
+        self.template_path = None
 
-        self.config_path = os.path.join(project_root, "configs") + "/"
-        self.templates = os.path.join(project_root, "templates") + "/"
-        self.logs_path = os.path.join(project_root, "logs") + "/"
+        # Priority 1: Check user-configured environment variables (highest priority)
+        configs_path = os.environ.get('GRAPHIANT_CONFIGS_PATH')
+        if configs_path and os.path.exists(configs_path):
+            LOG.info(f"PortalUtils : Using GRAPHIANT_CONFIGS_PATH: {configs_path}")
+            self.config_path = configs_path if configs_path.endswith('/') else configs_path + "/"
 
-        LOG.info(f"PortalUtils : project_root : {project_root}")
-        LOG.info(f"PortalUtils : templates_path : {self.config_path}")
-        LOG.info(f"PortalUtils : config_templates : {self.templates}")
+        templates_path = os.environ.get('GRAPHIANT_TEMPLATES_PATH')
+        if templates_path and os.path.exists(templates_path):
+            LOG.info(f"PortalUtils : Using GRAPHIANT_TEMPLATES_PATH: {templates_path}")
+            self.template_path = templates_path if templates_path.endswith('/') else templates_path + "/"
+
+        # Priority 2: Find the collection root and set paths from there
+        if not self.config_path or not self.template_path:
+            collection_root = self._find_collection_root()
+            if collection_root:
+                LOG.info(f"PortalUtils : collection_root : {collection_root}")
+                if not self.config_path:
+                    self.config_path = os.path.join(collection_root, "configs") + "/"
+                if not self.template_path:
+                    self.template_path = os.path.join(collection_root, "templates") + "/"
+
+        # Priority 3: Fallback to the current working directory
+        if not self.config_path:
+            LOG.warning(f"PortalUtils : config_path not found, using current working directory: {os.getcwd()}")
+            self.config_path = os.path.join(os.getcwd(), "configs") + "/"
+        if not self.template_path:
+            LOG.warning(f"PortalUtils : template_path not found, using current working directory: {os.getcwd()}")
+            self.template_path = os.path.join(os.getcwd(), "templates") + "/"
+
+        LOG.info(f"PortalUtils : config_path : {self.config_path}")
+        LOG.info(f"PortalUtils : template_path : {self.template_path}")
         LOG.info(f"PortalUtils : logs_path : {self.logs_path}")
         self.gsdk = GraphiantPortalClient(base_url=base_url, username=username, password=password)
         self.gsdk.set_bearer_token()
 
-    def _find_project_root(self) -> str:
+    def _find_collection_root(self) -> str:
         """
-        Find the project root directory using a systematic approach with the following priority:
-        1. Check user-configured GRAPHIANT_PLAYBOOKS_PATH environment variable (highest priority)
-        2. Check PYTHONPATH for graphiant-playbooks directory
-        3. Check current working directory
-        4. Find Git repository root and look for the directory there
-        5. Walk up from the current file location to find the directory (fallback)
+        Find the collection root directory (project root).
+
+        The collection root is: ansible_collections/graphiant/graphiant_playbooks/
+        After Galaxy installation: ~/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks/
+
+        This directory contains:
+        - configs/ (user-provided configuration files)
+        - templates/ (Jinja2 templates)
+        - plugins/ (collection code including libs)
+        - playbooks/ (example playbooks)
+
+        Priority:
+        1. Find the collection root based on common Ansible installation paths
+        2. Walk up from current file location to find collection root (has plugins/module_utils/libs/)
 
         Returns:
-            str: Path to the project root directory
+            str: Path to the collection root directory
+            None: If the collection root is not found
         """
-        # Method 1: Check user-configured GRAPHIANT_PLAYBOOKS_PATH environment variable (highest priority)
-        user_playbooks_path = os.environ.get('GRAPHIANT_PLAYBOOKS_PATH')
-        if user_playbooks_path and os.path.exists(user_playbooks_path):
-            LOG.debug(f"Found project root via GRAPHIANT_PLAYBOOKS_PATH: {user_playbooks_path}")
-            return user_playbooks_path
+        # Method 1: Find the collection root based on common Ansible installation paths
+        # NOTE: We avoid importing ansible.constants here as it can cause issues inside AnsiballZ
+        common_collection_paths = [
+            os.path.expanduser('~/.ansible/collections'),
+            '/usr/share/ansible/collections',
+        ]
+        for collections_path in common_collection_paths:
+            if collections_path and os.path.exists(collections_path):
+                collection_check = os.path.join(collections_path,
+                                                'ansible_collections', 'graphiant', 'graphiant_playbooks')
+                if os.path.exists(collection_check):
+                    LOG.info(f"Found graphiant collection root via common path: {collection_check}")
+                    return collection_check
 
-        # Method 2: Check PYTHONPATH for graphiant-playbooks directory
-        pythonpath = os.environ.get('PYTHONPATH', '')
-        for path in pythonpath.split(os.pathsep):
-            if path and os.path.exists(path):
-                # Check if this path contains the graphiant-playbooks directory
-                if 'graphiant-playbooks' in path:
-                    LOG.debug(f"Found project root via PYTHONPATH: {path}")
-                    return path
-                # Also check if this path is the project root (contains libs, configs, etc.)
-                if (os.path.exists(os.path.join(path, 'libs')) and os.path.exists(os.path.join(path, 'configs'))):
-                    LOG.debug(f"Found project root via PYTHONPATH (contains libs/configs): {path}")
-                    return path
-
-        # Method 3: Check current working directory
-        if (os.path.exists(os.path.join(os.getcwd(), 'libs')) and os.path.exists(os.path.join(os.getcwd(), 'configs'))):
-            LOG.debug(f"Found project root in current working directory: {os.getcwd()}")
-            return os.getcwd()
-
-        # Method 4: Find Git repository root and look for the directory there
-        current_dir = os.getcwd()
-        for _ in range(10):  # Walk up to 10 levels
-            git_path = os.path.join(current_dir, '.git')
-            if os.path.exists(git_path):
-                LOG.debug(f"Found project root at Git repository: {current_dir}")
+        # Method 2: Walk up from current file location to find collection root
+        # This file is at: .../plugins/module_utils/libs/portal_utils.py
+        # Collection root is: .../ (3 levels up)
+        current_file_dir = os.path.dirname(os.path.abspath(__file__))
+        # Walk up: libs/ -> module_utils/ -> plugins/ -> collection_root/
+        current_dir = current_file_dir
+        for _ in range(4):  # Walk up 4 levels max
+            # Check if this is the collection root (has plugins/module_utils/libs/)
+            libs_check = os.path.join(current_dir, 'plugins', 'module_utils', 'libs')
+            if os.path.exists(libs_check):
+                LOG.debug(f"Found collection root by walking up from file location: {current_dir}")
                 return current_dir
+            # Also check if we're at the repo root (has ansible_collections/graphiant/graphiant_playbooks/)
+            collection_check = os.path.join(current_dir, 'ansible_collections', 'graphiant', 'graphiant_playbooks')
+            if os.path.exists(collection_check):
+                LOG.debug(f"Found collection root at repo root: {collection_check}")
+                return collection_check
             current_dir = os.path.dirname(current_dir)
+            if current_dir == os.path.dirname(current_dir):  # Reached filesystem root
+                break
 
-        # Method 5: Walk up from the current file location (fallback)
-        current_dir = os.path.dirname(__file__)
-        for _ in range(10):  # Walk up to 10 levels
-            if (os.path.exists(os.path.join(current_dir, 'libs')) and os.path.exists(os.path.join(current_dir,
-                                                                                                  'configs'))):
-                LOG.debug(f"Found project root by walking up from file location: {current_dir}")
-                return current_dir
-            current_dir = os.path.dirname(current_dir)
-
-        # Final fallback to current working directory if nothing else works
-        LOG.warning("Could not find project root using any method, using current working directory")
-        return os.getcwd()
+        # Final fallback: Use current working directory
+        # Users can create configs/ and templates/ in their working directory
+        LOG.warning("Could not find collection root, using current working directory as fallback")
+        return None
 
     def concurrent_task_execution(self, function, config_dict):
         """
@@ -123,33 +152,6 @@ class PortalUtils(object):
                 failures.append(e)
         if failures:
             raise Exception(f"futures failed: {failures}")
-
-    def update_device_bringup_status(self, device_id, status):
-        """
-        Update the device bringup status via GCSDK APIs.
-
-        :param device_id: str - The ID of the device to update
-        :param status: str - New status to set
-        :return: Response from GCSDK
-        """
-        result = self.gsdk.put_devices_bringup(device_ids=[device_id], status=status)
-        return result
-
-    def update_multiple_devices_bringup_status(self, yaml_file):
-        """
-        Update the multiple device bringup status concurrently via GCSDK APIs.
-
-        :param yaml_file: Contains list of devices and expected device status
-        :return: None
-        """
-        input_file_path = self.config_path + yaml_file
-        input_dict = {}
-        with open(input_file_path, "r") as file:
-            config_data = yaml.safe_load(file)
-            for device_name, config in config_data.items():
-                device_id = self.gsdk.get_device_id(device_name=device_name)
-                input_dict[device_id] = {"device_id": device_id, "status": config["status"]}
-            self.concurrent_task_execution(self.update_device_bringup_status, input_dict)
 
     def render_config_file(self, yaml_file):
         """

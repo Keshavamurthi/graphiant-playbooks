@@ -7,9 +7,9 @@ for all configuration managers.
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
-from libs.config_utils import ConfigUtils
-from libs.logger import setup_logger
-from libs.exceptions import ConfigurationError, APIError, DeviceNotFoundError, SiteNotFoundError
+from .config_utils import ConfigUtils
+from .logger import setup_logger
+from .exceptions import ConfigurationError, APIError, DeviceNotFoundError, SiteNotFoundError
 
 LOG = setup_logger()
 

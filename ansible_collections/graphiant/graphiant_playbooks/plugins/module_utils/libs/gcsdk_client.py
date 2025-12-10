@@ -15,8 +15,8 @@ except ImportError:
     # Fallback for older pydantic versions
     ValidationError = None
 
-from libs.logger import setup_logger
-from libs.poller import poller
+from .logger import setup_logger
+from .poller import poller
 
 LOG = setup_logger()
 
@@ -39,12 +39,26 @@ class GraphiantPortalClient():
             v1_auth_login_post_response = self.api.v1_auth_login_post(
                 v1_auth_login_post_request=v1_auth_login_post_request)
         except BadRequestException as e:
-            LOG.error(f"v1_auth_login_post: Got BadRequestException. "
-                      f"Please verify payload is correct. {e}")
+            api_url = f"{self.api.api_client.configuration.host}/v1/auth/login"
+            self._log_api_error(
+                method_name="v1_auth_login_post",
+                api_url=api_url,
+                # request_body=v1_auth_login_post_request.to_dict(),
+                exception=e
+            )
+            assert False, (f"v1_auth_login_post: Got BadRequestException. "
+                           f"Please verify payload is correct. {e.body}")
+
         except (UnauthorizedException, ServiceException) as e:
-            LOG.error(f"v1_auth_login_post: Got Exception. "
-                      f"Please verify crendentials are correct. {e}")
-        assert v1_auth_login_post_response, 'v1_auth_login_post_response is None'
+            api_url = f"{self.api.api_client.configuration.host}/v1/auth/login"
+            self._log_api_error(
+                method_name="v1_auth_login_post",
+                api_url=api_url,
+                exception=e
+            )
+            assert False, (f"v1_auth_login_post: Got {type(e).__name__}. "
+                           f"Please verify crendentials are correct. {e.body}")
+
         assert v1_auth_login_post_response.token, 'bearer_token is not retrieved'
         # Security: Do not log the actual bearer token to prevent credential exposure
         LOG.debug("GraphiantPortalClient Bearer token retrieved successfully")
