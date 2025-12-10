@@ -1,6 +1,6 @@
-# Terraform Infrastructure as Code
+# Graphiant Playbooks Terraform Infrastructure as Code
 
-Graphiant Playbooks includes production-ready Terraform modules for deploying cloud networking infrastructure that seamlessly integrates with Graphiant Edge devices.
+Graphiant Playbooks includes production-ready Terraform modules for deploying cloud networking infrastructure that seamlessly integrates with Graphiant Edge and Gateway devices.
 
 ## 🎯 What Terraform Creates
 
