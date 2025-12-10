@@ -1,4 +1,4 @@
-# Terraform configuration for express route circuit on Azure
+# Terraform configuration for express route circuit on azure
 terraform {
   required_providers {
     azurerm = {
@@ -10,7 +10,7 @@ terraform {
   required_version = ">= 1.1.0"
 }
 
-# Configure Azure Provider
+# Configure azure Provider
 provider "azurerm" {
   features {}
   skip_provider_registration = true

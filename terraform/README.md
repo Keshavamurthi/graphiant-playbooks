@@ -117,7 +117,7 @@ choco install azure-cli
 
 ### Linux (Ubuntu/Debian)
 ```bash
-# Install Azure CLI
+# Install azure CLI
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
 # Verify installation
@@ -140,12 +140,12 @@ aws --version
 # Using Chocolatey
 choco install awscli
 
-# Or download from AWS
+# Or download from aws
 ```
 
 ### Linux (Ubuntu/Debian)
 ```bash
-# Install AWS CLI
+# Install aws CLI
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
 sudo ./aws/install
@@ -158,7 +158,7 @@ aws --version
 
 ### Azure Authentication
 ```bash
-# Login to Azure
+# Login to azure
 az login
 
 # Set subscription (if multiple)
@@ -170,7 +170,7 @@ az account show
 
 ### AWS Authentication
 ```bash
-# Configure AWS credentials
+# Configure aws credentials
 aws configure
 
 # Or use environment variables
@@ -188,8 +188,8 @@ aws sts get-caller-identity
 # Check all installations
 python3 --version    # Should show Python 3.12+
 terraform version    # Should show Terraform 1.1.0+
-az version          # Should show Azure CLI
-aws --version       # Should show AWS CLI
+az version          # Should show azure CLI
+aws --version       # Should show aws CLI
 ```
 
 ## Quick Start with Terraform
@@ -326,7 +326,7 @@ Update these in `terraform/configs/azure_config.tfvars`:
 # Check Terraform version
 terraform version
 
-# Check Azure CLI authentication
+# Check azure CLI authentication
 az account show
 
 # List available peering locations
@@ -350,10 +350,10 @@ python3 -c "from libs.graphiant_config import GraphiantConfig; print('Graphiant 
 
 **AWS:**
 ```bash
-# Check AWS CLI version
+# Check aws CLI version
 aws --version
 
-# Check AWS authentication
+# Check aws authentication
 aws sts get-caller-identity
 
 # List available regions

@@ -1,4 +1,4 @@
-# Variables for ExpressRoute circuit configuration on Azure
+# Variables for ExpressRoute circuit configuration on azure
 variable "project_name" {
   description = "Project name for resource naming"
   type        = string

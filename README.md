@@ -103,14 +103,14 @@ See `ansible_collections/graphiant/graphiant_playbooks/tests/test.py` for compre
 Deploy cloud connectivity infrastructure with Terraform:
 
 ```bash
-# Azure ExpressRoute
+# azure ExpressRoute
 cd terraform/azure-expressroute
 terraform init
 terraform plan -var-file="../../terraform/configs/azure_config.tfvars"
 terraform apply -var-file="../../terraform/configs/azure_config.tfvars"
 
-# AWS Direct Connect
-cd terraform/AWS/directConnect
+# aws Direct Connect
+cd terraform/aws/directConnect
 terraform init
 terraform plan -var-file="../../../terraform/configs/aws_config.tfvars"
 terraform apply -var-file="../../../terraform/configs/aws_config.tfvars"

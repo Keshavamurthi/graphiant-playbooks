@@ -1,4 +1,4 @@
-# Outputs for Express.js Terraform configuration on Azure
+# Outputs for Express.js Terraform configuration on azure
 
 output "resource_group_name" {
   description = "Name of the resource group"
