@@ -125,7 +125,6 @@ graphiant-playbooks/
 ├── ansible_collections/graphiant/graphiant_playbooks/  # Ansible collection
 ├── terraform/                                          # Terraform modules
 ├── pipelines/                                          # CI/CD pipelines
-├── scripts/                                            # Utility scripts
 └── README.md                                           # This file
 ```
 
