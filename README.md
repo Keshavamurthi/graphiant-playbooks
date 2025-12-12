@@ -103,17 +103,23 @@ See `ansible_collections/graphiant/graphiant_playbooks/tests/test.py` for compre
 Deploy cloud connectivity infrastructure with Terraform:
 
 ```bash
-# azure ExpressRoute
-cd terraform/azure-expressroute
+# Azure ExpressRoute
+cd terraform/gateway_services/azure
 terraform init
-terraform plan -var-file="../../terraform/configs/azure_config.tfvars"
-terraform apply -var-file="../../terraform/configs/azure_config.tfvars"
+terraform plan -var-file="../../configs/gateway_services/azure_config.tfvars"
+terraform apply -var-file="../../configs/gateway_services/azure_config.tfvars"
 
-# aws Direct Connect
-cd terraform/aws/directConnect
+# AWS Direct Connect
+cd terraform/gateway_services/aws
 terraform init
-terraform plan -var-file="../../../terraform/configs/aws_config.tfvars"
-terraform apply -var-file="../../../terraform/configs/aws_config.tfvars"
+terraform plan -var-file="../../configs/gateway_services/aws_config.tfvars"
+terraform apply -var-file="../../configs/gateway_services/aws_config.tfvars"
+
+# GCP InterConnect
+cd terraform/gateway_services/gcp
+terraform init
+terraform plan -var-file="../../configs/gateway_services/gcp_config.tfvars"
+terraform apply -var-file="../../configs/gateway_services/gcp_config.tfvars"
 ```
 
 **See the [Terraform README](terraform/README.md) for detailed setup instructions.**

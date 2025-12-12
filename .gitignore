@@ -178,7 +178,7 @@ cython_debug/
 
 # Terraform
 # Local .terraform directories
-**/.terraform/*
+**/.terraform/
 
 # .tfstate files
 *.tfstate
@@ -226,9 +226,8 @@ terraform.rc
 # IDE files
 .idea/
 
-# Terraform specific files
-terraform/azure-expressroute/.terraform.lock.hcl
-terraform/azure-expressroute/tfplan
+# Terraform specific files (if needed, add specific paths here)
+# Example: terraform/specific-path/.terraform.lock.hcl
 
 # Output files
 output/

@@ -2,18 +2,18 @@
 
 output "resource_group_name" {
   description = "Name of the resource group"
-  value       = azurerm_resource_group.rg.name
+  value       = var.use_existing_rg ? data.azurerm_resource_group.existing[0].name : azurerm_resource_group.rg[0].name
 }
 
 #Virtual Network output
 output "vnet_id" {
   description = "ID of the Virtual Network"
-  value       = azurerm_virtual_network.virtual_network.id
+  value       = var.use_existing_vnet ? data.azurerm_virtual_network.existing[0].id : azurerm_virtual_network.virtual_network[0].id
 }
 
 output "vnet_name" {
   description = "Name of the Virtual Network"
-  value       = azurerm_virtual_network.virtual_network.name
+  value       = var.use_existing_vnet ? data.azurerm_virtual_network.existing[0].name : azurerm_virtual_network.virtual_network[0].name
 }
 
 # ExpressRoute Circuit Outputs
