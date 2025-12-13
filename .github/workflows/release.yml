@@ -1,0 +1,81 @@
+name: Release Collection
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Collection version to publish'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: Publish to Ansible Galaxy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    defaults:
+      run:
+        working-directory: ansible_collections/graphiant/graphiant_playbooks
+    steps:
+      - name: Check user permissions
+        run: |
+          PERMISSION=$(curl -s -H "Authorization: Bearer ${{ github.token }}" \
+            "https://api.github.com/repos/${{ github.repository }}/collaborators/${{ github.actor }}/permission" | \
+            jq -r '.permission')
+          
+          if [ "$PERMISSION" != "admin" ] && [ "$PERMISSION" != "maintain" ]; then
+            echo "❌ Error: Only repository admins and maintainers can trigger this workflow."
+            echo "   Current user: ${{ github.actor }}"
+            echo "   Permission level: $PERMISSION"
+            echo "   Required: admin or maintain"
+            exit 1
+          fi
+          
+          echo "✅ User ${{ github.actor }} has permission level: $PERMISSION"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install ansible-core
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core~=2.19
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Create build directory
+        run: |
+          mkdir -p ${{ github.workspace }}/build
+
+      - name: Build collection
+        run: |
+          python ${{ github.workspace }}/scripts/build_collection.py
+
+      - name: Publish to Ansible Galaxy
+        env:
+          GALAXY_API_KEY: ${{ secrets.GALAXY_API_KEY || vars.GALAXY_API_KEY || '' }}
+        run: |
+          COLLECTION_FILE=$(ls ${{ github.workspace }}/build/graphiant-graphiant_playbooks-*.tar.gz | head -1)
+          if [ -z "$COLLECTION_FILE" ] || [ ! -f "$COLLECTION_FILE" ]; then
+            echo "Error: Collection file not found in build directory"
+            exit 1
+          fi
+          if [ -z "$GALAXY_API_KEY" ]; then
+            echo "GALAXY_API_KEY secret/variable is not set. Skipping publish."
+            echo "   To enable publishing, configure GALAXY_API_KEY as a secret or variable in GitHub:"
+            echo "   - Go to Settings → Secrets and variables → Actions"
+            echo "   - Add GALAXY_API_KEY (get token from https://galaxy.ansible.com/ui/token/)"
+            exit 0
+          fi
+          ansible-galaxy collection publish $COLLECTION_FILE --api-key=$GALAXY_API_KEY
+

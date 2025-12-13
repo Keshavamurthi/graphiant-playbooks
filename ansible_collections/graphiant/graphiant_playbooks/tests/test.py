@@ -1,4 +1,3 @@
-import configparser
 import os
 import unittest
 from libs.graphiant_config import GraphiantConfig
@@ -8,14 +7,31 @@ LOG = setup_logger()
 
 
 def read_config():
-    config = configparser.ConfigParser()
-    config_file = 'test/test.ini'
-    if not os.path.exists(config_file):
-        config_file = 'test.ini'
-    config.read(config_file)
-    username = config['credentials']['username']
-    password = config['credentials']['password']
-    host = config['host']['url']
+    """
+    Read configuration from environment variables.
+
+    Required environment variables:
+        - GRAPHIANT_HOST: Graphiant API endpoint (e.g., https://api.graphiant.com)
+        - GRAPHIANT_USERNAME: Graphiant API username
+        - GRAPHIANT_PASSWORD: Graphiant API password
+
+    Returns:
+        tuple: (host, username, password)
+
+    Raises:
+        ValueError: If any required environment variable is not set
+    """
+    host = os.getenv('GRAPHIANT_HOST')
+    username = os.getenv('GRAPHIANT_USERNAME')
+    password = os.getenv('GRAPHIANT_PASSWORD')
+
+    if not host:
+        raise ValueError("GRAPHIANT_HOST environment variable is required")
+    if not username:
+        raise ValueError("GRAPHIANT_USERNAME environment variable is required")
+    if not password:
+        raise ValueError("GRAPHIANT_PASSWORD environment variable is required")
+
     return host, username, password
 
 

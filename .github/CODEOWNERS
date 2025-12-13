@@ -1,0 +1,39 @@
+# CODEOWNERS file
+# This file defines code owners for automatic review requests
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners - all files default to these owners
+# SRE team approval is required for all changes
+* @Graphiant-Inc/graphiant-team @Graphiant-Inc/sre
+
+# Ansible Collection - core collection files
+/ansible_collections/graphiant/graphiant_playbooks/ @Graphiant-Inc/graphiant-team
+
+# Ansible Collection - modules and plugins
+/ansible_collections/graphiant/graphiant_playbooks/plugins/ @Graphiant-Inc/graphiant-team
+
+# Ansible Collection - playbooks
+/ansible_collections/graphiant/graphiant_playbooks/playbooks/ @Graphiant-Inc/graphiant-team
+
+# Ansible Collection - tests
+/ansible_collections/graphiant/graphiant_playbooks/tests/ @Graphiant-Inc/graphiant-team
+
+# CI/CD workflows - SRE team must approve
+/.github/workflows/ @Graphiant-Inc/graphiant-team @Graphiant-Inc/sre
+
+# Build and validation scripts
+/scripts/ @Graphiant-Inc/graphiant-team
+
+# Terraform modules
+/terraform/ @Graphiant-Inc/graphiant-team
+
+# Documentation
+/docs/ @Graphiant-Inc/graphiant-team
+/*.md @Graphiant-Inc/graphiant-team
+
+# Configuration files
+/.github/ @Graphiant-Inc/graphiant-team
+/.gitignore @Graphiant-Inc/graphiant-team
+/.pre-commit-config.yaml @Graphiant-Inc/graphiant-team
+/setup.cfg @Graphiant-Inc/graphiant-team
+/Dockerfile @Graphiant-Inc/graphiant-team
