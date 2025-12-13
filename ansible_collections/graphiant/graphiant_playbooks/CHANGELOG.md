@@ -5,6 +5,48 @@ All notable changes to the Graphiant Playbooks collection will be documented in 
 The format is based on [Ansible Collection Changelog Guidelines](https://docs.ansible.com/ansible/latest/dev_guide/developing_collections.html#changelogs),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [25.11.3] - 2025-12-13
+
+### Added
+- **Security:**
+  - Comprehensive `SECURITY.md` with security best practices, vulnerability reporting process, and security checklist
+  - Security policy covering credential management, code security, dependency management, and CI/CD security
+- **Documentation:**
+  - Reorganized documentation structure following Ansible collection best practices
+  - Moved `CONTRIBUTING.md` to repository root for better visibility
+  - Consolidated version management documentation into `docs/guides/VERSION_MANAGEMENT.md`
+  - Enhanced `CONTRIBUTING.md` with detailed branch protection requirements and GPG signing instructions
+- **Repository Management:**
+  - Added `.github/CODEOWNERS` file for automatic code review assignments
+  - Improved code ownership structure with SRE team approval requirements
+
+### Changed
+- **Credential Management:**
+  - Removed `test.ini` file in favor of environment variable-based credential management
+  - Updated `tests/test.py` to require environment variables (`GRAPHIANT_HOST`, `GRAPHIANT_USERNAME`, `GRAPHIANT_PASSWORD`)
+  - Enhanced credential examples in playbooks to reflect best practices
+- **Documentation:**
+  - Updated all documentation references to reflect new file locations
+  - Improved documentation organization with guides in `docs/guides/` directory
+  - Enhanced release process documentation with version management details
+
+### Deprecated
+- N/A
+
+### Removed
+- `ansible_collections/graphiant/graphiant_playbooks/tests/test.ini` - Replaced with environment variable-based configuration
+- `setup.cfg` - No longer required for collection configuration
+
+### Fixed
+- Improved GPG signing documentation and troubleshooting guidance
+- Enhanced branch protection rule compliance documentation
+- Better credential management practices and examples
+
+### Security
+- Added comprehensive security best practices documentation
+- Improved credential handling with environment variable requirements
+- Enhanced security checklist for contributors
+
 ## [25.11.2] - 2025-12-12
 
 ### Added

@@ -1,7 +1,7 @@
 ---
 namespace: graphiant
 name: graphiant_playbooks
-version: 25.11.2
+version: 25.11.3
 readme: README.md
 authors:
   - Graphiant Team <support@graphiant.com>
