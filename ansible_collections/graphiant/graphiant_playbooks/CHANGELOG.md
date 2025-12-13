@@ -13,12 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Multi-version testing support (ansible-core 2.17, 2.18, 2.19)
   - E2E integration test workflow with conditional execution
 - **Documentation:**
-  - `ANSIBLE_INCLUSION_CHECKLIST.md` - Comprehensive checklist for Ansible collection inclusion
-  - `CODE_OF_CONDUCT.md` - Code of conduct for contributors
-  - `README_VERSION_MANAGEMENT.md` - Version management documentation
-  - `RELEASE.md` - Release procedures and guidelines
-  - `VERSIONING.md` - Version management system documentation
-  - `VERSION_MANAGEMENT_SUMMARY.md` - Version management summary
+  - `ANSIBLE_INCLUSION_CHECKLIST.md` - Comprehensive checklist for Ansible collection inclusion (repository root)
+  - `CODE_OF_CONDUCT.md` - Code of conduct for contributors (repository root)
+  - `docs/guides/` - Additional documentation guides:
+    - `VERSION_MANAGEMENT.md` - Version management guide
+  - `docs/guides/RELEASE.md` - Release procedures and guidelines
+  - `docs/guides/CREDENTIAL_MANAGEMENT_GUIDE.md` - Credential management best practices
+  - `docs/guides/EXAMPLES.md` - Detailed usage examples
+  - `docs/guides/VERSION_MANAGEMENT.md` - Version management guide
   - GitHub Actions pipeline documentation
 - **Version Management:**
   - Centralized version management system (`_version.py`)

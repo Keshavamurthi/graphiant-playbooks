@@ -1,76 +1,63 @@
-# Documentation for Graphiant Playbooks Ansible Collection
+# Documentation
 
-This directory contains documentation and docsite configuration for the Graphiant Playbooks Ansible Collection.
+This directory contains additional documentation for the Graphiant Playbooks Ansible Collection.
 
-## Directory Structure
+## Documentation Structure
 
+### Collection Root Files (Required/Recommended)
+
+- **`README.md`** - Main collection documentation (required)
+- **`CHANGELOG.md`** - Version history and release notes (recommended)
+
+### Guides (`docs/guides/`)
+
+Detailed guides for specific topics:
+
+- **[VERSION_MANAGEMENT.md](guides/VERSION_MANAGEMENT.md)** - Version management system and release process
+- **[RELEASE.md](guides/RELEASE.md)** - Complete release process documentation
+- **[CREDENTIAL_MANAGEMENT_GUIDE.md](guides/CREDENTIAL_MANAGEMENT_GUIDE.md)** - Best practices for managing credentials
+- **[EXAMPLES.md](guides/EXAMPLES.md)** - Detailed usage examples and playbook samples
+
+### Docusite (`docs/docsite/`)
+
+Documentation site configuration for building HTML documentation with Sphinx/antsibull-docs.
+
+See [DOCSITE_SETUP.md](DOCSITE_SETUP.md) for building the documentation site.
+
+## Quick Links
+
+- [Main README](../README.md) - Collection overview and quick start
+- [Version Management](guides/VERSION_MANAGEMENT.md) - How to manage versions
+- [Release Process](guides/RELEASE.md) - How to release new versions
+- [Examples](guides/EXAMPLES.md) - Usage examples
+- [Credential Management](guides/CREDENTIAL_MANAGEMENT_GUIDE.md) - Security best practices
+
+## Module Documentation
+
+Module documentation is embedded in the module files themselves. Use `ansible-doc` to view:
+
+```bash
+ansible-doc graphiant.graphiant_playbooks.graphiant_interfaces
+ansible-doc graphiant.graphiant_playbooks.graphiant_bgp
+ansible-doc graphiant.graphiant_playbooks.graphiant_global_config
+ansible-doc graphiant.graphiant_playbooks.graphiant_sites
+ansible-doc graphiant.graphiant_playbooks.graphiant_data_exchange
 ```
-docs/
-├── README.md              # This file
-├── DOCSITE_SETUP.md       # Comprehensive setup guide
-├── QUICK_START.md         # Quick reference guide
-├── build_docsite.sh       # Custom automated build script
-├── build.sh               # Auto-generated build script (from sphinx-init)
-├── conf.py                # Sphinx configuration (auto-generated)
-├── requirements.txt      # Python dependencies (auto-generated)
-├── antsibull-docs.cfg     # antsibull-docs configuration (auto-generated)
-├── rst/                   # Generated RST files (auto-generated)
-│   ├── index.rst
-│   └── *_module.rst
-└── build/                 # Built HTML files (after Sphinx build)
-    └── html/              # Final HTML documentation
-```
 
-## Quick Start
+## Building Documentation Site
 
-### Using the Build Script (Recommended)
+To build the HTML documentation site:
 
 ```bash
 # From collection root
-cd ansible_collections/graphiant/graphiant_playbooks
-./docs/build_docsite.sh
+python ../../scripts/build_docsite.sh
 ```
 
-### Manual Build
-
-See [QUICK_START.md](QUICK_START.md) for step-by-step instructions.
-
-## Documentation Files
-
-- **DOCSITE_SETUP.md**: Comprehensive guide with all options and troubleshooting
-- **QUICK_START.md**: Quick reference for common tasks
-- **build_docsite.sh**: Automated build script
-
-## Building the Docusite
-
-The docsite is built in two steps:
-
-1. **Generate RST files** using `antsibull-docs collection`
-   - Extracts documentation from module `DOCUMENTATION` strings
-   - Creates RST files for Sphinx
-
-2. **Build HTML** using `sphinx-build`
-   - Converts RST files to HTML
-   - Creates a navigable documentation site
-
-## Publishing
-
-See [DOCSITE_SETUP.md](DOCSITE_SETUP.md) for publishing options:
-- GitHub Pages
-- Your existing documentation site
-- Other hosting options
-
-## Validation
-
-Before building, validate your documentation:
+Or from the collection directory:
 
 ```bash
-cd ansible_collections/graphiant/graphiant_playbooks
-antsibull-docs lint-collection-docs --plugin-docs --skip-rstcheck --validate-collection-refs=self .
+cd docs
+./build.sh
 ```
 
-## Resources
-
-- [antsibull-docs Documentation](https://ansible.readthedocs.io/projects/antsibull-docs/collection-docs/)
-- [Ansible Collection Development Guide](https://docs.ansible.com/ansible/latest/dev_guide/developing_collections.html)
-
+See [DOCSITE_SETUP.md](DOCSITE_SETUP.md) for detailed instructions.

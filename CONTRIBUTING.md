@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing!
 
-> **Note:** Version management is centralized in `_version.py`. See [RELEASE.md](ansible_collections/graphiant/graphiant_playbooks/RELEASE.md) for version bumping and release procedures.
+> **Note:** Version management is centralized in `_version.py`. See [Version Management Guide](ansible_collections/graphiant/graphiant_playbooks/docs/guides/VERSION_MANAGEMENT.md) and [Release Process](ansible_collections/graphiant/graphiant_playbooks/docs/guides/RELEASE.md) for version bumping and release procedures.
 
 ## Getting Started
 
@@ -92,7 +92,6 @@ The project uses multiple linting tools to ensure code quality:
 
 Configuration files:
 - `.ansible-lint` - Ansible lint rules
-- `setup.cfg` (root) - flake8/pylint configuration
 
 **Note:** `flake8` and `pylint` are available for local development but are not part of the CI/CD pipeline. The CI/CD pipeline runs `ansible-lint`, `djlint`, `antsibull-docs`, and `ansible-test sanity` for linting, and `ansible-test sanity` and E2E integration test for testing.
 
@@ -189,7 +188,7 @@ python scripts/bump_version.py minor
 python scripts/bump_version.py major
 ```
 
-The script automatically updates all version references. See [RELEASE.md](ansible_collections/graphiant/graphiant_playbooks/RELEASE.md) for complete release procedures.
+The script automatically updates all version references. See [Version Management Guide](ansible_collections/graphiant/graphiant_playbooks/docs/guides/VERSION_MANAGEMENT.md) and [Release Process](ansible_collections/graphiant/graphiant_playbooks/docs/guides/RELEASE.md) for complete release procedures.
 
 ### For Contributors
 
