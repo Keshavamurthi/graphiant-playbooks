@@ -13,7 +13,7 @@ COLLECTION_VERSION = __version__
 DEPENDENCIES = {
     # Core Python dependencies
     "PyYAML": "6.0.1",
-    "Jinja2": "3.1.2",
+    "Jinja2": "3.1.6",
     "future": "0.18.3",
     "tabulate": "0.9.0",
 
