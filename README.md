@@ -1,6 +1,6 @@
 # Graphiant Playbooks
 
-[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Ansible](https://img.shields.io/badge/ansible--core-2.17+-green.svg)](https://docs.ansible.com/)
 [![Terraform](https://img.shields.io/badge/terraform-1.14+-red.svg)](https://developer.hashicorp.com/terraform/install)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -13,7 +13,7 @@ Refer [Graphiant Docs](https://docs.graphiant.com) to get started with [Graphian
 ## 📚 Documentation
 
 - **Official Documentation**: [Graphiant Plybooks Guide](https://docs.graphiant.com/docs/graphiant-playbooks) <-> [Graphiant Automation Docs](https://docs.graphiant.com/docs/automation)
-- **Ansible Collection**: [Ansible Galaxy Collection - graphiant_playbooks](https://galaxy.ansible.com/ui/collections)
+- **Ansible Collection**: [Ansible Galaxy Collection - graphiant.graphiant_playbooks](https://galaxy.ansible.com/ui/repo/published/graphiant/graphiant_playbooks)
 
 ## Components
 
@@ -21,14 +21,14 @@ Refer [Graphiant Docs](https://docs.graphiant.com) to get started with [Graphian
 |-----------|-------------|---------------|
 | **Ansible Collection** | Ansible modules for Graphiant NaaS automation | [📖 Documentation](ansible_collections/graphiant/graphiant_playbooks/README.md) |
 | **Terraform Modules** | Infrastructure as Code for cloud connectivity | [📖 Documentation](terraform/README.md) |
-| **CI/CD Pipelines** | Automated testing, linting, and Docker builds | [📖 Documentation](pipelines/README.md) |
+| **CI/CD Pipelines** | Automated testing, linting, and Docker builds | [📖 GitHub](.github/workflows/README.md) |
 | **Docker Support** | Containerized execution environment | [📖 Documentation](Docker.md) |
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.12+
+- Python 3.10+
 - Ansible Core 2.17+
 - Terraform v1.14+
 
@@ -40,7 +40,7 @@ git clone https://github.com/Graphiant-Inc/graphiant-playbooks.git
 cd graphiant-playbooks
 
 # Create virtual environment
-python3.12 -m venv venv
+python3.10 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
@@ -124,13 +124,24 @@ terraform apply -var-file="../../../terraform/configs/aws_config.tfvars"
 graphiant-playbooks/
 ├── ansible_collections/graphiant/graphiant_playbooks/  # Ansible collection
 ├── terraform/                                          # Terraform modules
-├── pipelines/                                          # CI/CD pipelines
+├── scripts/                                            # Utility scripts (version management, validation, building)
+│   ├── build_collection.py                           # Collection build script
+│   ├── bump_version.py                               # Version bumping script
+│   ├── generate_requirements.py                      # Requirements generator
+│   ├── validate_collection.py                        # Collection validation script
+│   └── build_docsite.sh                              # Documentation build script
+├── .github/workflows/                                 # GitHub Actions workflows
+│   ├── lint.yml                                       # Linting workflow
+│   ├── test.yml                                       # Test workflow
+│   ├── build.yml                                      # Build workflow
+│   ├── release.yml                                    # Release workflow
+│   └── README.md                                      # GitHub documentation
 └── README.md                                           # This file
 ```
 
 ## 🤝 Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](ansible_collections/graphiant/graphiant_playbooks/CONTRIBUTING.md) for:
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Development setup
 - Code standards
 - Testing requirements
