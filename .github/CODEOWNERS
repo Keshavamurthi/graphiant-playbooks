@@ -35,5 +35,4 @@
 /.github/ @Graphiant-Inc/graphiant-team
 /.gitignore @Graphiant-Inc/graphiant-team
 /.pre-commit-config.yaml @Graphiant-Inc/graphiant-team
-/setup.cfg @Graphiant-Inc/graphiant-team
 /Dockerfile @Graphiant-Inc/graphiant-team

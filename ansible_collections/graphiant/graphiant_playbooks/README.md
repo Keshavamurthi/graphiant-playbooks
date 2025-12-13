@@ -24,7 +24,7 @@ This collection requires **ansible-core >= 2.17.0**.
 - Python >= 3.10
 - Graphiant SDK >= 25.11.1
 
-> **Note:** All dependency versions are managed centrally in `_version.py`. See [RELEASE.md](RELEASE.md) for version management details.
+> **Note:** All dependency versions are managed centrally in `_version.py`. See [Version Management Guide](docs/guides/VERSION_MANAGEMENT.md) for details.
 
 ## Included Content
 
@@ -211,7 +211,7 @@ The `playbooks/de_workflows/` directory contains playbooks for Data Exchange ope
 | `06_dataex_accept_invitation_dry_run.yml` | Test invitation acceptance |
 | `07_dataex_accept_invitation.yml` | Accept service invitations |
 
-See [EXAMPLES.md](EXAMPLES.md) for detailed usage examples.
+See [Examples Guide](docs/guides/EXAMPLES.md) for detailed usage examples.
 
 ### Module Documentation
 
@@ -224,6 +224,22 @@ ansible-doc graphiant.graphiant_playbooks.graphiant_global_config
 ansible-doc graphiant.graphiant_playbooks.graphiant_sites
 ansible-doc graphiant.graphiant_playbooks.graphiant_data_exchange
 ```
+
+## Documentation
+
+### Quick Links
+
+- **[Examples Guide](docs/guides/EXAMPLES.md)** - Detailed usage examples and playbook samples
+- **[Credential Management Guide](docs/guides/CREDENTIAL_MANAGEMENT_GUIDE.md)** - Best practices for managing credentials securely
+- **[Version Management Guide](docs/guides/VERSION_MANAGEMENT.md)** - Version management system and quick reference
+- **[Release Process](docs/guides/RELEASE.md)** - Complete release process documentation
+- **[Documentation Index](docs/README.md)** - Full documentation structure
+
+### Additional Documentation
+
+- **Module Documentation**: Use `ansible-doc` to view embedded module documentation (see above)
+- **Docusite Setup**: See [docs/DOCSITE_SETUP.md](docs/DOCSITE_SETUP.md) for building HTML documentation
+- **Changelog**: See [CHANGELOG.md](CHANGELOG.md) for version history and release notes
 
 ### Credential Management
 
@@ -249,7 +265,7 @@ tasks:
 - Ansible Vault for encrypted credentials
 - Variable files with `vars_files`
 
-See [CREDENTIAL_MANAGEMENT_GUIDE.md](CREDENTIAL_MANAGEMENT_GUIDE.md) for detailed examples.
+See [Credential Management Guide](docs/guides/CREDENTIAL_MANAGEMENT_GUIDE.md) for detailed examples.
 
 ### State Parameter
 
@@ -358,7 +374,7 @@ See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
 
 ## Version Management
 
-Version information is centralized in `_version.py`. To bump versions or update dependencies, see [RELEASE.md](RELEASE.md) for detailed instructions.
+Version information is centralized in `_version.py`. To bump versions or update dependencies, see [Version Management Guide](docs/guides/VERSION_MANAGEMENT.md) and [Release Process](docs/guides/RELEASE.md) for detailed instructions.
 
 Quick version bump:
 ```bash

@@ -74,7 +74,7 @@ ansible-galaxy collection install graphiant.graphiant_playbooks
         operation: "configure_lan_interfaces"
 ```
 
-**See the [Ansible Collection README](ansible_collections/graphiant/graphiant_playbooks/README.md) for complete documentation and [EXAMPLES.md](ansible_collections/graphiant/graphiant_playbooks/EXAMPLES.md) for detailed usage examples.**
+**See the [Ansible Collection README](ansible_collections/graphiant/graphiant_playbooks/README.md) for complete documentation and [Examples Guide](ansible_collections/graphiant/graphiant_playbooks/docs/guides/EXAMPLES.md) for detailed usage examples.**
 
 ### Python Library
 
