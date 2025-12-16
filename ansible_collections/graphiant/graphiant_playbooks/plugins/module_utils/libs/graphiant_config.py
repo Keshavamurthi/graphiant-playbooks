@@ -10,6 +10,7 @@ from .bgp_manager import BGPManager
 from .global_config_manager import GlobalConfigManager
 from .site_manager import SiteManager
 from .data_exchange_manager import DataExchangeManager
+from .device_config_manager import DeviceConfigManager
 from .logger import setup_logger
 from .exceptions import GraphiantPlaybookError
 
@@ -58,6 +59,7 @@ class GraphiantConfig:
             self.global_config = GlobalConfigManager(self.config_utils)
             self.sites = SiteManager(self.config_utils)
             self.data_exchange = DataExchangeManager(self.config_utils)
+            self.device_config = DeviceConfigManager(self.config_utils)
 
             LOG.info("GraphiantConfig class initialized successfully with all managers")
 
@@ -78,5 +80,6 @@ class GraphiantConfig:
             'global_config': hasattr(self, 'global_config') and self.global_config is not None,
             'sites': hasattr(self, 'sites') and self.sites is not None,
             'data_exchange': hasattr(self, 'data_exchange') and self.data_exchange is not None,
+            'device_config': hasattr(self, 'device_config') and self.device_config is not None,
             'config_utils': hasattr(self, 'config_utils') and self.config_utils is not None
         }

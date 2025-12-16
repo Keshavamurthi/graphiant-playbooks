@@ -37,6 +37,7 @@ This collection requires **ansible-core >= 2.17.0**.
 | `graphiant_global_config` | Manage global configuration objects |
 | `graphiant_sites` | Manage sites and site attachments |
 | `graphiant_data_exchange` | Manage Data Exchange workflows |
+| `graphiant_device_config` | Push raw device configurations to Edge, Gateway, and Core devices |
 
 ## Installation
 
@@ -180,6 +181,12 @@ antsibull-docs lint-collection-docs ansible_collections/graphiant/graphiant_play
         <<: *graphiant_client_params
         config_file: "global_prefix_lists.yaml"
         operation: "configure"
+
+    - name: Push raw device configuration
+      graphiant.graphiant_playbooks.graphiant_device_config:
+        <<: *graphiant_client_params
+        config_file: "sample_device_config_payload.yaml"
+        operation: "configure"
 ```
 
 ### Example Playbooks
@@ -195,6 +202,7 @@ The collection includes ready-to-use example playbooks in the `playbooks/` direc
 | `site_management.yml` | Site creation and management |
 | `site_lists_management.yml` | Site list operations |
 | `credential_examples.yml` | Credential management examples |
+| `device_config_management.yml` | Push raw device configurations (Edge/Gateway/Core) |
 
 #### Data Exchange Workflows
 
@@ -223,6 +231,7 @@ ansible-doc graphiant.graphiant_playbooks.graphiant_bgp
 ansible-doc graphiant.graphiant_playbooks.graphiant_global_config
 ansible-doc graphiant.graphiant_playbooks.graphiant_sites
 ansible-doc graphiant.graphiant_playbooks.graphiant_data_exchange
+ansible-doc graphiant.graphiant_playbooks.graphiant_device_config
 ```
 
 ## Documentation
@@ -340,6 +349,9 @@ Configuration files use YAML format with optional Jinja2 templating. Sample file
 - `sample_interface_config.yaml` - Interface configurations
 - `sample_bgp_peering.yaml` - BGP peering configurations
 - `sample_global_*.yaml` - Global configuration objects
+- `sample_device_config_payload.yaml` - Raw device configuration payloads (Edge/Gateway Device types)
+- `sample_device_config_core_device_payload.yaml` - Raw device configuration payloads (Core Device type)
+- `sample_device_config_with_template.yaml` - Device config with user-defined template (`device_config_template.yaml`)
 
 ### Config File Path Resolution
 

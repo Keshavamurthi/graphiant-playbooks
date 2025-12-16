@@ -466,15 +466,36 @@ class TestGraphiantPlaybooks(unittest.TestCase):
         result = graphiant_config.data_exchange.accept_invitation(config_file, matches_file, dry_run=True)
         LOG.info(f"Accept invitation result: {result}")
 
+    def test_show_validated_payload_for_device_config(self):
+        """
+        Show validated payload for device configuration.
+        """
+        base_url, username, password = read_config()
+        graphiant_config = GraphiantConfig(base_url=base_url, username=username, password=password)
+        result = graphiant_config.device_config.show_validated_payload(
+            config_yaml_file="sample_device_config_payload.yaml"
+        )
+        LOG.info(f"Show validated payload result: {result}")
+
+    def test_configure_device_config(self):
+        """
+        Configure device configuration.
+        """
+        base_url, username, password = read_config()
+        graphiant_config = GraphiantConfig(base_url=base_url, username=username, password=password)
+        result = graphiant_config.device_config.configure(
+            config_yaml_file="sample_device_config_with_template.yaml",
+            template_file="device_config_template.yaml")
+        LOG.info(f"Configure device configuration result: {result}")
+
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(TestGraphiantPlaybooks('test_get_login_token'))
     suite.addTest(TestGraphiantPlaybooks('test_get_enterprise_id'))
 
-    suite.addTest(TestGraphiantPlaybooks('test_configure_sites'))
+    # suite.addTest(TestGraphiantPlaybooks('test_configure_sites'))
 
-    '''
     # LAN Segments Management Tests
     suite.addTest(TestGraphiantPlaybooks('test_get_lan_segments'))
     suite.addTest(TestGraphiantPlaybooks('test_configure_global_lan_segments'))
@@ -559,5 +580,8 @@ if __name__ == '__main__':
     # To deconfigure all interfaces
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_circuits'))
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_interfaces'))
-    '''
+
+    # Device Configuration Management Tests
+    suite.addTest(TestGraphiantPlaybooks('test_show_validated_payload_for_device_config'))
+    suite.addTest(TestGraphiantPlaybooks('test_configure_device_config'))
     runner = unittest.TextTestRunner(verbosity=2).run(suite)

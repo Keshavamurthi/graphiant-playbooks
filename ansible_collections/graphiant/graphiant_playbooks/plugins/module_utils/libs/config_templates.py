@@ -28,6 +28,7 @@ except ImportError:
 
 from .logger import setup_logger
 from .exceptions import TemplateError, ConfigurationError
+from .vpn_mappings import map_vpn_profiles
 
 # Required dependencies - checked when functions are called
 # Don't raise at module level to allow import test to pass
@@ -193,7 +194,6 @@ class ConfigTemplates:
         try:
             # Apply VPN algorithm mapping if needed
             if 'vpn_profiles' in kwargs:
-                from libs.vpn_mappings import map_vpn_profiles
                 kwargs['vpn_profiles'] = map_vpn_profiles(kwargs['vpn_profiles'])
                 LOG.info("Applied VPN algorithm mapping %s", kwargs['vpn_profiles'])
 
