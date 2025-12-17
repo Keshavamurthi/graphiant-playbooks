@@ -74,7 +74,6 @@ jobs:
             echo "   - GRAPHIANT_USERNAME"
             echo "   - GRAPHIANT_PASSWORD"
           fi
-        continue-on-error: true
 
       - name: Validate collection
         run: |
@@ -127,5 +126,4 @@ jobs:
             echo "   - GRAPHIANT_USERNAME"
             echo "   - GRAPHIANT_PASSWORD"
           fi
-        continue-on-error: true
 

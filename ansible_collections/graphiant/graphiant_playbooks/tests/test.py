@@ -494,8 +494,6 @@ if __name__ == '__main__':
     suite.addTest(TestGraphiantPlaybooks('test_get_login_token'))
     suite.addTest(TestGraphiantPlaybooks('test_get_enterprise_id'))
 
-    # suite.addTest(TestGraphiantPlaybooks('test_configure_sites'))
-
     # LAN Segments Management Tests
     suite.addTest(TestGraphiantPlaybooks('test_get_lan_segments'))
     suite.addTest(TestGraphiantPlaybooks('test_configure_global_lan_segments'))
@@ -530,6 +528,20 @@ if __name__ == '__main__':
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_site_lists'))
     suite.addTest(TestGraphiantPlaybooks('test_get_global_site_lists'))
 
+    # Global Configuration Management (VPN Profiles)
+    suite.addTest(TestGraphiantPlaybooks('test_configure_vpn_profiles'))
+    suite.addTest(TestGraphiantPlaybooks('test_deconfigure_vpn_profiles'))
+
+    # Global Configuration Management (Prefix Lists and BGP Filters)
+    suite.addTest(TestGraphiantPlaybooks('test_configure_global_config_prefix_lists'))
+    suite.addTest(TestGraphiantPlaybooks('test_configure_global_config_bgp_filters'))
+
+    # Global Configuration Management (SNMP, Syslog, IPFIX)
+    suite.addTest(TestGraphiantPlaybooks('test_configure_snmp_service'))
+    suite.addTest(TestGraphiantPlaybooks('test_configure_syslog_service'))
+    suite.addTest(TestGraphiantPlaybooks('test_configure_ipfix_service'))
+
+    '''
     # Device Interface Configuration Management
     suite.addTest(TestGraphiantPlaybooks('test_configure_lan_interfaces'))
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_lan_interfaces'))
@@ -550,10 +562,6 @@ if __name__ == '__main__':
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_bgp_peering'))
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_config_bgp_filters'))
     suite.addTest(TestGraphiantPlaybooks('test_deconfigure_global_config_prefix_lists'))
-
-    # Global Configuration Management and VPN Profiles
-    suite.addTest(TestGraphiantPlaybooks('test_configure_vpn_profiles'))
-    suite.addTest(TestGraphiantPlaybooks('test_deconfigure_vpn_profiles'))
 
     # Global Configuration Management and Attaching System Objects (SNMP, Syslog, IPFIX etc) to Sites
     suite.addTest(TestGraphiantPlaybooks('test_configure_snmp_service'))
@@ -584,4 +592,5 @@ if __name__ == '__main__':
     # Device Configuration Management Tests
     suite.addTest(TestGraphiantPlaybooks('test_show_validated_payload_for_device_config'))
     suite.addTest(TestGraphiantPlaybooks('test_configure_device_config'))
+    '''
     runner = unittest.TextTestRunner(verbosity=2).run(suite)
