@@ -3,14 +3,14 @@ name: Test Collection
 on:
   pull_request:
     paths:
-      - 'ansible_collections/graphiant/graphiant_playbooks/**'
+      - 'ansible_collections/graphiant/naas/**'
       - '.github/workflows/test.yml'
   push:
     branches:
       - main
       - develop
     paths:
-      - 'ansible_collections/graphiant/graphiant_playbooks/**'
+      - 'ansible_collections/graphiant/naas/**'
       - '.github/workflows/test.yml'
   schedule:
     # Run nightly at 2 AM UTC
@@ -29,7 +29,7 @@ jobs:
           - '2.19'
     defaults:
       run:
-        working-directory: ansible_collections/graphiant/graphiant_playbooks
+        working-directory: ansible_collections/graphiant/naas
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,7 +55,7 @@ jobs:
 
       - name: Set PYTHONPATH
         run: |
-          echo "PYTHONPATH=${{ github.workspace }}/ansible_collections/graphiant/graphiant_playbooks/plugins/module_utils" >> $GITHUB_ENV
+          echo "PYTHONPATH=${{ github.workspace }}/ansible_collections/graphiant/naas/plugins/module_utils" >> $GITHUB_ENV
 
       - name: Run Python tests
         env:
@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ansible_collections/graphiant/graphiant_playbooks
+        working-directory: ansible_collections/graphiant/naas
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -117,7 +117,7 @@ jobs:
         run: |
           if [ -n "$GRAPHIANT_HOST" ] && [ -n "$GRAPHIANT_USERNAME" ] && [ -n "$GRAPHIANT_PASSWORD" ]; then
             echo "✅ GRAPHIANT credentials detected - running E2E integration test"
-            ansible-playbook ~/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks/playbooks/hello_test.yml
+            ansible-playbook ~/.ansible/collections/ansible_collections/graphiant/naas/playbooks/hello_test.yml
           else
             echo "ℹ️  Skipping E2E integration test - GRAPHIANT credentials not configured"
             echo "   This is expected behavior when credentials are not set in GitHub secrets/variables"

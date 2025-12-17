@@ -6,8 +6,9 @@ We actively support the following versions with security updates:
 
 | Version | Supported          | Notes                    |
 | ------- | ------------------ | ------------------------ |
-| 25.11.x | :white_check_mark: | Current stable release    |
-| 25.10.x | :white_check_mark: | Previous release         |
+| 25.12.x | :white_check_mark: | Current stable release    |
+| 25.11.x | :white_check_mark: | Previous release         |
+| 25.10.x | :white_check_mark: | Legacy release           |
 | < 25.10 | :x:                | No longer supported      |
 
 **Note:** We recommend always using the latest version to ensure you have the most recent security patches.
@@ -112,7 +113,7 @@ def validate_host(host):
 pip-audit -r requirements.txt
 
 # Check Ansible collection dependencies
-ansible-galaxy collection verify graphiant.graphiant_playbooks
+ansible-galaxy collection verify graphiant.naas
 ```
 
 ### CI/CD Security
@@ -244,4 +245,4 @@ Security updates are released as:
 
 ---
 
-**Last Updated**: December 2025
+**Last Updated**: 2025-12-18

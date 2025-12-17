@@ -13,11 +13,11 @@ jobs:
     name: Publish to Ansible Galaxy
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       actions: read
     defaults:
       run:
-        working-directory: ansible_collections/graphiant/graphiant_playbooks
+        working-directory: ansible_collections/graphiant/naas
     steps:
       - name: Check user permissions
         run: |
@@ -37,6 +37,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -65,7 +67,7 @@ jobs:
         env:
           GALAXY_API_KEY: ${{ secrets.GALAXY_API_KEY || vars.GALAXY_API_KEY || '' }}
         run: |
-          COLLECTION_FILE=$(ls ${{ github.workspace }}/build/graphiant-graphiant_playbooks-*.tar.gz | head -1)
+          COLLECTION_FILE=$(ls ${{ github.workspace }}/build/graphiant-naas-*.tar.gz | head -1)
           if [ -z "$COLLECTION_FILE" ] || [ ! -f "$COLLECTION_FILE" ]; then
             echo "Error: Collection file not found in build directory"
             exit 1
@@ -79,3 +81,53 @@ jobs:
           fi
           ansible-galaxy collection publish $COLLECTION_FILE --api-key=$GALAXY_API_KEY
 
+      - name: Create Git tag
+        id: tag
+        run: |
+          VERSION="${{ inputs.version }}"
+          # Ensure version starts with 'v'
+          if [[ ! "$VERSION" =~ ^v ]]; then
+            VERSION="v$VERSION"
+          fi
+          
+          # Check if tag already exists
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "ℹ️  Tag $VERSION already exists, skipping tag creation"
+            echo "✅ Using existing tag: $VERSION"
+          else
+            git config user.name "GitHub Actions"
+            git config user.email "actions@github.com"
+            git tag -a "$VERSION" -m "Release $VERSION"
+            git push origin "$VERSION"
+            echo "✅ Created and pushed tag: $VERSION"
+          fi
+          
+          echo "tag=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        run: |
+          VERSION="${{ steps.tag.outputs.tag }}"
+          
+          # Check if release already exists
+          RELEASE_ID=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/$VERSION" | \
+            jq -r '.id // empty')
+          
+          if [ -n "$RELEASE_ID" ] && [ "$RELEASE_ID" != "null" ]; then
+            echo "ℹ️  Release for tag $VERSION already exists (ID: $RELEASE_ID), skipping release creation"
+            echo "✅ Using existing release: $VERSION"
+          else
+            # Create new release
+            RELEASE_BODY="## Release $VERSION"$'\n\n'"See [CHANGELOG.md](ansible_collections/graphiant/naas/CHANGELOG.md) for detailed release notes and version history."
+            
+            curl -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/releases" \
+              -d "$(jq -n \
+                --arg tag "$VERSION" \
+                --arg name "Release $VERSION" \
+                --arg body "$RELEASE_BODY" \
+                '{tag_name: $tag, name: $name, body: $body, draft: false, prerelease: false}')"
+            echo "✅ Created GitHub release: $VERSION"
+          fi

@@ -12,7 +12,7 @@ Usage:
     python build_collection.py
 
 Or directly use ansible-galaxy:
-    cd ansible_collections/graphiant/graphiant_playbooks
+    cd ansible_collections/graphiant/naas
     ansible-galaxy collection build .
 """
 
@@ -39,10 +39,10 @@ def build_collection():
     print("🚀 Building Graphiant Ansible Collection")
     print("=" * 50)
 
-    # Get the collection directory (scripts/ is at repo root, collection is in ansible_collections/graphiant/graphiant_playbooks)
+    # Get the collection directory (scripts/ is at repo root, collection is in ansible_collections/graphiant/naas)
     script_dir = Path(__file__).parent
     repo_root = script_dir.parent
-    collection_dir = repo_root / "ansible_collections" / "graphiant" / "graphiant_playbooks"
+    collection_dir = repo_root / "ansible_collections" / "graphiant" / "naas"
 
     # Create output directory at repo root
     output_dir = repo_root / "build"
@@ -72,7 +72,7 @@ def build_collection():
             print(result.stderr)
 
         # Find the built tarball
-        tarballs = list(output_dir.glob("graphiant-graphiant_playbooks-*.tar.gz"))
+        tarballs = list(output_dir.glob("graphiant-naas-*.tar.gz"))
         if tarballs:
             tarball = tarballs[0]
             print(f"✅ Collection built successfully: {tarball}")
@@ -84,7 +84,7 @@ def build_collection():
             print(f"     ansible-galaxy collection install {tarball} --force")
             print()
             print("  ✅ Verify installation:")
-            print("     ansible-galaxy collection list graphiant.graphiant_playbooks")
+            print("     ansible-galaxy collection list graphiant.naas")
             print()
             print("  🚀 Publish to Ansible Galaxy:")
             print("     1. Get API token from: https://galaxy.ansible.com/ui/token/")

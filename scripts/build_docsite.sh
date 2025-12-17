@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build script for Graphiant Playbooks Ansible Collection docsite
+# Build script for Graphiant NaaS Ansible Collection docsite
 # Usage: ./build_docsite.sh
 
 set -e
@@ -9,7 +9,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}🚀 Building Graphiant Playbooks Collection Docusite${NC}"
+echo -e "${GREEN}🚀 Building Graphiant NaaS Collection Docusite${NC}"
 echo "=========================================="
 
 # Activate virtual environment
@@ -33,7 +33,7 @@ echo "Collection directory: $COLLECTION_DIR"
 echo ""
 echo -e "${GREEN}Step 1: Installing collection...${NC}"
 cd "$PROJECT_ROOT"
-ansible-galaxy collection install ansible_collections/graphiant/graphiant_playbooks/ --force
+ansible-galaxy collection install ansible_collections/graphiant/naas/ --force
 
 # Step 2: Validate documentation
 echo ""
@@ -53,7 +53,7 @@ antsibull-docs collection \
     --dest-dir docs/docsite \
     --use-current \
     --squash-hierarchy \
-    graphiant.graphiant_playbooks
+    graphiant.naas
 
 # Step 4: Build HTML with Sphinx
 echo ""

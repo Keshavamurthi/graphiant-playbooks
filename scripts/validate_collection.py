@@ -24,7 +24,7 @@ from pathlib import Path
 
 # Installed collection path
 INSTALLED_COLLECTION_PATH = os.path.expanduser(
-    "~/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks"
+    "~/.ansible/collections/ansible_collections/graphiant/naas"
 )
 
 
@@ -339,10 +339,10 @@ Note: ansible-lint requires the collection to be installed to resolve module ref
     print("🚀 Graphiant Ansible Collection Validator")
     print("=" * 60)
 
-    # Get collection path (scripts/ is at repo root, collection is in ansible_collections/graphiant/graphiant_playbooks)
+    # Get collection path (scripts/ is at repo root, collection is in ansible_collections/graphiant/naas)
     script_dir = Path(__file__).parent
     repo_root = script_dir.parent
-    collection_path = repo_root / "ansible_collections" / "graphiant" / "graphiant_playbooks"
+    collection_path = repo_root / "ansible_collections" / "graphiant" / "naas"
 
     results = {}
 

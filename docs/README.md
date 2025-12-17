@@ -7,7 +7,7 @@ This repository uses **Sphinx/antsibull-docs** for documentation, not Jekyll.
 The actual documentation for the Graphiant Playbooks Ansible Collection is located at:
 
 ```
-ansible_collections/graphiant/graphiant_playbooks/docs/
+ansible_collections/graphiant/naas/docs/
 ```
 
 ## Building Documentation
@@ -22,7 +22,7 @@ python scripts/build_docsite.sh
 Or from the collection directory:
 
 ```bash
-cd ansible_collections/graphiant/graphiant_playbooks
+cd ansible_collections/graphiant/naas
 ./docs/build.sh
 ```
 
@@ -30,7 +30,7 @@ cd ansible_collections/graphiant/graphiant_playbooks
 
 For GitHub Pages, the documentation should be published to a `gh-pages` branch, not from this `docs` folder.
 
-See `ansible_collections/graphiant/graphiant_playbooks/docs/DOCSITE_SETUP.md` for detailed instructions.
+See `ansible_collections/graphiant/naas/docs/DOCSITE_SETUP.md` for detailed instructions.
 
 ## GitHub Pages Configuration
 
