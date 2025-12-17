@@ -1,4 +1,4 @@
-# Variables For DirectConnect circuit configuration on AWS
+# Variables For DirectConnect circuit configuration on aws
 variable "project_name" {
   description = "Project name for resource naming"
   type        = string

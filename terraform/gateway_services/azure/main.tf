@@ -1,4 +1,4 @@
-# Terraform configuration for express route circuit on Azure
+# Terraform configuration for express route circuit on azure
 terraform {
   required_providers {
     azurerm = {
@@ -10,36 +10,65 @@ terraform {
   required_version = ">= 1.1.0"
 }
 
-# Configure Azure Provider
+# Configure azure Provider
 provider "azurerm" {
   features {}
   skip_provider_registration = true
 }
 
+
+locals {
+  rg_name   = var.use_existing_rg ? var.rg_name : azurerm_resource_group.rg[0].name
+  rg_location = var.use_existing_rg ? data.azurerm_resource_group.existing[0].location : azurerm_resource_group.rg[0].location
+  vnet_name = var.use_existing_vnet ? var.vnet_name : azurerm_virtual_network.virtual_network[0].name
+  vnet_id   = var.use_existing_vnet ? data.azurerm_virtual_network.existing[0].id : azurerm_virtual_network.virtual_network[0].id
+}
+
+# Get existing Resource Group
+data "azurerm_resource_group" "existing" {
+  count = var.use_existing_rg ? 1 : 0
+  name  = var.rg_name
+}
+
 # Resource Group
 resource "azurerm_resource_group" "rg" {
-  name     = "${var.project_name}-rg"
+  count    = var.use_existing_rg ? 0 : 1
+  name     = var.rg_name != null ? var.rg_name : "${var.project_name}-rg"
   location = var.azure_region
+
+  tags = {
+    Name        = var.rg_name != null ? var.rg_name : "${var.project_name}-rg"
+    Environment = var.environment
+  }
+}
+
+# Get existing Virtual Network
+data "azurerm_virtual_network" "existing" {
+  count               = var.use_existing_vnet ? 1 : 0
+  name                = var.vnet_name
+  resource_group_name = local.rg_name
 }
 
 # Virtual Network
 resource "azurerm_virtual_network" "virtual_network" {
-  name                = "${var.project_name}-vnet"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  count               = var.use_existing_vnet ? 0 : 1
+  name                = var.vnet_name != null ? var.vnet_name : "${var.project_name}-vnet"
+  resource_group_name = local.rg_name
+  location            = var.azure_region
   address_space       = [var.vnet_address_space]
 
   tags = {
-    Name        = "${var.project_name}-vnet"
+    Name        = var.vnet_name != null ? var.vnet_name : "${var.project_name}-vnet"
     Environment = var.environment
   }
 }
 
 # Public Subnet
 resource "azurerm_subnet" "express_public_subnet" {
+  count               = var.use_existing_vnet ? 0 : 1
   name                 = "${var.project_name}-public-subnet"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.virtual_network.name
+  resource_group_name  = local.rg_name
+  virtual_network_name = local.vnet_name
   address_prefixes     = [var.public_subnet_prefix]
 }
 
@@ -47,8 +76,8 @@ resource "azurerm_subnet" "express_public_subnet" {
 resource "azurerm_express_route_circuit" "express_route" {
   count               = var.enable_expressroute ? 1 : 0
   name                = "${var.project_name}-er-circuit"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  resource_group_name = local.rg_name
+  location            = local.rg_location
   service_provider_name = var.expressroute_service_provider
   peering_location    = var.expressroute_peering_location
   bandwidth_in_mbps   = var.expressroute_bandwidth
@@ -70,7 +99,7 @@ resource "azurerm_express_route_circuit" "express_route" {
 resource "azurerm_express_route_circuit_authorization" "express_route_auth" {
   count                   = var.enable_expressroute ? 1 : 0
   name                    = "${var.project_name}-er-auth"
-  resource_group_name     = azurerm_resource_group.rg.name
+  resource_group_name     = local.rg_name
   express_route_circuit_name = azurerm_express_route_circuit.express_route[count.index].name
 }
 
@@ -78,8 +107,8 @@ resource "azurerm_express_route_circuit_authorization" "express_route_auth" {
 resource "azurerm_express_route_circuit" "express_route_secondary" {
   count               = var.enable_expressroute && var.expressroute_secondary_peering_location != "" ? 1 : 0
   name                = "${var.project_name}-er-circuit-secondary"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  resource_group_name = local.rg_name
+  location            = local.rg_location
   service_provider_name = var.expressroute_secondary_service_provider != "" ? var.expressroute_secondary_service_provider : var.expressroute_service_provider
   peering_location    = var.expressroute_secondary_peering_location
   bandwidth_in_mbps   = var.expressroute_secondary_bandwidth
@@ -98,11 +127,13 @@ resource "azurerm_express_route_circuit" "express_route_secondary" {
 }
 
 # ExpressRoute Gateway Subnet
+# Note: Gateway Subnet is only created when creating a new VNet
+# If using existing VNet, ensure GatewaySubnet exists (required for ExpressRoute Gateway)
 resource "azurerm_subnet" "express_route_gateway_subnet" {
-  count                = var.enable_expressroute ? 1 : 0
+  count                = var.enable_expressroute && !var.use_existing_vnet ? 1 : 0
   name                 = "GatewaySubnet"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.virtual_network.name
+  resource_group_name  = local.rg_name
+  virtual_network_name = local.vnet_name
   address_prefixes     = ["10.0.2.0/24"]
 }
 
@@ -110,8 +141,8 @@ resource "azurerm_subnet" "express_route_gateway_subnet" {
 resource "azurerm_public_ip" "express_route_gateway_ip" {
   count               = var.enable_expressroute ? 1 : 0
   name                = "${var.project_name}-er-gateway-ip"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  resource_group_name = local.rg_name
+  location            = local.rg_location
   allocation_method   = "Static"
   sku                 = "Standard"
 
@@ -125,8 +156,8 @@ resource "azurerm_public_ip" "express_route_gateway_ip" {
 resource "azurerm_virtual_wan" "virtual_wan" {
   count               = var.enable_expressroute ? 1 : 0
   name                = "${var.project_name}-wan"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  resource_group_name = local.rg_name
+  location            = local.rg_location
 
   tags = {
     Name        = "${var.project_name}-wan"
@@ -138,8 +169,8 @@ resource "azurerm_virtual_wan" "virtual_wan" {
 resource "azurerm_virtual_hub" "express_hub" {
   count               = var.enable_expressroute ? 1 : 0
   name                = "${var.project_name}-hub"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  resource_group_name = local.rg_name
+  location            = local.rg_location
   virtual_wan_id      = azurerm_virtual_wan.virtual_wan[0].id
   address_prefix      = "10.1.0.0/16"
   sku                 = "Standard"
@@ -166,8 +197,8 @@ resource "time_sleep" "wait_for_virtual_hub" {
 resource "azurerm_express_route_gateway" "express_route_gateway" {
   count               = var.enable_expressroute ? 1 : 0
   name                = "${var.project_name}-er-gateway"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  resource_group_name = local.rg_name
+  location            = local.rg_location
   virtual_hub_id      = azurerm_virtual_hub.express_hub[0].id
 
   scale_units = var.expressroute_gateway_scale_units
@@ -207,7 +238,7 @@ resource "azurerm_virtual_hub_connection" "vnet_connection" {
   count                     = var.enable_expressroute ? 1 : 0
   name                      = "${var.project_name}-vnet-connection"
   virtual_hub_id            = azurerm_virtual_hub.express_hub[0].id
-  remote_virtual_network_id = azurerm_virtual_network.virtual_network.id
+  remote_virtual_network_id = local.vnet_id
   
   # Disable internet security to allow SSH access
   internet_security_enabled = false
@@ -226,8 +257,8 @@ resource "azurerm_virtual_hub_connection" "vnet_connection" {
 resource "azurerm_route_table" "express_route_route_table" {
   count                         = var.enable_expressroute ? 1 : 0
   name                          = "${var.project_name}-route-table"
-  location                      = azurerm_resource_group.rg.location
-  resource_group_name           = azurerm_resource_group.rg.name
+  location                      = local.rg_location
+  resource_group_name           = local.rg_name
   disable_bgp_route_propagation = var.route_table_disable_bgp_propagation
 
   tags = {
@@ -241,8 +272,8 @@ resource "azurerm_route_table" "express_route_route_table" {
 
 # Associate Route Table with Public Subnet
 resource "azurerm_subnet_route_table_association" "public_subnet_route_table" {
-  count          = var.enable_expressroute ? 1 : 0
-  subnet_id      = azurerm_subnet.express_public_subnet.id
+  count          = var.enable_expressroute && !var.use_existing_vnet ? 1 : 0
+  subnet_id      = azurerm_subnet.express_public_subnet[0].id
   route_table_id = azurerm_route_table.express_route_route_table[0].id
 }
 
@@ -251,7 +282,7 @@ resource "azurerm_express_route_circuit_peering" "express_route_peering" {
   count                   = var.enable_expressroute ? 1 : 0
   peering_type            = "AzurePrivatePeering"
   express_route_circuit_name = azurerm_express_route_circuit.express_route[count.index].name
-  resource_group_name     = azurerm_resource_group.rg.name
+  resource_group_name     = local.rg_name
   shared_key              = var.expressroute_shared_key != "" ? var.expressroute_shared_key : null
   peer_asn                = var.expressroute_peer_asn
   primary_peer_address_prefix = var.expressroute_primary_peer_address_prefix
@@ -267,8 +298,8 @@ resource "azurerm_express_route_circuit_peering" "express_route_peering" {
 resource "azurerm_subnet" "vm_subnet" {
   count                = var.deploy_test_vm ? 1 : 0
   name                 = "${var.project_name}-vm-subnet"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.virtual_network.name
+  resource_group_name  = local.rg_name
+  virtual_network_name = local.vnet_name
   address_prefixes     = [var.vm_subnet_prefix]
 }
 
@@ -276,8 +307,8 @@ resource "azurerm_subnet" "vm_subnet" {
 resource "azurerm_network_security_group" "vm_nsg" {
   count               = var.deploy_test_vm ? 1 : 0
   name                = "${var.project_name}-vm-nsg"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = local.rg_location
+  resource_group_name = local.rg_name
 
   # Allow SSH access
   security_rule {
@@ -322,8 +353,8 @@ resource "azurerm_subnet_network_security_group_association" "vm_nsg_association
 resource "azurerm_public_ip" "vm_public_ip" {
   count               = var.deploy_test_vm ? 1 : 0
   name                = "${var.project_name}-vm-public-ip"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  resource_group_name = local.rg_name
+  location            = local.rg_location
   allocation_method   = "Static"
   sku                 = "Standard"
 
@@ -337,8 +368,8 @@ resource "azurerm_public_ip" "vm_public_ip" {
 resource "azurerm_network_interface" "vm_nic" {
   count               = var.deploy_test_vm ? 1 : 0
   name                = "${var.project_name}-vm-nic"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = local.rg_location
+  resource_group_name = local.rg_name
 
   ip_configuration {
     name                          = "internal"
@@ -358,8 +389,8 @@ resource "azurerm_linux_virtual_machine" "test_vm" {
   count               = var.deploy_test_vm ? 1 : 0
   name                = "${var.project_name}-test-vm"
   computer_name       = "${replace(var.project_name, "_", "-")}-test-vm"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  resource_group_name = local.rg_name
+  location            = local.rg_location
   size                = var.vm_size
   admin_username      = var.vm_admin_username
 

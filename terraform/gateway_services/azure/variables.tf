@@ -1,4 +1,4 @@
-# Variables for ExpressRoute circuit configuration on Azure
+# Variables for ExpressRoute circuit configuration on azure
 variable "project_name" {
   description = "Project name for resource naming"
   type        = string
@@ -27,6 +27,32 @@ variable "public_subnet_prefix" {
   description = "Address prefix for public subnet"
   type        = string
   default     = "10.0.1.0/24"
+}
+
+# Resource Group Configuration
+variable "use_existing_rg" {
+  description = "Whether to use an existing Resource Group (true) or create a new one (false)"
+  type        = bool
+  default     = false
+}
+
+variable "rg_name" {
+  description = "Name of the Resource Group (used for both creating new or referencing existing RG)"
+  type        = string
+  default     = null
+}
+
+# Virtual Network Configuration
+variable "use_existing_vnet" {
+  description = "Whether to use an existing Virtual Network (true) or create a new one (false)"
+  type        = bool
+  default     = false
+}
+
+variable "vnet_name" {
+  description = "Name of the Virtual Network (used for both creating new or referencing existing VNet)"
+  type        = string
+  default     = null
 }
 
 # ExpressRoute Circuit Configuration Variables

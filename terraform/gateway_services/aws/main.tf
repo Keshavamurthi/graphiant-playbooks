@@ -1,4 +1,4 @@
-# Terraform configuration for direct connect circuit on AWS.
+# Terraform configuration for direct connect circuit on aws.
 terraform {
   required_providers {
     aws = {
@@ -10,7 +10,7 @@ terraform {
   required_version = ">= 1.1.0"
 }
 
-# Configure AWS Provider
+# Configure aws Provider
 provider "aws" {
   region = var.aws_region
 }
@@ -239,9 +239,9 @@ resource "aws_dx_gateway" "dxgw" {
 # MANUAL STEP REQUIRED - READ CAREFULLY
 # ============================================================================
 # Before proceeding to Step 2, you MUST manually accept the Direct Connect
-# connection in the AWS Console:
+# connection in the aws Console:
 #
-# 1. Go to AWS Console -> Direct Connect -> Connections
+# 1. Go to aws Console -> Direct Connect -> Connections
 # 2. Find the connection with ID: ${var.dx_connection_id}
 # 3. Check the connection state:
 #    - If state is "ordering": Click "Accept" button

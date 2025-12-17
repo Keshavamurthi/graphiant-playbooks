@@ -104,16 +104,22 @@ Deploy cloud connectivity infrastructure with Terraform:
 
 ```bash
 # Azure ExpressRoute
-cd terraform/azure-expressroute
+cd terraform/gateway_services/azure
 terraform init
-terraform plan -var-file="../../terraform/configs/azure_config.tfvars"
-terraform apply -var-file="../../terraform/configs/azure_config.tfvars"
+terraform plan -var-file="../../configs/gateway_services/azure_config.tfvars"
+terraform apply -var-file="../../configs/gateway_services/azure_config.tfvars"
 
 # AWS Direct Connect
-cd terraform/AWS/directConnect
+cd terraform/gateway_services/aws
 terraform init
-terraform plan -var-file="../../../terraform/configs/aws_config.tfvars"
-terraform apply -var-file="../../../terraform/configs/aws_config.tfvars"
+terraform plan -var-file="../../configs/gateway_services/aws_config.tfvars"
+terraform apply -var-file="../../configs/gateway_services/aws_config.tfvars"
+
+# GCP InterConnect
+cd terraform/gateway_services/gcp
+terraform init
+terraform plan -var-file="../../configs/gateway_services/gcp_config.tfvars"
+terraform apply -var-file="../../configs/gateway_services/gcp_config.tfvars"
 ```
 
 **See the [Terraform README](terraform/README.md) for detailed setup instructions.**
