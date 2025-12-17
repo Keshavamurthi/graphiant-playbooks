@@ -15,9 +15,6 @@ jobs:
     permissions:
       contents: write
       actions: read
-    defaults:
-      run:
-        working-directory: ansible_collections/graphiant/naas
     steps:
       - name: Check user permissions
         run: |
@@ -52,6 +49,7 @@ jobs:
           pip install ansible-core~=2.19
 
       - name: Install dependencies
+        working-directory: ansible_collections/graphiant/naas
         run: |
           pip install -r requirements.txt
 
@@ -60,6 +58,7 @@ jobs:
           mkdir -p ${{ github.workspace }}/build
 
       - name: Build collection
+        working-directory: ansible_collections/graphiant/naas
         run: |
           python ${{ github.workspace }}/scripts/build_collection.py
 
