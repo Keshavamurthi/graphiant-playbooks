@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         ansible_core:
           - '2.17'
@@ -63,6 +64,7 @@ jobs:
           GRAPHIANT_USERNAME: ${{ secrets.GRAPHIANT_USERNAME || vars.GRAPHIANT_USERNAME || '' }}
           GRAPHIANT_PASSWORD: ${{ secrets.GRAPHIANT_PASSWORD || vars.GRAPHIANT_PASSWORD || '' }}
         run: |
+          set -e
           if [ -n "$GRAPHIANT_HOST" ] && [ -n "$GRAPHIANT_USERNAME" ] && [ -n "$GRAPHIANT_PASSWORD" ]; then
             echo "✅ GRAPHIANT credentials detected - running Python tests"
             python tests/test.py
@@ -115,6 +117,7 @@ jobs:
           GRAPHIANT_PASSWORD: ${{ secrets.GRAPHIANT_PASSWORD || vars.GRAPHIANT_PASSWORD || '' }}
           ANSIBLE_STDOUT_CALLBACK: debug
         run: |
+          set -e
           if [ -n "$GRAPHIANT_HOST" ] && [ -n "$GRAPHIANT_USERNAME" ] && [ -n "$GRAPHIANT_PASSWORD" ]; then
             echo "✅ GRAPHIANT credentials detected - running E2E integration test"
             ansible-playbook ~/.ansible/collections/ansible_collections/graphiant/naas/playbooks/hello_test.yml
