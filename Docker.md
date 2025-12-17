@@ -47,7 +47,7 @@ docker run -it \
   -e GRAPHIANT_USERNAME=user \
   -e GRAPHIANT_PASSWORD=pass \
   graphiant-playbooks \
-  ansible-playbook /root/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks/playbooks/hello_test.yml
+  ansible-playbook /root/.ansible/collections/ansible_collections/graphiant/naas/playbooks/hello_test.yml
 
 # Run any playbook from the installed collection
 docker run -it \
@@ -55,7 +55,7 @@ docker run -it \
   -e GRAPHIANT_USERNAME=user \
   -e GRAPHIANT_PASSWORD=pass \
   graphiant-playbooks \
-  ansible-playbook /root/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks/playbooks/complete_network_setup.yml
+  ansible-playbook /root/.ansible/collections/ansible_collections/graphiant/naas/playbooks/complete_network_setup.yml
 ```
 
 ## Docker Compose
@@ -103,5 +103,5 @@ docker-compose exec graphiant-playbooks bash
 docker logs graphiant-playbooks
 
 # Verify collection
-docker run -it graphiant-playbooks ansible-galaxy collection list graphiant.graphiant_playbooks
+docker run -it graphiant-playbooks ansible-galaxy collection list graphiant.naas
 ```

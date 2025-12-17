@@ -9,10 +9,10 @@ requirements.txt to ensure consistency.
 import sys
 from pathlib import Path
 
-# Get the collection directory (scripts/ is at repo root, collection is in ansible_collections/graphiant/graphiant_playbooks)
+# Get the collection directory (scripts/ is at repo root, collection is in ansible_collections/graphiant/naas)
 script_dir = Path(__file__).parent
 repo_root = script_dir.parent
-collection_dir = repo_root / "ansible_collections" / "graphiant" / "graphiant_playbooks"
+collection_dir = repo_root / "ansible_collections" / "graphiant" / "naas"
 
 # Import version information from collection directory
 sys.path.insert(0, str(collection_dir))

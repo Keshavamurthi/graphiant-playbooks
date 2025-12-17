@@ -1,0 +1,91 @@
+---
+- name: Deploy complete Graphiant network configuration
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # graphiant_host: "https://api.graphiant.com"
+    # graphiant_username: "{{ vault_graphiant_username }}"
+    # graphiant_password: "{{ vault_graphiant_password }}"
+
+    # Use YAML anchors to avoid repetition
+    graphiant_client_params: &graphiant_client_params
+      host: "{{ graphiant_host | default(lookup('env', 'GRAPHIANT_HOST')) }}"
+      username: "{{ graphiant_username | default(lookup('env', 'GRAPHIANT_USERNAME')) }}"
+      password: "{{ graphiant_password | default(lookup('env', 'GRAPHIANT_PASSWORD')) }}"
+      # host: "{{ graphiant_host | default(lookup('ini', 'url file=/absolute/path/test/test.ini section=host')) }}"
+      # username: "{{ graphiant_username | default(lookup('ini', 'username file=/absolute/path/test/test.ini section=credentials')) }}"
+      # password: "{{ graphiant_password | default(lookup('ini', 'password file=/absolute/path/test/test.ini section=credentials')) }}"
+
+  tasks:
+    - name: Configure global prefix sets
+      graphiant.naas.graphiant_global_config:
+        <<: *graphiant_client_params
+        config_file: "sample_global_prefix_lists.yaml"
+        operation: "configure"
+        state: present
+      tags: ['global_config', 'prefix_sets']
+
+    - name: Configure global BGP filters
+      graphiant.naas.graphiant_global_config:
+        <<: *graphiant_client_params
+        config_file: "sample_global_bgp_filters.yaml"
+        operation: "configure"
+        state: present
+      tags: ['global_config', 'bgp_filters']
+
+    - name: Configure global SNMP services
+      graphiant.naas.graphiant_global_config:
+        <<: *graphiant_client_params
+        config_file: "sample_global_snmp_services.yaml"
+        operation: "configure"
+        state: present
+      tags: ['global_config', 'snmp']
+
+    - name: Configure global syslog services
+      graphiant.naas.graphiant_global_config:
+        <<: *graphiant_client_params
+        config_file: "sample_global_syslog_servers.yaml"
+        operation: "configure"
+        state: present
+      tags: ['global_config', 'syslog']
+
+    - name: Configure global IPFIX services
+      graphiant.naas.graphiant_global_config:
+        <<: *graphiant_client_params
+        config_file: "sample_global_ipfix_exporters.yaml"
+        operation: "configure"
+        state: present
+      tags: ['global_config', 'ipfix']
+
+    - name: Configure global VPN profiles
+      graphiant.naas.graphiant_global_config:
+        <<: *graphiant_client_params
+        config_file: "sample_global_vpn_profiles.yaml"
+        operation: "configure"
+        state: present
+      tags: ['global_config', 'vpn']
+
+    # - name: Configure interfaces and circuits
+    #   graphiant.naas.graphiant_interfaces:
+    #     <<: *graphiant_client_params
+    #     interface_config_file: "sample_interface_config.yaml"
+    #     circuit_config_file: "sample_circuit_config.yaml"
+    #     operation: "configure_interfaces"
+    #     state: present
+    #   tags: ['interfaces', 'circuits']
+
+    # - name: Attach global objects to sites
+    #   graphiant.naas.graphiant_sites:
+    #     <<: *graphiant_client_params
+    #     site_config_file: "sample_site_attachments.yaml"
+    #     operation: "attach"
+    #     state: present
+    #   tags: ['sites', 'attachments']
+
+    # - name: Configure BGP peering
+    #   graphiant.naas.graphiant_bgp:
+    #     <<: *graphiant_client_params
+    #     bgp_config_file: "sample_bgp_peering.yaml"
+    #     operation: "configure"
+    #     state: present
+    #   tags: ['bgp', 'peering']

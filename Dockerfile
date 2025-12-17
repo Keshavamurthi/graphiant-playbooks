@@ -6,10 +6,10 @@ WORKDIR /app
 COPY ansible_collections /app/ansible_collections
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN pip install --no-cache-dir -r /app/ansible_collections/graphiant/graphiant_playbooks/requirements.txt
+RUN pip install --no-cache-dir -r /app/ansible_collections/graphiant/naas/requirements.txt
 
 # Install the Ansible collection
-RUN ansible-galaxy collection install /app/ansible_collections/graphiant/graphiant_playbooks/ --force
+RUN ansible-galaxy collection install /app/ansible_collections/graphiant/naas/ --force
 
 # Stage 2: Final stage
 FROM python:3.12-slim
@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Set environment
 ENV PATH="/opt/venv/bin:$PATH"
-ENV GRAPHIANT_PLAYBOOKS_VERSION=$COMMIT_SHA
+ENV GRAPHIANT_NAAS_VERSION=$COMMIT_SHA
 
 # Copy additional project files
 COPY README.md LICENSE ./

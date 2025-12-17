@@ -7,16 +7,16 @@
 * @Graphiant-Inc/graphiant-team @Graphiant-Inc/sre
 
 # Ansible Collection - core collection files
-/ansible_collections/graphiant/graphiant_playbooks/ @Graphiant-Inc/graphiant-team
+/ansible_collections/graphiant/naas/ @Graphiant-Inc/graphiant-team
 
 # Ansible Collection - modules and plugins
-/ansible_collections/graphiant/graphiant_playbooks/plugins/ @Graphiant-Inc/graphiant-team
+/ansible_collections/graphiant/naas/plugins/ @Graphiant-Inc/graphiant-team
 
 # Ansible Collection - playbooks
-/ansible_collections/graphiant/graphiant_playbooks/playbooks/ @Graphiant-Inc/graphiant-team
+/ansible_collections/graphiant/naas/playbooks/ @Graphiant-Inc/graphiant-team
 
 # Ansible Collection - tests
-/ansible_collections/graphiant/graphiant_playbooks/tests/ @Graphiant-Inc/graphiant-team
+/ansible_collections/graphiant/naas/tests/ @Graphiant-Inc/graphiant-team
 
 # CI/CD workflows - SRE team must approve
 /.github/workflows/ @Graphiant-Inc/graphiant-team @Graphiant-Inc/sre

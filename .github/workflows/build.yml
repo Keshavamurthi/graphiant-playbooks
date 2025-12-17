@@ -3,14 +3,14 @@ name: Build Collection
 on:
   pull_request:
     paths:
-      - 'ansible_collections/graphiant/graphiant_playbooks/**'
+      - 'ansible_collections/graphiant/naas/**'
       - '.github/workflows/build.yml'
   push:
     branches:
       - main
       - develop
     paths:
-      - 'ansible_collections/graphiant/graphiant_playbooks/**'
+      - 'ansible_collections/graphiant/naas/**'
       - '.github/workflows/build.yml'
   workflow_dispatch:
 
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ansible_collections/graphiant/graphiant_playbooks
+        working-directory: ansible_collections/graphiant/naas
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,12 +52,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: collection-tarball
-          path: ${{ github.workspace }}/build/graphiant-graphiant_playbooks-*.tar.gz
+          path: ${{ github.workspace }}/build/graphiant-naas-*.tar.gz
           retention-days: 7
 
       - name: Verify build artifact exists
         run: |
-          COLLECTION_FILE=$(ls ${{ github.workspace }}/build/graphiant-graphiant_playbooks-*.tar.gz | head -1)
+          COLLECTION_FILE=$(ls ${{ github.workspace }}/build/graphiant-naas-*.tar.gz | head -1)
           if [ -z "$COLLECTION_FILE" ] || [ ! -f "$COLLECTION_FILE" ]; then
             echo "Error: Collection file not found in build directory"
             exit 1

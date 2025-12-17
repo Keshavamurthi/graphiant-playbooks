@@ -13,13 +13,13 @@ Refer [Graphiant Docs](https://docs.graphiant.com) to get started with [Graphian
 ## 📚 Documentation
 
 - **Official Documentation**: [Graphiant Plybooks Guide](https://docs.graphiant.com/docs/graphiant-playbooks) <-> [Graphiant Automation Docs](https://docs.graphiant.com/docs/automation)
-- **Ansible Collection**: [Ansible Galaxy Collection - graphiant.graphiant_playbooks](https://galaxy.ansible.com/ui/repo/published/graphiant/graphiant_playbooks)
+- **Ansible Collection**: [Ansible Galaxy Collection - graphiant.naas](https://galaxy.ansible.com/ui/repo/published/graphiant/naas)
 
 ## Components
 
 | Component | Description | Documentation |
 |-----------|-------------|---------------|
-| **Ansible Collection** | Ansible modules for Graphiant NaaS automation | [📖 Documentation](ansible_collections/graphiant/graphiant_playbooks/README.md) |
+| **Ansible Collection** | Ansible modules for Graphiant NaaS automation | [📖 Documentation](ansible_collections/graphiant/naas/README.md) |
 | **Terraform Modules** | Infrastructure as Code for cloud connectivity | [📖 Documentation](terraform/README.md) |
 | **CI/CD Pipelines** | Automated testing, linting, and Docker builds | [📖 GitHub](.github/workflows/README.md) |
 | **Docker Support** | Containerized execution environment | [📖 Documentation](Docker.md) |
@@ -44,13 +44,13 @@ python3.10 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
-pip install -r ansible_collections/graphiant/graphiant_playbooks/requirements.txt
+pip install -r ansible_collections/graphiant/naas/requirements.txt
 
 # Install collection from source
-ansible-galaxy collection install ansible_collections/graphiant/graphiant_playbooks/ --force
+ansible-galaxy collection install ansible_collections/graphiant/naas/ --force
 
 # Or install from Ansible Galaxy
-ansible-galaxy collection install graphiant.graphiant_playbooks
+ansible-galaxy collection install graphiant.naas
 ```
 
 **Example Playbook:**
@@ -68,13 +68,13 @@ ansible-galaxy collection install graphiant.graphiant_playbooks
 
   tasks:
     - name: Configure LAN interfaces
-      graphiant.graphiant_playbooks.graphiant_interfaces:
+      graphiant.naas.graphiant_interfaces:
         <<: *graphiant_client_params
         interface_config_file: "interface_config.yaml"
         operation: "configure_lan_interfaces"
 ```
 
-**See the [Ansible Collection README](ansible_collections/graphiant/graphiant_playbooks/README.md) for complete documentation and [Examples Guide](ansible_collections/graphiant/graphiant_playbooks/docs/guides/EXAMPLES.md) for detailed usage examples.**
+**See the [Ansible Collection README](ansible_collections/graphiant/naas/README.md) for complete documentation and [Examples Guide](ansible_collections/graphiant/naas/docs/guides/EXAMPLES.md) for detailed usage examples.**
 
 ### Python Library
 
@@ -82,7 +82,7 @@ The collection can also be used as a Python library:
 
 ```bash
 # Set PYTHONPATH for direct Python usage
-export PYTHONPATH=$(pwd)/ansible_collections/graphiant/graphiant_playbooks/plugins/module_utils:$PYTHONPATH
+export PYTHONPATH=$(pwd)/ansible_collections/graphiant/naas/plugins/module_utils:$PYTHONPATH
 ```
 
 ```python
@@ -96,7 +96,7 @@ config = GraphiantConfig(
 config.interfaces.configure_lan_interfaces("interface_config.yaml")
 ```
 
-See `ansible_collections/graphiant/graphiant_playbooks/tests/test.py` for comprehensive Python library usage examples.
+See `ansible_collections/graphiant/naas/tests/test.py` for comprehensive Python library usage examples.
 
 ### Terraform Modules
 
@@ -128,7 +128,7 @@ terraform apply -var-file="../../configs/gateway_services/gcp_config.tfvars"
 
 ```
 graphiant-playbooks/
-├── ansible_collections/graphiant/graphiant_playbooks/  # Ansible collection
+├── ansible_collections/graphiant/naas/  # Ansible collection
 ├── terraform/                                          # Terraform modules
 ├── scripts/                                            # Utility scripts (version management, validation, building)
 │   ├── build_collection.py                           # Collection build script

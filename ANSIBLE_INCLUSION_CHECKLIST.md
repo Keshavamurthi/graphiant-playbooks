@@ -1,8 +1,8 @@
 # Ansible Collection Inclusion Checklist
-## Collection: graphiant.graphiant_playbooks
+## Collection: graphiant.naas
 
-**Review Date:** 2025-01-XX  
-**Collection Version:** 25.11.3  
+**Review Date:** 2025-12-18  
+**Collection Version:** 25.12.1  
 **Ansible Core Requirement:** >= 2.17.0  
 **Python Requirement:** >= 3.10  
 
@@ -14,7 +14,7 @@
 - [x] **Status:** ✅ **PASSING**
 - **Requirement:** Collection must be published on Ansible Galaxy with version 1.0.0 or later
 - **Verification:**
-  - Collection version: `25.11.3` (meets requirement: >= 1.0.0)
+  - Collection version: `25.12.1` (meets requirement: >= 1.0.0)
   - Location: `galaxy.yml` line 4
   - Repository: `https://github.com/Graphiant-Inc/graphiant-playbooks`
   - Galaxy URL: Collection should be published on Ansible Galaxy
@@ -47,7 +47,7 @@
 - [x] **Status:** ✅ **PASSING**
 - **Requirement:** Releases must be tagged in the repository
 - **Verification:**
-  - Version `25.11.3` is specified in `galaxy.yml`
+  - Version `25.12.1` is specified in `galaxy.yml`
   - Git tags should be created for each release (verify with `git tag`)
 
 ---
@@ -58,7 +58,7 @@
 - [x] **Status:** ✅ **PASSING**
 - **Requirement:** Must adhere to semantic versioning (MAJOR.MINOR.PATCH)
 - **Verification:**
-  - Current version: `25.11.3` (follows semantic versioning)
+  - Current version: `25.12.1` (follows semantic versioning)
   - Location: `galaxy.yml` line 4, `_version.py` line 9
   - Changelog follows semantic versioning format
   - Version management: Centralized in `_version.py`
@@ -123,7 +123,7 @@
 - [x] **Status:** ✅ **PASSING**
 - **Requirement:** Must have a README.md file
 - **Verification:**
-  - File exists: `ansible_collections/graphiant/graphiant_playbooks/README.md`
+  - File exists: `ansible_collections/graphiant/naas/README.md`
   - Includes: Installation instructions, usage examples, module documentation
   - Comprehensive documentation with examples
 
@@ -131,7 +131,7 @@
 - [x] **Status:** ✅ **PASSING**
 - **Requirement:** FQCNs must be used for all plugins and modules
 - **Verification:**
-  - Modules use FQCN: `graphiant.graphiant_playbooks.graphiant_*`
+  - Modules use FQCN: `graphiant.naas.graphiant_*`
   - Playbooks use FQCNs (e.g., `ansible.builtin.debug`)
   - No short names used in examples
 
@@ -144,7 +144,7 @@
 - **Requirement:** Must follow Ansible collection directory structure
 - **Verification:**
   - Proper namespace: `graphiant`
-  - Proper collection name: `graphiant_playbooks`
+  - Proper collection name: `naas`
   - Directory structure:
     - `plugins/modules/` ✅
     - `plugins/module_utils/` ✅
@@ -178,14 +178,14 @@
 - [x] **Status:** ✅ **PASSING**
 - **Requirement:** All modules must have `version_added` in major.minor format
 - **Verification:**
-  - All modules use `version_added: "25.11.0"` (major.minor format)
+  - All modules use `version_added: "25.12.0"` (major.minor format)
   - Centralized in `_version.py` as `MODULE_VERSION_ADDED`
   - Modules verified:
-    - `graphiant_bgp.py`: `version_added: "25.11.0"` ✅
-    - `graphiant_data_exchange.py`: `version_added: "25.11.0"` ✅
-    - `graphiant_global_config.py`: `version_added: "25.11.0"` ✅
-    - `graphiant_interfaces.py`: `version_added: "25.11.0"` ✅
-    - `graphiant_sites.py`: `version_added: "25.11.0"` ✅
+    - `graphiant_bgp.py`: `version_added: "25.12.0"` ✅
+    - `graphiant_data_exchange.py`: `version_added: "25.12.0"` ✅
+    - `graphiant_global_config.py`: `version_added: "25.12.0"` ✅
+    - `graphiant_interfaces.py`: `version_added: "25.12.0"` ✅
+    - `graphiant_sites.py`: `version_added: "25.12.0"` ✅
 
 ### 3.5 Collection Dependencies
 - [x] **Status:** ✅ **PASSING**
@@ -321,11 +321,11 @@ All requirements from the [Ansible Collection Inclusion Checklist](https://githu
 
 | Module | Check Mode | Python | version_added | License Header |
 |--------|------------|--------|---------------|----------------|
-| `graphiant_interfaces` | ✅ Yes | >= 3.10 | 25.11.0 | ✅ GPLv3 |
-| `graphiant_bgp` | ✅ Yes | >= 3.10 | 25.11.0 | ✅ GPLv3 |
-| `graphiant_global_config` | ✅ Yes | >= 3.10 | 25.11.0 | ✅ GPLv3 |
-| `graphiant_sites` | ✅ Yes | >= 3.10 | 25.11.0 | ✅ GPLv3 |
-| `graphiant_data_exchange` | ⚠️ No* | >= 3.10 | 25.11.0 | ✅ GPLv3 |
+| `graphiant_interfaces` | ✅ Yes | >= 3.10 | 25.12.0 | ✅ GPLv3 |
+| `graphiant_bgp` | ✅ Yes | >= 3.10 | 25.12.0 | ✅ GPLv3 |
+| `graphiant_global_config` | ✅ Yes | >= 3.10 | 25.12.0 | ✅ GPLv3 |
+| `graphiant_sites` | ✅ Yes | >= 3.10 | 25.12.0 | ✅ GPLv3 |
+| `graphiant_data_exchange` | ⚠️ No* | >= 3.10 | 25.12.0 | ✅ GPLv3 |
 
 *Note: `graphiant_data_exchange` does not support check_mode but provides `dry_run` parameter for the `accept_invitation` operation. This is intentional for complex multi-step workflows.
 
@@ -386,7 +386,7 @@ These are not blocking requirements but are recommended for better collection qu
 All critical action items have been completed:
 
 - [x] ✅ Code of Conduct - `CODE_OF_CONDUCT.md` exists
-- [x] ✅ version_added - All modules use `"25.11.0"` (major.minor format)
+- [x] ✅ version_added - All modules use `"25.12.0"` (major.minor format)
 - [x] ✅ Multi-version CI testing - Tests against ansible-core 2.17, 2.18, 2.19
 - [x] ✅ Scheduled CI runs - Nightly runs at 2 AM UTC
 - [x] ✅ Python version support - Python 3.10+ supported and documented
@@ -417,7 +417,7 @@ All requirements from the [Ansible Collection Inclusion Checklist](https://githu
 ---
 
 **Review completed by:** Auto (AI Assistant)  
-**Collection Version:** 25.11.3  
-**Review Date:** 2025-01-XX  
+**Collection Version:** 25.12.1  
+**Review Date:** 2025-12-18  
 **Ansible Core Requirement:** >= 2.17.0  
 **Python Requirement:** >= 3.10

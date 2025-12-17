@@ -26,10 +26,13 @@ Builds the Ansible collection:
 - Uploads build artifact
 
 ### `release.yml` - Release and Publish
-Publishes the collection to Ansible Galaxy:
+Publishes the collection to Ansible Galaxy and creates Git tags/releases:
 - Manual trigger only (workflow_dispatch)
 - Restricted to repository admins and maintainers only
-- Requires `GALAXY_API_KEY` secret or variable to be set
+- Requires `GALAXY_API_KEY` secret or variable to be set for publishing
+- **Automatically creates Git tags** for releases
+- **Automatically creates GitHub releases** with CHANGELOG references
+- **Idempotent behavior**: Won't fail if tags or releases already exist (safe to re-run)
 
 ## Setup
 
@@ -80,7 +83,7 @@ The `e2e-integration-test` job in `test.yml` requires the following secrets/vari
 While you can't run GitHub Actions locally, you can run the same commands:
 
 ```bash
-cd ansible_collections/graphiant/graphiant_playbooks
+cd ansible_collections/graphiant/naas
 
 # Linting
 djlint configs -e yaml
@@ -102,7 +105,7 @@ export GRAPHIANT_HOST="https://api.graphiant.com"
 export GRAPHIANT_USERNAME="your_username"
 export GRAPHIANT_PASSWORD="your_password"
 export ANSIBLE_STDOUT_CALLBACK=debug
-ansible-playbook ~/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks/playbooks/hello_test.yml
+ansible-playbook ~/.ansible/collections/ansible_collections/graphiant/naas/playbooks/hello_test.yml
 
 # Building
 python ../../scripts/build_collection.py
@@ -111,8 +114,13 @@ python ../../scripts/build_collection.py
 ### Publishing a Release
 
 1. Manually trigger the release workflow via `workflow_dispatch` from the GitHub Actions tab
-2. Provide the collection version when prompted
-3. The workflow will build and publish to Ansible Galaxy
+2. Provide the collection version when prompted (e.g., `25.12.1` or `v25.12.1`)
+3. The workflow will:
+   - Build the collection
+   - Publish to Ansible Galaxy (if `GALAXY_API_KEY` is configured)
+   - Create Git tag (normalized to include 'v' prefix, e.g., `v25.12.1`)
+   - Create GitHub release with CHANGELOG reference
+4. **Idempotent**: The workflow can be safely re-run - it won't fail if tags or releases already exist
 
 ## Workflow Status
 

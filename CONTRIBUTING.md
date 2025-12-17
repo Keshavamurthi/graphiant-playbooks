@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing!
 
-> **Note:** Version management is centralized in `_version.py`. See [Version Management Guide](ansible_collections/graphiant/graphiant_playbooks/docs/guides/VERSION_MANAGEMENT.md) and [Release Process](ansible_collections/graphiant/graphiant_playbooks/docs/guides/RELEASE.md) for version bumping and release procedures.
+> **Note:** Version management is centralized in `_version.py`. See [Version Management Guide](ansible_collections/graphiant/naas/docs/guides/VERSION_MANAGEMENT.md) and [Release Process](ansible_collections/graphiant/naas/docs/guides/RELEASE.md) for version bumping and release procedures.
 
 ## Getting Started
 
@@ -16,7 +16,7 @@ Thank you for your interest in contributing!
    ```bash
    python3.10 -m venv venv
    source venv/bin/activate
-   pip install -r ansible_collections/graphiant/graphiant_playbooks/requirements.txt
+   pip install -r ansible_collections/graphiant/naas/requirements.txt
    ```
 
 ## Development Workflow
@@ -37,24 +37,24 @@ Thank you for your interest in contributing!
 
 3. **Build and install collection:**
    ```bash
-   ansible-galaxy collection install ansible_collections/graphiant/graphiant_playbooks/ --force
+   ansible-galaxy collection install ansible_collections/graphiant/naas/ --force
    ```
 
 4. **Run linting (before commit):**
    ```bash
    # Python linting with flake8 (local development only, not in CI)
-   flake8 ansible_collections/graphiant/graphiant_playbooks/plugins/module_utils/libs
+   flake8 ansible_collections/graphiant/naas/plugins/module_utils/libs
 
    # Python linting with pylint (errors only, local development only, not in CI)
-   export PYTHONPATH=$PYTHONPATH:$(pwd)/ansible_collections/graphiant/graphiant_playbooks/plugins/module_utils/libs
-   pylint --errors-only ansible_collections/graphiant/graphiant_playbooks/plugins/module_utils/libs
+   export PYTHONPATH=$PYTHONPATH:$(pwd)/ansible_collections/graphiant/naas/plugins/module_utils/libs
+   pylint --errors-only ansible_collections/graphiant/naas/plugins/module_utils/libs
 
    # Ansible playbook linting (runs in CI, requires collection to be installed - step 3)
-   ansible-lint --config-file ~/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks/.ansible-lint ~/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks/playbooks/
+   ansible-lint --config-file ~/.ansible/collections/ansible_collections/graphiant/naas/.ansible-lint ~/.ansible/collections/ansible_collections/graphiant/naas/playbooks/
 
    # YAML/Jinja template linting with djlint (runs in CI)
-   djlint ansible_collections/graphiant/graphiant_playbooks/configs -e yaml
-   djlint ansible_collections/graphiant/graphiant_playbooks/templates -e yaml
+   djlint ansible_collections/graphiant/naas/configs -e yaml
+   djlint ansible_collections/graphiant/naas/templates -e yaml
    ```
 
 5. **Run E2E integration test (hello_test.yml):**
@@ -68,7 +68,7 @@ Thank you for your interest in contributing!
    export ANSIBLE_STDOUT_CALLBACK=debug
    
    # Run hello_test.yml to verify collection works (also runs in CI as e2e-integration-test)
-   ansible-playbook ~/.ansible/collections/ansible_collections/graphiant/graphiant_playbooks/playbooks/hello_test.yml
+   ansible-playbook ~/.ansible/collections/ansible_collections/graphiant/naas/playbooks/hello_test.yml
    ```
 
 6. **Commit with clear messages:**
@@ -139,7 +139,7 @@ options:
 
 EXAMPLES = r'''
 - name: Example task
-  graphiant.graphiant_playbooks.your_module:
+  graphiant.naas.your_module:
     option_name: value
 '''
 
@@ -188,7 +188,7 @@ python scripts/bump_version.py minor
 python scripts/bump_version.py major
 ```
 
-The script automatically updates all version references. See [Version Management Guide](ansible_collections/graphiant/graphiant_playbooks/docs/guides/VERSION_MANAGEMENT.md) and [Release Process](ansible_collections/graphiant/graphiant_playbooks/docs/guides/RELEASE.md) for complete release procedures.
+The script automatically updates all version references. See [Version Management Guide](ansible_collections/graphiant/naas/docs/guides/VERSION_MANAGEMENT.md) and [Release Process](ansible_collections/graphiant/naas/docs/guides/RELEASE.md) for complete release procedures.
 
 ### For Contributors
 
