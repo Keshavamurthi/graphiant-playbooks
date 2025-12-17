@@ -303,7 +303,7 @@ class GraphiantPortalClient():
                         role, region, status)
             return None
 
-    @poller(timeout=90, wait=5)
+    @poller(timeout=120, wait=10)
     def verify_device_portal_status(self, device_id: int):
         """
         Verifies device portal sync Ready status (InSync) and
@@ -336,7 +336,7 @@ class GraphiantPortalClient():
             edge (dict, V1DevicesDeviceIdConfigPutRequestEdge, optional): Edge configuration data.
 
         Returns:
-            response (V1DevicesDeviceIdConfigPut202Response):
+            response (V1DevicesDeviceIdConfigPutResponse):
             The response from the API call to push the device config.
 
         Raises:
@@ -368,6 +368,104 @@ class GraphiantPortalClient():
             LOG.warning("put_device_config : Exception while config push %s", e)
             raise APIError(f"put_device_config : Retrying, Exception while config push to {device_id}. "
                            f"Exception: {e}")
+
+    def put_device_config_raw(self, device_id: int, payload: dict):
+        """
+        Put Devices Config on GCS using raw payload dictionary.
+
+        This method accepts a raw payload dictionary that conforms to the
+        /v1/devices/{device_id}/config API schema. It is designed for use cases
+        where users want to provide the complete configuration payload directly.
+
+        Args:
+            device_id (int): The device ID to push the config.
+            payload (dict): Raw configuration payload containing edge/core config.
+                           Must conform to V1DevicesDeviceIdConfigPutRequest schema.
+
+        Returns:
+            response (V1DevicesDeviceIdConfigPutResponse):
+            The response from the API call to push the device config.
+
+        Raises:
+            AssertionError: If the device portal status is not 'Ready' after retries
+            ApiException/AssertionError: If there is an API exception during the
+            config push after retries
+        """
+        # Extract edge and core from payload
+        edge = payload.get('edge')
+        core = payload.get('core')
+
+        device_config_put_request = \
+            graphiant_sdk.V1DevicesDeviceIdConfigPutRequest(core=core, edge=edge)
+
+        # Add optional fields if present in payload
+        if 'description' in payload:
+            device_config_put_request.description = payload['description']
+        if 'configurationMetadata' in payload:
+            device_config_put_request.configuration_metadata = payload['configurationMetadata']
+
+        try:
+            # Verify device portal status and connection status.
+            self.verify_device_portal_status(device_id=device_id)
+            LOG.info("put_device_config_raw : config to be pushed for %s: \n%s",
+                     device_id, json.dumps(device_config_put_request.to_dict(), indent=2))
+            response = self.api.v1_devices_device_id_config_put(
+                authorization=self.bearer_token, device_id=device_id,
+                v1_devices_device_id_config_put_request=device_config_put_request)
+            # Verify device portal status and connection status.
+            self.verify_device_portal_status(device_id=device_id)
+            return response
+        except ForbiddenException as e:
+            LOG.error("put_device_config_raw: Got ForbiddenException while config push %s", e)
+            raise AssertionError(f"put_device_config_raw : Retrying, Got ForbiddenException "
+                                 f"while config push to {device_id}. "
+                                 f"User {self.config.username} does not have permissions "
+                                 f"to perform the requested operation "
+                                 f"(v1_devices_device_id_config_put).")
+        except ApiException as e:
+            LOG.warning("put_device_config_raw : Exception while config push %s", e)
+            raise AssertionError(f"put_device_config_raw : Retrying, Exception while config push to {device_id}. "
+                                 f"Exception: {e}")
+
+    def show_validated_payload(self, device_id: int, payload: dict):
+        """
+        Show validated device configuration payload using SDK models (dry-run mode).
+
+        This method validates the payload structure by constructing the SDK request
+        object and verifies the payload structure using SDK models without pushing the configuration.
+        This returns the validated payload.
+
+        Args:
+            device_id (int): The device ID to validate the config for.
+            payload (dict): Raw configuration payload containing edge/core config.
+                           Must conform to V1DevicesDeviceIdConfigPutRequest schema.
+
+        Returns:
+            dict: Validation result containing the constructed request payload.
+
+        Raises:
+            Exception: If payload structure validation fails
+        """
+        # Extract edge and core from payload
+        edge = payload.get('edge')
+        core = payload.get('core')
+
+        device_config_put_request = \
+            graphiant_sdk.V1DevicesDeviceIdConfigPutRequest(core=core, edge=edge)
+
+        # Add optional fields if present in payload
+        if 'description' in payload:
+            device_config_put_request.description = payload['description']
+        if 'configurationMetadata' in payload:
+            device_config_put_request.configuration_metadata = payload['configurationMetadata']
+
+        # Convert to dict to validate structure
+        validated_payload_dict = device_config_put_request.to_dict()
+        LOG.info("show_validated_payload : validated config for %s: \n%s",
+                 device_id, json.dumps(validated_payload_dict, indent=2))
+
+        LOG.info("show_validated_payload: Successfully showed validated payload for %s", device_id)
+        return validated_payload_dict
 
     def post_devices_bringup(self, device_ids):
         """
