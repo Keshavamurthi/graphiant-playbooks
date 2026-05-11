@@ -95,11 +95,12 @@ variable "instance_type" {
 
 variable "key_name" {
   type = string
+  default = null
 }
 
 variable "ssh_allowed_cidr" {
   type    = string
-  default = "your-management-ip/32" # Replace with your management IP or VPN CIDR
+  default = "0.0.0.0/0"
 }
 
 variable "deploy_connect_endpoint" {
@@ -134,11 +135,11 @@ variable "dx_gateway_asn" {
 variable "dxgw_allowed_prefixes" {
   description = "Restricted Prefix allowed from VPC"
   type        = list(string)
-  default     = ["10.0.0.0/16", "192.168.1.0/24"]
+  default     = ["10.10.0.0/16"]
 }
 
 variable "dx_connection_id" {
-  description = "Direct Connect connection ID (e.g., dxcon-xxxxx)"
+  description = "Direct Connect connection or LAG ID. Set to the LAG ID (dxlag-xxxxx) when using a LAG, or the connection ID (dxcon-xxxxx) for a single connection."
   type        = string
   default     = null
 }
@@ -146,7 +147,6 @@ variable "dx_connection_id" {
 variable "dx_connection_vlan" {
   description = "VLAN ID for the Transit Virtual Interface"
   type        = number
-  default     = null
 }
 
 variable "dx_vif_name" {
@@ -167,8 +167,9 @@ variable "transit_vif_mtu" {
   default     = 8500
 }
 
-variable "skip_manual_steps" {
-  description = "Set to true to skip resources that require manual Direct Connect connection acceptance. Use false for pre-manual step, true for post-manual step."
-  type        = bool
-  default     = false
+variable "tgw_route_cidr" {
+  description = "Destination CIDR block for the route to the Transit Gateway. Use 0.0.0.0/0 for a default route or a specific CIDR to limit traffic."
+  type        = string
+  default     = "0.0.0.0/0"
 }
+
