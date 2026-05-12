@@ -49,25 +49,25 @@ terraform/
 │           ├── outputs.tf
 │           └── templates/
 │
-├── gateway_services/              # Cloud gateway service modules
-│   ├── azure/                    # Azure ExpressRoute modules
-│   │   ├── main.tf              # Main Terraform configuration
-│   │   ├── variables.tf         # Variable definitions
-│   │   └── outputs.tf           # Output values
-│   ├── aws/                     # AWS Direct Connect modules
-│   │   ├── main.tf              # Main Terraform configuration
-│   │   ├── variables.tf         # Variable definitions
-│   │   └── outputs.tf          # Output values
-│   └── gcp/                     # GCP InterConnect modules
-│       ├── main.tf              # Main Terraform configuration
-│       ├── variables.tf         # Variable definitions
-│       └── outputs.tf           # Output values
-│
-└── configs/                       # Gateway service tfvars (edge tfvars live under each module’s configs/)
-    └── gateway_services/        # Configuration files
-        ├── azure_config.tfvars  # Azure variable configuration
-        ├── aws_config.tfvars    # AWS variable configuration
-        └── gcp_config.tfvars    # GCP variable configuration
+└── gateway_services/              # Cloud gateway service modules
+    ├── azure/                    # Azure ExpressRoute modules
+    │   ├── configs/              # Configuration files
+    │   │   └── azure_config.tfvars
+    │   ├── main.tf              # Main Terraform configuration
+    │   ├── variables.tf         # Variable definitions
+    │   └── outputs.tf           # Output values
+    ├── aws/                     # AWS Direct Connect modules
+    │   ├── configs/             # Configuration files
+    │   │   └── aws_config.tfvars
+    │   ├── main.tf              # Main Terraform configuration
+    │   ├── variables.tf         # Variable definitions
+    │   └── outputs.tf          # Output values
+    └── gcp/                     # GCP InterConnect modules
+        ├── configs/              # Configuration files
+        │   └── gcp_config.tfvars
+        ├── main.tf              # Main Terraform configuration
+        ├── variables.tf         # Variable definitions
+        └── outputs.tf           # Output values
 ```
 
 ## Installation
@@ -117,7 +117,7 @@ terraform init
 terraform validate
 
 # Plan
-terraform plan -var-file="../../configs/gateway_services/<cloud>_config.tfvars" -out=tfplan
+terraform plan -var-file="config/<cloud>_config.tfvars" -out=tfplan
 
 # Apply
 terraform apply tfplan
@@ -126,7 +126,7 @@ terraform apply tfplan
 terraform output
 
 # Destroy
-terraform destroy -var-file="../../configs/gateway_services/<cloud>_config.tfvars"
+terraform destroy -var-file="config/<cloud>_config.tfvars"
 ```
 
 ### View Outputs
@@ -273,11 +273,11 @@ az account show  # Verify
 
 ## Azure Configuration
 
-> **⚠️ Required:** You must update `terraform/configs/gateway_services/azure_config.tfvars` with your specific values before running Terraform commands.
+> **⚠️ Required:** You must update `terraform/gateway_services/azure/configs/azure_config.tfvars` with your specific values before running Terraform commands.
 
 ### Step 1: Deploy Azure resources (without ExpressRoute connection)
 
-1. Update `terraform/configs/gateway_services/azure_config.tfvars` and set:
+1. Update `terraform/gateway_services/azure/configs/azure_config.tfvars` and set:
    - `create_expressroute_connection = false`
 2. Optional reference commands:
    - Azure regions: [Azure regions list](https://learn.microsoft.com/en-us/azure/reliability/regions-list)
@@ -292,7 +292,7 @@ az network express-route list-service-providers --query "[?name=='PacketFabric']
 ```bash
 cd graphiant-playbooks/terraform/gateway_services/azure
 terraform init
-terraform plan -var-file="../../configs/gateway_services/azure_config.tfvars" -out=tfplan
+terraform plan -var-file="config/azure_config.tfvars" -out=tfplan
 terraform apply tfplan
 ```
 
@@ -306,10 +306,10 @@ Graphiant Customer Support configures the sub-interface, fabric, and BGP peering
 
 ### Step 4: Create the ExpressRoute connection
 
-After Graphiant confirms circuit provisioning, set `create_expressroute_connection = true` in `terraform/configs/gateway_services/azure_config.tfvars`, then rerun:
+After Graphiant confirms circuit provisioning, set `create_expressroute_connection = true` in `terraform/gateway_services/azure/configs/azure_config.tfvars`, then rerun:
 
 ```bash
-terraform plan -var-file="../../configs/gateway_services/azure_config.tfvars" -out=tfplan
+terraform plan -var-file="config/azure_config.tfvars" -out=tfplan
 terraform apply tfplan
 ```
 
@@ -340,7 +340,7 @@ To destroy all Azure Terraform-managed resources:
 
 ```bash
 cd terraform/gateway_services/azure
-terraform destroy -var-file="../../configs/gateway_services/azure_config.tfvars"
+terraform destroy -var-file="config/azure_config.tfvars"
 ```
 
 **⚠️ Warning:** This command will permanently delete all created Azure resources!
@@ -397,9 +397,7 @@ aws sts get-caller-identity  # Verify
 
 > **📚 Documentation:** For a step-by-step guide on creating the Graphiant Gateway Service for AWS, see the [Graphiant Documentation](https://docs.graphiant.com/docs/creating-the-graphiant-gateway-service-for-aws-graphiant-support). This guide provides step-by-step instructions to accomplish the same setup.
 
-> **⚠️ Important:** Before running Terraform commands, you must request the Gateway Service in Graphiant Portal first, then update `terraform/configs/gateway_services/aws_config.tfvars` with your specific values. See the [AWS Configuration](#aws-configuration) section below.
-
-> **💡 Tip:** This module supports using existing VPC, subnet, and route table. If you have existing resources, set `use_existing_* = true` and provide the resource names.
+> **⚠️ Important:** Before running Terraform commands, you must request the Gateway Service in Graphiant Portal first, then update `terraform/gateway_services/aws/configs/aws_config.tfvars` with your specific values. See the [AWS Configuration](#aws-configuration) section below.
 
 **Step 1: Request Gateway Service in Graphiant Portal (Manual Step - Required)**
 
@@ -423,74 +421,41 @@ Before running Terraform, you need to request the Gateway Service in the Graphia
 
 **Note:** After submitting the request, Graphiant Customer Support will schedule a call to discuss the details. The Direct Connect connection will be provisioned and will appear in your AWS account.
 
-**Step 2: Verify Existing Resources (if using existing VPC/subnet)**
+**Step 2: Accept the Connection**
 
-If you're using existing VPC, subnet, or route table, verify they exist:
+After Graphiant provisions the Direct Connect connection, you'll receive the connection request in AWS Portal.
 
-```bash
-# List VPCs
-aws ec2 describe-vpcs --query 'Vpcs[*].[VpcId,Tags[?Key==`Name`].Value|[0],CidrBlock]' --output table
-
-# List subnets
-aws ec2 describe-subnets --filters "Name=vpc-id,Values=vpc-xxxxx" --query 'Subnets[*].[SubnetId,Tags[?Key==`Name`].Value|[0],CidrBlock]' --output table
-
-# List route tables
-aws ec2 describe-route-tables --filters "Name=vpc-id,Values=vpc-xxxxx" --query 'RouteTables[*].[RouteTableId,Tags[?Key==`Name`].Value|[0]]' --output table
-```
-
-**Step 3: Update Configuration**
-
-After Graphiant provisions the Direct Connect connection, you'll receive the connection ID. Update `terraform/configs/gateway_services/aws_config.tfvars` with your AWS-specific values:
-- **Project name, region, environment**
-- **Existing VPC/subnet/route table names** (if `use_existing_* = true`)
-- **Direct Connect connection ID** (provided by Graphiant after Gateway Service request)
-- **VLAN ID** (you'll get this when you accept the connection in Step 4)
-- **BGP ASN, MTU settings**
-
-**Step 4: Deploy**
-
-**Note:** AWS Direct Connect requires a multi-step deployment process with manual steps between Terraform runs.
-
-**Step 4a: Initial Terraform Deployment (skip_manual_steps = false)**
-```bash
-cd terraform/gateway_services/aws
-terraform init
-terraform plan -var-file="../../configs/gateway_services/aws_config.tfvars" -out=tfplan
-terraform apply tfplan
-```
-
-**Step 4b - Manual Step: Accept Direct Connect Connection**
-
-After Terraform creates the Transit Gateway and DirectConnect Gateway, you need to accept the Direct Connect connection:
-
+To accept the Direct Connect Connection request and to get Direct Connect connection ID
 1. Go to AWS Console → **Direct Connect** → **Connections**
 2. Find the connection provisioned by Graphiant (it will show as "ordering")
 3. Click on the connection and note the **VLAN ID** (you'll need this to update the config file)
 4. Click **"Accept"** to accept the connection
 5. A confirmation modal will appear - click **"Confirm"** to proceed
 6. Wait for the connection state to change to "available" or "pending"
-7. After acceptance, update `dx_connection_vlan` with the VLAN ID and set `skip_manual_steps = true` in `aws_config.tfvars`
+7. After acceptance, update `dx_connection_id` and `dx_connection_vlan` in `aws_config.tfvars`
 
-**Step 4c: Final Terraform Deployment (skip_manual_steps = true)**
+> **Note:** If using LAG, create a LAG manually in AWS Console → **Direct Connect** → **LAGs**, and attach the Direct Connect connections to it. Set `dx_connection_id` to the LAG ID (`dxlag-xxxxx`) and `dx_connection_vlan` to the LAG VLAN in `aws_config.tfvars`. Enable MACsec as part of lag created if needed.
+
+**Step 3: Update the Configuration**
+
+Update `terraform/gateway_services/aws/configs/aws_config.tfvars` with your AWS-specific values:
+- **Project name, region, environment**
+- **Existing VPC/subnet/route table names** (if `use_existing_* = true`)
+- **Direct Connect connection ID** (Direct Connect connection ID after the Connection is accepted)
+- **VLAN ID** (VLAN used for the direct connection between Graphaint Gateway and AWS Direct Connect)
+- **BGP ASN, MTU settings**
+
+
+**Step 4: Deploy**
+
 ```bash
-terraform plan -var-file="../../configs/gateway_services/aws_config.tfvars" -out=tfplan2
-terraform apply tfplan2
+cd terraform/gateway_services/aws
+terraform init
+terraform plan -var-file="configs/aws_config.tfvars" -out=tfplan
+terraform apply tfplan
 ```
 
-**Step 4d - Manual Step: Associate Transit Gateway with DirectConnect Gateway**
-
-After accepting the connection, you need to associate the Transit Gateway with the DirectConnect Gateway:
-
-1. Go to AWS Console → **Direct Connect** → **Direct Connect Gateways**
-2. Select the DirectConnect Gateway created by Terraform
-3. Click on **"Gateway associations"** tab
-4. Click **"Associate gateway"**
-5. Configure the association:
-   - **Gateways**: Select the Transit Gateway created by Terraform
-   - **Allowed prefixes**: Enter the prefixes you want to advertise from AWS to Graphiant (e.g., `["10.0.0.0/16"]`)
-6. Click **"Associate gateway"**
-
-**Step 4e - Manual Step: Provide Information to Graphiant Support**
+**Step 5 - Provide BGP Peering Information to Graphiant Support**
 
 After the Virtual Interface is created, you need to provide the following information to Graphiant Customer Support:
 
@@ -503,9 +468,7 @@ After the Virtual Interface is created, you need to provide the following inform
    - **Amazon router peer IP** (from the virtual interface)
 4. Provide this information to Graphiant Customer Support
 
-> **💡 Tip:** You can download a sample configuration file from the Virtual Interface **Actions** menu → **"Sample configuration"** to get all required fields in one file.
-
-**Step 4f: Graphiant Provisions the Gateway Service**
+**Step 6: Graphiant Provisions the Gateway Service**
 
 After providing the information, Graphiant Customer Support will enable the BGP Peer connection to the Graphiant Core and complete the provisioning of your Gateway Service. 
 
@@ -522,6 +485,7 @@ After providing the information, Graphiant Customer Support will enable the BGP 
 - Transit Gateway
 - DirectConnect Gateway
 - Transit Gateway Attachment (to VPC)
+- Transit Gateway Association with DirectConnect Gateway
 - Transit Virtual Interface
 - Route Table with default route to Transit Gateway
 
@@ -531,54 +495,38 @@ After providing the information, Graphiant Customer Support will enable the BGP 
 - Route Table (if `use_existing_route_table = false`)
 - VM Instance (if `deploy_vm = true`)
 
-**What Terraform does NOT create (requires manual steps):**
-- Gateway Service request in Graphiant Portal (must be done first - Step 1)
-- Direct Connect Connection (provisioned by Graphiant after Gateway Service request)
-- Transit Gateway Association with DirectConnect Gateway (Step 4d)
-- BGP peering configuration (completed by Graphiant Support after you provide the required information)
-
-## AWS Configuration
-
-> **⚠️ Required:** You must update `terraform/configs/gateway_services/aws_config.tfvars` with your specific values before running Terraform commands.
-
-### Using Existing VPC, Subnet, and Route Table (Optional)
-
-**If you already have a VPC, subnet, and route table**, you can use them instead of creating new ones:
-
-**Prerequisites:**
-- Your VPC must already exist in the specified AWS region
-- Your subnet must be in the specified VPC and Availability Zone
-- Your route table must be associated with the subnet
-
 **Configuration Example:**
 ```hcl
-# Use existing resources
+# Use Existing VPC
 use_existing_vpc         = true
 existing_vpc_name        = "your-vpc-name"  # Name of existing VPC
 
+# Use Existing Subnet
 use_existing_subnet      = true
 existing_subnet_name     = "your-subnet-name"  # Name of existing subnet
 
+# Use Existing Route Table
 use_existing_route_table = true
 existing_route_table_name = "your-route-table-name"  # Name of existing route table
 ```
-
-**Important:** Make sure the resource names match exactly the `Name` tags of your existing resources in AWS.
 
 ### Creating New VPC and Subnet (Default)
 
 If you need to create new VPC and subnet resources:
 
 ```hcl
-# Create new resources
-use_existing_vpc         = false
-cidr_block               = "10.0.0.0/16"
+# To deploy new VPC 
+use_existing_vpc = false
+cidr_block      = "10.10.0.0/16"
+tenancy         = "default"
 
-use_existing_subnet      = false
-private_subnet_cidr      = "10.0.1.0/24"
-aws_az                   = "us-east-1a"
+# To create new Private Subnet
+use_existing_subnet   = false
+private_subnet_cidr = "10.10.0.0/24"
+aws_az          = "us-east-1a"
 
-use_existing_route_table = false
+# To create new Route Table
+use_existing_route_table   = false
 ```
 
 ### Required Configuration
@@ -587,96 +535,42 @@ Regardless of whether you use existing or new resources, you must configure:
 
 ```hcl
 # Project Configuration
-project_name = "your-project"
+project_name = "your-project-name"
 aws_region   = "us-east-1"
-
-# Deployment Control
-skip_manual_steps = false  # Set to true after accepting Direct Connect connection
+environment  = "prod"
 
 # Transit Gateway
+tgw_description = "transit gateway description"
 tgw_asn_number = 64512  # Must be different from DirectConnect Gateway ASN
 
 # DirectConnect Gateway
-dx_gateway_name = "graphiant-dx-gateway"
+dx_gateway_name = "your-dx-gateway-name"
 dx_gateway_asn  = 64513  # Must be different from Transit Gateway ASN
-dxgw_allowed_prefixes = ["10.0.0.0/16"]  # Prefixes to advertise to Graphiant
+dxgw_allowed_prefixes = ["10.10.0.0/16"]  # Prefixes to advertise to Graphiant
 
-# DirectConnect Connection (from Graphiant - provided after Gateway Service request)
-dx_connection_id   = "dx-xxxxx"  # Provided by Graphiant after Step 1
-dx_connection_vlan = 100         # VLAN ID from the connection (obtained when accepting connection in Step 4b)
+# DirectConnect Connection
+dx_connection_id = "dx-xxxxx" # Get the direct connect connection ID from AWS after the Graphiant connection is accepted, Incase of LAG the dx_connection_id would be "dxlag-xxxxx"
 
-# Transit Virtual Interface
+# DirectConnect Virtual Interface
 dx_vif_name      = "graphiant-transit-vif"
+dx_connection_vlan = 100      # VLAN tag for this VIF on the connection/LAG, should match the vlan on Graphiant Gateway Interface
 customer_bgp_asn = 30656  # Graphiant's ASN
 transit_vif_mtu   = 8500   # Valid values: 1500 or 8500 (jumbo frames)
+
+# VM Instance (Optional)
+deploy_vm       = true  # Set to true to deploy a test VM
+ami             = "ami-0f9fc25dd2506cf6d"   # Amazon Linux 2023 (us-east-1) - update for your region
+instance_type   = "t3.micro"
+key_name        = "aws_ec2_ssh_keypair"
+ssh_allowed_cidr = "0.0.0.0/0"
 ```
 
-See the full configuration file (`terraform/configs/gateway_services/aws_config.tfvars`) for all available options.
-
-## AWS Troubleshooting
-
-**Authentication Errors:**
-- Run `aws configure` or set environment variables
-- Verify credentials: `aws sts get-caller-identity`
-
-**Common Issues:**
-
-**VPC/Subnet/Route Table Not Found (when using existing resources):**
-- Verify resource names match exactly the `Name` tags in AWS
-- Ensure resources exist in the specified region
-- Verify subnet is in the specified VPC
-- Verify route table is associated with the subnet
-- Check that you're using the correct AWS region
-
-**Direct Connect Connection Issues:**
-- Ensure you've requested the Gateway Service in Graphiant Portal first (Step 1)
-- Verify `dx_connection_id` is correct (provided by Graphiant after Gateway Service request)
-- Ensure connection is accepted in AWS Console before Step 4c
-- Check connection state: `aws directconnect describe-connections --connection-id <id>`
-- Verify the VLAN ID in config matches the connection's VLAN ID
-- Wait for connection state to be "available" or "pending" before proceeding
-
-**ASN Configuration Issues:**
-- Ensure Direct Connect Gateway ASN is different from Transit Gateway ASN
-- Verify customer BGP ASN is set to Graphiant's ASN (30656)
-- Check that ASN values are within valid ranges
-
-**BGP Peering Issues:**
-- If BGP status is not "UP", verify you've provided all required information to Graphiant Support
-- Ensure Virtual Interface is in "available" state
-- Verify all information provided to Graphiant Support is correct
-
-**Resource Creation Failures:**
-- Verify AWS account permissions
-- Check resource quotas/limits
-- Ensure network CIDR ranges don't conflict (when creating new resources)
-
-**Useful Commands:**
+> **Note:** To Generate SSH Keypair from AWS cloudshell, 
 ```bash
-# Verify AWS credentials
-aws sts get-caller-identity
-
-# List VPCs
-aws ec2 describe-vpcs --query 'Vpcs[*].[VpcId,Tags[?Key==`Name`].Value|[0],CidrBlock]' --output table
-
-# List subnets in a VPC
-aws ec2 describe-subnets --filters "Name=vpc-id,Values=vpc-xxxxx" --query 'Subnets[*].[SubnetId,Tags[?Key==`Name`].Value|[0],CidrBlock,AvailabilityZone]' --output table
-
-# List route tables
-aws ec2 describe-route-tables --filters "Name=vpc-id,Values=vpc-xxxxx" --query 'RouteTables[*].[RouteTableId,Tags[?Key==`Name`].Value|[0]]' --output table
-
-# Check Direct Connect connections
-aws directconnect describe-connections --query 'connections[*].[connectionId,connectionState,vlan]' --output table
-
-# Check Direct Connect virtual interfaces
-aws directconnect describe-virtual-interfaces --query 'virtualInterfaces[*].[virtualInterfaceId,virtualInterfaceState,virtualInterfaceType]' --output table
-
-# Get Transit Gateway details
-aws ec2 describe-transit-gateways --query 'TransitGateways[*].[TransitGatewayId,State,AmazonSideAsn]' --output table
-
-# Get Direct Connect Gateway details
-aws directconnect describe-direct-connect-gateways --query 'directConnectGateways[*].[directConnectGatewayId,directConnectGatewayName,amazonSideAsn]' --output table
+aws ec2 create-key-pair --key-name aws_ec2_ssh_keypair --region us-east-1 --query 'KeyMaterial' --output text > aws_ec2_ssh_keypair_privatekey.pem
 ```
+
+See the full configuration file (`terraform/gateway_services/aws/configs/aws_config.tfvars`) for all available options.
 
 ## AWS Cleanup
 
@@ -684,7 +578,7 @@ To destroy all AWS Terraform-managed resources:
 
 ```bash
 cd terraform/gateway_services/aws
-terraform destroy -var-file="../../configs/gateway_services/aws_config.tfvars"
+terraform destroy -var-file="configs/aws_config.tfvars"
 ```
 
 **⚠️ Warning:** This command will permanently delete all created resources!
@@ -748,7 +642,7 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
 
 > **📚 Documentation:** For a step-by-step guide on creating the Graphiant Gateway Service for GCP, see the [Graphiant Documentation](https://docs.graphiant.com/docs/creating-the-graphiant-gateway-service-for-google-cloud-platform-graphiant-support). This guide provides step-by-step instructions to accomplish the same setup.
 
-> **⚠️ Important:** Before running Terraform commands, you must update `terraform/configs/gateway_services/gcp_config.tfvars` with your specific values. See the [GCP Configuration](#gcp-configuration) section below.
+> **⚠️ Important:** Before running Terraform commands, you must update `terraform/gateway_services/gcp/configs/gcp_config.tfvars` with your specific values. See the [GCP Configuration](#gcp-configuration) section below.
 
 > **💡 Tip:** This module is designed to work with your existing VPC and subnet (default). Make sure you have the exact names of your existing VPC and subnet before configuring.
 
@@ -764,7 +658,7 @@ gcloud compute networks subnets list --project=your-project-id --filter="region:
 
 **Step 2: Update Configuration**
 
-Edit `terraform/configs/gateway_services/gcp_config.tfvars` with your GCP-specific values:
+Edit `terraform/gateway_services/gcp/configs/gcp_config.tfvars` with your GCP-specific values:
 - **Project ID, region, zone**
 - **Existing VPC name** (if `use_existing_vpc = true`)
 - **Existing subnet name** (if `use_existing_subnet = true`)
@@ -779,7 +673,7 @@ cd terraform/gateway_services/gcp
 terraform init
 
 # Review plan
-terraform plan -var-file="../../configs/gateway_services/gcp_config.tfvars" -out=tfplan
+terraform plan -var-file="config/gcp_config.tfvars" -out=tfplan
 
 # Apply configuration
 terraform apply tfplan
@@ -858,7 +752,7 @@ After you've completed the manual steps above, Graphiant Support will finalize t
 
 ## GCP Configuration
 
-> **⚠️ Required:** You must update `terraform/configs/gateway_services/gcp_config.tfvars` with your specific values before running Terraform commands.
+> **⚠️ Required:** You must update `terraform/gateway_services/gcp/configs/gcp_config.tfvars` with your specific values before running Terraform commands.
 
 ### Using Existing VPC and Subnet (Recommended - Default)
 
@@ -911,7 +805,7 @@ subnet_name         = "new-subnet-name"
 subnet_cidr         = "10.0.1.0/24"  # Required when creating new subnet
 ```
 
-See the full configuration file (`terraform/configs/gateway_services/gcp_config.tfvars`) for all available options.
+See the full configuration file (`terraform/gateway_services/gcp/configs/gcp_config.tfvars`) for all available options.
 
 ## GCP Troubleshooting
 
@@ -969,7 +863,7 @@ To destroy all GCP Terraform-managed resources:
 
 ```bash
 cd terraform/gateway_services/gcp
-terraform destroy -var-file="../../configs/gateway_services/gcp_config.tfvars"
+terraform destroy -var-file="config/gcp_config.tfvars"
 ```
 
 **⚠️ Warning:** This command will permanently delete all created resources!

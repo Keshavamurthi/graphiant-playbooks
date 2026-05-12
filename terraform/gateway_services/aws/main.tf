@@ -113,6 +113,13 @@ resource "aws_security_group" "vm_sg" {
     cidr_blocks = [var.ssh_allowed_cidr]
   }
 
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.ssh_allowed_cidr]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -147,6 +154,13 @@ resource "aws_security_group" "connect_endpoint_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
+    cidr_blocks = [var.ssh_allowed_cidr]
+  }
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
     cidr_blocks = [var.ssh_allowed_cidr]
   }
 
@@ -201,10 +215,6 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "tgw_vpc_attachment" {
   appliance_mode_support = "disable"
   subnet_ids             = local.subnet_ids
 
-  depends_on = [
-    aws_ec2_transit_gateway.tgw
-  ]
-
   tags = {
     Name        = "${var.project_name}-tgw-attachment"
     Environment = var.environment
@@ -215,7 +225,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "tgw_vpc_attachment" {
 # Create Default Route to the transit gateway for the VPC
 resource "aws_route" "tgw_route" {
   route_table_id         = local.private_route_table_id
-  destination_cidr_block = "0.0.0.0/0" # Or specific CIDRs
+  destination_cidr_block = var.tgw_route_cidr
   transit_gateway_id     = aws_ec2_transit_gateway.tgw.id
 
   depends_on = [
@@ -223,54 +233,16 @@ resource "aws_route" "tgw_route" {
   ]
 }
 
-# ============================================================================
-# STEP 1: PRE-MANUAL STEP RESOURCES
-# ============================================================================
-# These resources can be created before accepting the Direct Connect connection.
-# Run: terraform apply with skip_manual_steps = false (default)
-
 # Create a DirectConnect Gateway
+# Note: The LAG (and connection associations) are created manually outside Terraform
+# due to MACsec constraints in the AWS provider. Set dx_connection_id to the LAG ID.
 resource "aws_dx_gateway" "dxgw" {
   name            = var.dx_gateway_name
   amazon_side_asn = var.dx_gateway_asn
 }
 
-# ============================================================================
-# MANUAL STEP REQUIRED - READ CAREFULLY
-# ============================================================================
-# Before proceeding to Step 2, you MUST manually accept the Direct Connect
-# connection in the aws Console:
-#
-# 1. Go to aws Console -> Direct Connect -> Connections
-# 2. Find the connection with ID: ${var.dx_connection_id}
-# 3. Check the connection state:
-#    - If state is "ordering": Click "Accept" button
-#    - If state is "requested": Connection may need approval from provider
-#    - If state is "available": Connection is already accepted, proceed to Step 2
-# 4. Wait until connection state changes to "available" or "pending"
-#
-# You can verify the connection state using:
-#   aws directconnect describe-connections --connection-id ${var.dx_connection_id}
-#
-# ============================================================================
-# STEP 2: POST-MANUAL STEP RESOURCES
-# ============================================================================
-# These resources require the Direct Connect connection to be accepted first.
-# Run: terraform apply with skip_manual_steps = true
-#
-# NOTE: Set skip_manual_steps = true in your tfvars file after accepting the connection
-
-# Note: Direct Connect connection validation
-# The connection_id is validated when creating the Transit VIF.
-# If the connection doesn't exist, Terraform will fail with a clear error message.
-# Verify the connection exists using:
-#   aws directconnect describe-connections --connection-id <your-connection-id>
-
 # Associate Transit Gateway to Direct Connect Gateway
-# This requires the Direct Connect connection to be in "available" or "pending" state
 resource "aws_dx_gateway_association" "tgw_dxgw_association" {
-  count = var.skip_manual_steps ? 1 : 0
-
   dx_gateway_id         = aws_dx_gateway.dxgw.id
   associated_gateway_id = aws_ec2_transit_gateway.tgw.id
   # Optional: restrict advertised prefixes
@@ -283,10 +255,8 @@ resource "aws_dx_gateway_association" "tgw_dxgw_association" {
 }
 
 # Create a Transit Virtual Interface
-# This requires the Direct Connect connection to be accepted and exist
 resource "aws_dx_transit_virtual_interface" "transit_vif" {
-  count = var.skip_manual_steps ? 1 : 0
-
+  # When using a LAG, set dx_connection_id to the LAG ID (e.g. dxlag-xxxxxxxx)
   connection_id = var.dx_connection_id
   dx_gateway_id = aws_dx_gateway.dxgw.id
 
@@ -296,9 +266,15 @@ resource "aws_dx_transit_virtual_interface" "transit_vif" {
   bgp_asn        = var.customer_bgp_asn
   mtu            = var.transit_vif_mtu
 
+  lifecycle {
+    precondition {
+      condition     = var.dx_connection_id != null
+      error_message = "dx_connection_id must be set. Use the LAG ID when connecting via a LAG."
+    }
+  }
+
   tags = {
     Name        = var.dx_vif_name
     Environment = var.environment
   }
-
 }

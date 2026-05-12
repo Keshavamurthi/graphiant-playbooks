@@ -87,7 +87,7 @@ output "dxgw_name" {
 # Output the DirectConnect Gateway Association ID
 output "dxgw_tgw_association_id" {
   description = "ID of the association between Direct Connect Gateway and Transit Gateway"
-  value       = var.skip_manual_steps ? aws_dx_gateway_association.tgw_dxgw_association[0].id : "Run Step 2 with skip_manual_steps = true"
+  value       = aws_dx_gateway_association.tgw_dxgw_association.id
 }
 
 # --------------------------------
@@ -97,35 +97,52 @@ output "dxgw_tgw_association_id" {
 # Amazon side ASN
 output "amazon_side_asn" {
   description = "Amazon side ASN for BGP peering"
-  value       = var.skip_manual_steps ? aws_dx_transit_virtual_interface.transit_vif[0].amazon_side_asn : "Run Step 2 with skip_manual_steps = true"
+  value       = aws_dx_transit_virtual_interface.transit_vif.amazon_side_asn
 }
 
 # BGP Authentication Key
 output "bgp_authentication_key" {
   description = "BGP authentication key for the virtual interface"
-  value       = var.skip_manual_steps ? aws_dx_transit_virtual_interface.transit_vif[0].bgp_auth_key : "Run Step 2 with skip_manual_steps = true"
+  value       = aws_dx_transit_virtual_interface.transit_vif.bgp_auth_key
+  sensitive   = true
 }
 
 # Your router peer IP (Customer side)
 output "customer_router_peer_ip" {
   description = "Customer router peer IP address"
-  value       = var.skip_manual_steps ? aws_dx_transit_virtual_interface.transit_vif[0].customer_address : "Run Step 2 with skip_manual_steps = true"
+  value       = aws_dx_transit_virtual_interface.transit_vif.customer_address
 }
 
 # Amazon router peer IP
 output "amazon_router_peer_ip" {
   description = "Amazon router peer IP address"
-  value       = var.skip_manual_steps ? aws_dx_transit_virtual_interface.transit_vif[0].amazon_address : "Run Step 2 with skip_manual_steps = true"
+  value       = aws_dx_transit_virtual_interface.transit_vif.amazon_address
 }
 
 # --------------------------------
 #    VM Instance
 # --------------------------------
 
-output "VM-instance_id" {
-  value = var.deploy_vm ? aws_instance.vm[0].id : null
+output "vm_instance_id" {
+  description = "ID of the deployed EC2 instance"
+  value       = var.deploy_vm ? aws_instance.vm[0].id : null
 }
 
-output "VM-private_ip" {
-  value = var.deploy_vm ? aws_instance.vm[0].private_ip : null
+output "vm_private_ip" {
+  description = "Private IP of the deployed EC2 instance"
+  value       = var.deploy_vm ? aws_instance.vm[0].private_ip : null
+}
+
+# --------------------------------
+#    EC2 Instance Connect Endpoint
+# --------------------------------
+
+output "connect_endpoint_id" {
+  description = "ID of the EC2 Instance Connect Endpoint"
+  value       = var.deploy_connect_endpoint ? aws_ec2_instance_connect_endpoint.connect_endpoint[0].id : null
+}
+
+output "connect_endpoint_dns" {
+  description = "DNS name of the EC2 Instance Connect Endpoint"
+  value       = var.deploy_connect_endpoint ? aws_ec2_instance_connect_endpoint.connect_endpoint[0].dns_name : null
 }
