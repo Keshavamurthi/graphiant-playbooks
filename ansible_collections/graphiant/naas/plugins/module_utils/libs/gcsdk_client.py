@@ -1423,7 +1423,8 @@ class GraphiantPortalClient:
         Args:
             service_config (dict): Service configuration containing:
                 - serviceName: Service name
-                - type: Service type ("peering_service" or "client_to_server")
+                - serviceType: Service type ("peering_service" or "client_to_server") — matches
+                  the API field name directly; "type" (legacy) is still accepted as an alias.
                 - policy: Service policy configuration. "peering_service" configs carry
                   "site" (singular) and a "type" key inside policy; both are translated
                   here since the generic policy schema uses "sites" (plural, same inner
@@ -1433,7 +1434,7 @@ class GraphiantPortalClient:
             dict: Created service response (contains "id"), camelCase keys to match the
                 shape callers previously got from the raw/typed peering response.
         """
-        service_type = service_config.get("type", "peering_service")
+        service_type = service_config.get("serviceType") or service_config.get("type") or "peering_service"
         policy = dict(service_config.get("policy") or {})
         policy.pop("type", None)
         if "site" in policy:
@@ -2246,11 +2247,12 @@ class GraphiantPortalClient:
 
         ``acceptance_payload`` is already built in the generic API's own shape by
         ``DataExchangeManager._resolve_acceptance_names_to_ids`` — {"id", "policy":
-        {"sites", "consumerLanSegments", "siteToSiteVpn", "globalObjectOps",
-        "natTranslationMode" (peering_service only)}}. The only rename left here is
-        top-level "id" -> "serviceId" (not user-facing — computed internally, never
-        read from a config file); "customerId" is never sent (the customer is already
-        identified by match_id in the URL path).
+        {"sites", "consumerLanSegments", "globalObjectOps", "siteToSiteVpn" (omitted
+        entirely — not even as {} — for a Graphiant customer with no vpnProfile; the API
+        rejects an empty siteToSiteVpn object), "natTranslationMode" (peering_service
+        only)}}. The only rename left here is top-level "id" -> "serviceId" (not
+        user-facing — computed internally, never read from a config file); "customerId"
+        is never sent (the customer is already identified by match_id in the URL path).
 
         Args:
             match_id (int): The match ID to accept

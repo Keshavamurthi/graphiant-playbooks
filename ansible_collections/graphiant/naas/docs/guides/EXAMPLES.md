@@ -3279,12 +3279,28 @@ Deconfigure deletes only the prefixes listed in the YAML (per segment).
 
 ### Step 1: Prerequisites
 
-```bash
-# Create LAN segments
-ansible-playbook playbooks/de_workflows/00_dataex_lan_segments_prerequisites.yml --check
-ansible-playbook playbooks/de_workflows/00_dataex_lan_segments_prerequisites.yml
+Data Exchange distinguishes two kinds of end customer (see
+[docs.graphiant.com/docs/data-exchange](https://docs.graphiant.com/docs/data-exchange)):
 
-# Configure interfaces
+- A **Graphiant customer** — a business that is also on the Graphiant network and can access the
+  Graphiant Portal directly.
+- A **Non-Graphiant customer** — a business with an unmanaged or third-party edge device. It
+  connects via a Site-to-Site VPN Connection, with a separate tenant acting as **proxy tenant** on
+  its behalf: the location where the service lands for any end customer using a third-party edge
+  device.
+
+Because of this, prerequisites are split across two tenants. Run the first block below in your
+main tenant (the producer of the Data Exchange service); switch credentials and run the second
+block in the proxy tenant that will host Non-Graphiant customers' Site-to-Site VPN Connections.
+
+```bash
+# ---- In the main tenant (producer) ----
+
+# Create the LAN segments referenced by Data Exchange services (e.g. policy.serviceLanSegment)
+ansible-playbook playbooks/de_workflows/00_dataex_lan_segments_prerequisites.yml -e config_file=sample_global_lan_segments.yaml --check
+ansible-playbook playbooks/de_workflows/00_dataex_lan_segments_prerequisites.yml -e config_file=sample_global_lan_segments.yaml
+
+# Configure LAN interfaces for producer edge devices
 ansible-playbook playbooks/de_workflows/00_dataex_lan_interface_prerequisites.yml --check
 ansible-playbook playbooks/de_workflows/00_dataex_lan_interface_prerequisites.yml
 
@@ -3292,30 +3308,54 @@ ansible-playbook playbooks/de_workflows/00_dataex_lan_interface_prerequisites.ym
 ansible-playbook playbooks/complete_network_setup.yml --tag prefix_sets --check
 ansible-playbook playbooks/complete_network_setup.yml --tag prefix_sets
 
-# Create Graphiant filters to be in Data Exchange Services
+# Create Graphiant filters to be used in Data Exchange Services
 ansible-playbook playbooks/complete_network_setup.yml --tag graphiant_filters --check
 ansible-playbook playbooks/complete_network_setup.yml --tag graphiant_filters
+```
 
-# Create VPN profiles in the proxy tenant
+```bash
+# ---- In the proxy tenant ----
 export GRAPHIANT_USERNAME="proxy-tenant-username"
+
+# Create the LAN segment(s) that consumer prefixes are advertised into on acceptance
+# (policy.consumerLanSegments in the Step 5 acceptance config)
+ansible-playbook playbooks/de_workflows/00_dataex_lan_segments_prerequisites.yml -e config_file=de_workflows_configs/sample_global_lan_segments.yaml --check
+ansible-playbook playbooks/de_workflows/00_dataex_lan_segments_prerequisites.yml -e config_file=de_workflows_configs/sample_global_lan_segments.yaml
+
+# Create the VPN profiles used for a Non-Graphiant customer's Site-to-Site VPN Connection
 ansible-playbook playbooks/de_workflows/00_dataex_vpn_profile_prerequisites.yml --check
 ansible-playbook playbooks/de_workflows/00_dataex_vpn_profile_prerequisites.yml
 ```
 
+`config_file` is optional on all three `00_dataex_*` playbooks above — each falls back to its own
+default sample file when omitted (see the playbook's header comment). Note that
+`configs/sample_global_lan_segments.yaml` (producer-side: `lan-segment-1/2/3`, referenced by the
+sample service configs in Step 2) and `configs/de_workflows_configs/sample_global_lan_segments.yaml`
+(consumer-side: `customer-1-segment`, referenced by the sample acceptance config in Step 5) are
+different files despite the similar name — pass whichever one matches what you're configuring in
+each tenant.
+
 ### Step 2: Create Data Exchange Services
 
-Data Exchange "Partner Services" come in two types, set via `type` on each entry in
-`data_exchange_services`:
+Data Exchange "Partner Services" come in two types, set via `serviceType` on each entry in
+`data_exchange_services` (`type` is accepted as a legacy alias):
 
 - `peering_service` (Peer to Peer): full network-level routing/segmentation with a partner — the
   default type.
 - `client_to_server` (Client to Server): for providing partners with access to your organization's
   services. Requires a NAT pool per edge device of the selected site(s), configured under
-  `policy.natTranslationMode`.
+  `policy.natTranslationMode`. **Requires edge devices on a software release greater than 2603** —
+  creating a `client_to_server` service against an older edge fails server-side with
+  `client_to_server requires a release greater than 2603`; upgrade the edge first.
 
 ```bash
-ansible-playbook playbooks/de_workflows/01_dataex_create_services.yml --check
-ansible-playbook playbooks/de_workflows/01_dataex_create_services.yml
+# peering_service (default sample config)
+ansible-playbook playbooks/de_workflows/01_dataex_create_services.yml -e config_file=de_workflows_configs/sample_data_exchange_services.yaml --check
+ansible-playbook playbooks/de_workflows/01_dataex_create_services.yml -e config_file=de_workflows_configs/sample_data_exchange_services.yaml
+
+# client_to_server
+ansible-playbook playbooks/de_workflows/01_dataex_create_services.yml -e config_file=de_workflows_configs/sample_data_exchange_services_client_to_server.yaml --check
+ansible-playbook playbooks/de_workflows/01_dataex_create_services.yml -e config_file=de_workflows_configs/sample_data_exchange_services_client_to_server.yaml
 ```
 
 To create `peering_service` Data Exchange services
@@ -3389,7 +3429,7 @@ Service Name, Status, Role, and Customers.
 ### Step 2b: Update Data Exchange Services
 
 `update_services` changes an **existing** service in place; use `create_services` for new
-services. What can be changed depends on the service's `type`:
+services. What can be changed depends on the service's `serviceType`:
 
 - `peering_service`: only `policy.prefixTags` — at least one prefix must remain.
 - `client_to_server`: `policy.prefixTags` and/or `policy.natTranslationMode` — at least one of the
@@ -3398,10 +3438,13 @@ services. What can be changed depends on the service's `type`:
   site/LAN-segment/device membership) apply here too.
 
 ```bash
-# Preview changes before applying
-ansible-playbook playbooks/de_workflows/01b_dataex_update_services.yml --check --diff
-# Apply
-ansible-playbook playbooks/de_workflows/01b_dataex_update_services.yml
+# peering_service prefixTags
+ansible-playbook playbooks/de_workflows/01b_dataex_update_services.yml -e config_file=de_workflows_configs/sample_data_exchange_services_update.yaml --check --diff
+ansible-playbook playbooks/de_workflows/01b_dataex_update_services.yml -e config_file=de_workflows_configs/sample_data_exchange_services_update.yaml
+
+# client_to_server prefixTags/natTranslationMode
+ansible-playbook playbooks/de_workflows/01b_dataex_update_services.yml -e config_file=de_workflows_configs/sample_data_exchange_services_client_to_server_update.yaml --check --diff
+ansible-playbook playbooks/de_workflows/01b_dataex_update_services.yml -e config_file=de_workflows_configs/sample_data_exchange_services_client_to_server_update.yaml
 ```
 
 To update a `peering_service`'s prefixTags
@@ -3452,6 +3495,11 @@ This is a preview only — no changes are made by `create_services` in this case
 `update_services` (as above) to actually apply them.
 
 ### Step 3: Create Data Exchange Customers
+
+Each customer's `type` is `non_graphiant_peer` (default; connects via a Site-to-Site VPN
+Connection on acceptance — see `sample_data_exchange_customers.yaml`) or `graphiant_peer` (already
+on the Graphiant network, no VPN needed — see `sample_data_exchange_customers_graphiant_peer.yaml`
+and Step 5's Graphiant-customer note below).
 
 ```bash
 # Dry-run (validates config)
@@ -3668,6 +3716,15 @@ ansible-playbook playbooks/de_workflows/07_dataex_accept_invitation.yml \
 ```
 
 > **After acceptance**: Graphiant automatically emails the non-Graphiant end customer with a temporary password and a security profile download (their VPN tunnel credentials). No further action is needed from the proxy tenant.
+
+> **Graphiant customer** (`type: graphiant_peer`, Step 3): omit `policy.siteToSiteVpn` entirely
+> from the acceptance config — no Site-to-Site VPN Connection is needed, so a `vpnProfile` isn't
+> required either. The module confirms this from the customer's `type` before proceeding without
+> one; accepting for a `non_graphiant_peer` customer with `siteToSiteVpn` missing fails instead. See
+> `sample_data_exchange_acceptance_graphiant_peer_client_to_server.yaml`,
+> `sample_data_exchange_customers_graphiant_peer.yaml`, and
+> `sample_data_exchange_services_graphiant_peer_client_to_server.yaml` for a full worked example
+> (service created in the proxy tenant, accepted in the main tenant).
 
 #### Config file: Site-to-Site VPN with `ipsecGatewayPeers`
 

@@ -212,6 +212,37 @@ def test_create_data_exchange_services_client_to_server_returns_id_on_success() 
     assert kwargs["v1_extranet_b2b_producer_post_request"]["serviceType"] == "client_to_server"
 
 
+def test_create_data_exchange_services_service_type_key() -> None:
+    """"serviceType" (matching the API field name directly) is the primary config key."""
+    client = _make_client()
+    client.api.v1_extranet_b2b_producer_post.return_value = MagicMock(
+        model_dump=MagicMock(return_value={"id": 789})
+    )
+
+    result = client.create_data_exchange_services(
+        {"serviceName": "svc", "serviceType": "client_to_server", "policy": {"sites": []}}
+    )
+
+    assert result == {"id": 789}
+    kwargs = client.api.v1_extranet_b2b_producer_post.call_args.kwargs
+    assert kwargs["v1_extranet_b2b_producer_post_request"]["serviceType"] == "client_to_server"
+
+
+def test_create_data_exchange_services_service_type_takes_precedence_over_legacy_type() -> None:
+    """When both are present, "serviceType" wins over the legacy "type" alias."""
+    client = _make_client()
+    client.api.v1_extranet_b2b_producer_post.return_value = MagicMock(
+        model_dump=MagicMock(return_value={"id": 790})
+    )
+
+    client.create_data_exchange_services(
+        {"serviceName": "svc", "serviceType": "client_to_server", "type": "peering_service", "policy": {"sites": []}}
+    )
+
+    kwargs = client.api.v1_extranet_b2b_producer_post.call_args.kwargs
+    assert kwargs["v1_extranet_b2b_producer_post_request"]["serviceType"] == "client_to_server"
+
+
 def test_create_data_exchange_services_peering_translates_site_and_type() -> None:
     """
     Regression: peering_service configs use "site" (singular) and a "type" key inside
