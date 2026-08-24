@@ -1,0 +1,70 @@
+---
+- name: Restart VM
+  hosts: gateway_hypervisors
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - vars/gateway_vm_vars.yml
+
+  pre_tasks:
+    - name: Resolve the VM from vms.yml
+      block:
+        - name: Get VM Info from vms.yml
+          ansible.builtin.include_role:
+            name: read_vms_yml_file
+
+        - name: Verify vms.yml declares a VM for index {{ vm_index }}
+          when: ('gw-' ~ vm_index ~ '-vm') not in (vms_dict[inventory_hostname].vms | default({}))
+          ansible.builtin.fail:
+            msg: >-
+              gw-{{ vm_index }}-vm not found under {{ inventory_hostname }}.vms
+              in {{ vms_file_name }}.
+
+        # Both values come straight from vms.yml: the key is the libvirt domain name
+        # and hostname is the portal-side device name.
+        - name: Set derived variables
+          vars:
+            vm_entry: >-
+              {{ vms_dict[inventory_hostname].vms | dict2items
+                 | selectattr('key', 'eq', 'gw-' ~ vm_index ~ '-vm') | first }}
+          ansible.builtin.set_fact:
+            device: "{{ vm_entry.key }}"
+            hostname: "{{ vm_entry.value.hostname }}"
+
+  tasks:
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg: |
+          Action: Restart VM
+          Hypervisor: {{ inventory_hostname }}
+          VM Name: {{ device }}
+          VM Hostname: {{ hostname }}
+
+    - name: Destroy VM
+      community.libvirt.virt:
+        name: "{{ device }}"
+        state: destroyed
+
+    - name: Start VM
+      community.libvirt.virt:
+        name: "{{ device }}"
+        state: running
+
+    - name: Check if VM is running
+      block:
+        - name: Wait for VM to start and check status
+          community.libvirt.virt:
+            name: "{{ device }}"
+            command: status
+          register: vm_status
+          retries: 10
+          delay: 15
+          until: vm_status.status == 'running'
+
+        - name: Display VM status
+          ansible.builtin.debug:
+            msg: |
+              VM Name: {{ device }}
+              Status: {{ vm_status.status }}
+              Running: {{ vm_status.status == 'running' }}

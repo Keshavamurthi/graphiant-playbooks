@@ -1,0 +1,83 @@
+---
+- name: Use the system Python until the virtualenv exists
+  ansible.builtin.set_fact:
+    ansible_python_interpreter: /usr/bin/python3
+
+- name: Gather OS facts when the play has not
+  when: ansible_facts.os_family is not defined
+  ansible.builtin.setup:
+    gather_subset:
+      - '!all'
+      - '!min'
+      - distribution
+
+- name: Verify the OS family is supported
+  when: ansible_facts.os_family not in install_dependencies_supported_os_families
+  ansible.builtin.fail:
+    msg: >-
+      Unsupported OS family '{{ ansible_facts.os_family }}'
+      ({{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }})
+      on {{ inventory_hostname }}.
+      Supported: {{ install_dependencies_supported_os_families | join(', ') }}.
+      To add this family, create
+      roles/install_dependencies/vars/{{ ansible_facts.os_family }}.yml
+      defining install_dependencies_packages, then add
+      '{{ ansible_facts.os_family }}' to install_dependencies_supported_os_families
+      in roles/install_dependencies/vars/main.yml.
+
+- name: Load the package list for {{ ansible_facts.os_family }}
+  ansible.builtin.include_vars:
+    file: "{{ ansible_facts.os_family }}.yml"
+
+- name: Report what will be installed
+  ansible.builtin.debug:
+    msg: >-
+      {{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }}
+      (family {{ ansible_facts.os_family }}):
+      installing {{ install_dependencies_packages | length }} packages
+
+- name: Update the apt cache
+  when: ansible_facts.os_family == 'Debian'
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install dependency packages
+  ansible.builtin.package:
+    name: "{{ install_dependencies_packages }}"
+    state: present
+
+- name: Start and enable libvirt daemon
+  ansible.builtin.systemd:
+    name: libvirtd
+    state: started
+    enabled: true
+  become: true
+
+- name: Create venv if not exists
+  ansible.builtin.command:
+    cmd: python3 -m venv /venv
+    creates: /venv/bin/activate
+
+- name: Copy requirements.txt to remote host
+  ansible.builtin.copy:
+    src: requirements.txt
+    dest: /tmp/requirements.txt
+    mode: '0644'
+
+- name: Install Python dependencies in remote venv
+  ansible.builtin.pip:
+    requirements: /tmp/requirements.txt
+    virtualenv: /venv
+    state: present
+    extra_args: --upgrade --force-reinstall
+
+- name: Clean up temporary requirements file
+  ansible.builtin.file:
+    path: /tmp/requirements.txt
+    state: absent
+
+- name: Switch to the virtualenv interpreter for subsequent roles
+  ansible.builtin.set_fact:
+    ansible_python_interpreter: /venv/bin/python
+    dependencies_installed: true

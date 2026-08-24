@@ -1,0 +1,93 @@
+---
+- name: Verify bearer token is available
+  when: bearer_token is not defined
+  ansible.builtin.fail:
+    msg: "Bearer token not found"
+
+- name: Verify api_base_url is available
+  when: api_base_url is not defined
+  ansible.builtin.fail:
+    msg: "api_base_url not found"
+
+- name: Verify gnos_mode is available
+  when: gnos_mode is not defined
+  ansible.builtin.fail:
+    msg: "gnos_mode not found. Please set gnos_mode in gateway_vm_vars.yml"
+
+- name: Get available software releases summary
+  graphiant.naas.graphiant_api:
+    host: "{{ api_base_url }}"
+    access_token: "{{ bearer_token }}"
+    method: get_software_releases_summary
+  register: software_releases_summary_response
+  retries: 3
+  delay: 10
+  # A failed call omits response_data; only read summaries after a succeeded call.
+  until: >
+    software_releases_summary_response is succeeded
+    and software_releases_summary_response.get('response_data') is not none
+    and software_releases_summary_response['response_data'].get('summaries') is not none
+
+- name: Print software releases summary
+  ansible.builtin.debug:
+    msg: "{{ software_releases_summary_response }}"
+  delegate_to: localhost
+
+- name: Extract software version from API response
+  loop: "{{ software_releases_summary_response.response_data.summaries }}"
+  when: item.release == service_version
+  ansible.builtin.set_fact:
+    software_version: "{{ item.key.version }}"
+    software_release: "{{ item.name }}"
+
+- name: Display software versions
+  when: software_version is defined
+  ansible.builtin.debug:
+    msg: "{{ service_version }} software version - {{ software_release }} ({{ software_version }})"
+
+- name: Set Software Download URL variable (non-production)
+  when: gnos_mode != "production"
+  ansible.builtin.set_fact:
+    software_download_url: >-
+      https://gitlab.com/api/v4/projects/graphiant%2Fgraphnos%2Fbuild-image/packages/generic/gnos/{{ software_version }}/gnos.{{ gnos_mode }}.qcow2
+
+- name: Get Software Download URL from portal (production)
+  when: gnos_mode == "production"
+  graphiant.naas.graphiant_api:
+    host: "{{ api_base_url }}"
+    access_token: "{{ bearer_token }}"
+    method: get_software_download_url
+    kwargs:
+      version: "{{ software_version }}"
+      image_ext: qcow2
+  register: software_download_url_response
+  retries: 3
+  delay: 10
+  # A failed call omits response_data; only read image_link after a succeeded call.
+  until: >
+    software_download_url_response is succeeded
+    and software_download_url_response.get('response_data') is not none
+    and software_download_url_response['response_data'].get('image_link') is not none
+
+- name: Set Software Download URL variable (production)
+  when: gnos_mode == "production"
+  ansible.builtin.set_fact:
+    software_download_url: "{{ software_download_url_response.response_data.image_link }}"
+
+- name: Display download URL
+  when: software_download_url is defined
+  ansible.builtin.debug:
+    msg: "{{ service_version }} software download URL: {{ software_download_url }}"
+
+- name: Save software information to file
+  when: software_download_url is defined and software_version is defined and software_release is defined
+  ansible.builtin.blockinfile:
+    path: "{{ playbook_vars_dir }}/runtime_vars_{{ inventory_hostname }}.yml"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - software info"
+    block: |
+      software_version: "{{ software_version }}"
+      software_release: "{{ software_release }}"
+      software_download_url: "{{ software_download_url }}"
+    create: true
+    mode: '0644'
+  delegate_to: localhost

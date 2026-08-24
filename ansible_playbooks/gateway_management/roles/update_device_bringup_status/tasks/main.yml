@@ -1,0 +1,25 @@
+---
+- name: Verify api_base_url is available
+  when: api_base_url is not defined
+  ansible.builtin.fail:
+    msg: "api_base_url not found"
+
+- name: Verify bearer_token is available
+  when: bearer_token is not defined
+  ansible.builtin.fail:
+    msg: "bearer_token not found"
+
+- name: Verify device_id is available
+  when: device_id is not defined
+  ansible.builtin.fail:
+    msg: "device_id not found"
+
+- name: Update Device Bringup Status
+  graphiant.naas.graphiant_api:
+    host: "{{ api_base_url }}"
+    access_token: "{{ bearer_token }}"
+    method: put_devices_bringup
+    kwargs:
+      device_ids:
+        - "{{ device_id | int }}"
+      status: "{{ bringup_status }}"

@@ -1,0 +1,52 @@
+---
+- name: Verify software download URL is available
+  when: software_download_url is not defined
+  ansible.builtin.fail:
+    msg: "Software download URL not found. Please run get_software_version_info.yml first."
+
+- name: Verify software version is available
+  when: software_version is not defined
+  ansible.builtin.fail:
+    msg: "Software version not found. Please run get_software_version_info.yml first."
+
+- name: Verify gitlab_api_key is available for internal software download
+  when: gcs_env != "production" and gitlab_api_key is not defined
+  ansible.builtin.fail:
+    msg: "Gitlab API key not found. Please check infra_secrets in setup_init.py"
+
+- name: Create download directory on remote hypervisor
+  ansible.builtin.file:
+    path: /home/gso/gnos_qcow2
+    state: directory
+    mode: '0755'
+    owner: gso
+    group: gso
+
+- name: Download GNOS image to remote hypervisor
+  ansible.builtin.get_url:
+    url: "{{ software_download_url }}"
+    dest: "/home/gso/gnos_qcow2/{{ software_version }}.qcow2"
+    mode: '0644'
+    owner: gso
+    group: gso
+    timeout: 3600
+    # GitLab's package registry needs a token; production uses a portal-issued
+    # presigned URL that must be sent without one. A single task keeps one
+    # register: a skipped task still registers, clobbering the real result.
+    headers: "{{ {'PRIVATE-TOKEN': gitlab_api_key} if gcs_env != 'production' else {} }}"
+  register: download_result
+
+- name: Display download results
+  when: download_result is defined and download_result.changed
+  ansible.builtin.debug:
+    msg: "Download completed: {{ download_result.dest }} ({{ download_result.size }} bytes)"
+
+- name: Display download status
+  when: download_result is defined
+  ansible.builtin.debug:
+    msg: "Download status: {{ 'Success' if download_result.changed else 'Already exists or failed' }}"
+
+- name: Set gnos_qcow2_path variable
+  when: download_result is defined
+  ansible.builtin.set_fact:
+    gnos_qcow2_path: "{{ download_result.dest }}"

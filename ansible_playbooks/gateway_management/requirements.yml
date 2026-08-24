@@ -1,0 +1,9 @@
+---
+collections:
+  # libvirt VM lifecycle management on the gateway hypervisors.
+  - name: community.libvirt
+    version: ">=1.0.0"
+  # Graphiant portal modules. Supersedes the private graphiant.portal collection;
+  # graphiant_api (used by these playbooks) was added in 26.7.0.
+  - name: graphiant.naas
+    version: ">=26.7.0"

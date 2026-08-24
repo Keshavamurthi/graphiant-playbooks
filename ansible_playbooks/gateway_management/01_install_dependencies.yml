@@ -1,0 +1,14 @@
+---
+- name: Install dependencies
+  hosts: gateway_hypervisors
+  become: true
+  gather_facts: false
+
+  vars_files:
+    - vars/gateway_vm_vars.yml
+
+  tasks:
+    - name: Install required packages
+      when: dependencies_installed is not defined
+      ansible.builtin.include_role:
+        name: install_dependencies

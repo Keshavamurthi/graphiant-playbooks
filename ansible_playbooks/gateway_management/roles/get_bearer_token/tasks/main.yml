@@ -1,0 +1,54 @@
+---
+- name: Verify api_username is available
+  when: api_username is not defined
+  ansible.builtin.fail:
+    msg: "api_username not found"
+
+- name: Verify api_password is available
+  when: api_password is not defined
+  ansible.builtin.fail:
+    msg: "api_password not found"
+
+- name: Verify api_base_url is available
+  when: api_base_url is not defined
+  ansible.builtin.fail:
+    msg: "api_base_url not found"
+
+- name: Save api_base_url to runtime_vars.yml file
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_vars_dir }}/runtime_vars.yml"
+    line: "api_base_url: \"{{ api_base_url }}\""
+    regexp: "^api_base_url:"
+    create: true
+    mode: '0644'
+
+- name: Get bearer token
+  graphiant.naas.graphiant_api:
+    method: get_bearer_token
+    host: "{{ api_base_url }}"
+    username: "{{ api_username }}"
+    password: "{{ api_password }}"
+  register: response
+
+- name: Extract bearer token from response
+  when: response.response_data is defined
+  ansible.builtin.set_fact:
+    bearer_token: "{{ response.response_data }}"
+
+- name: Impersonate to enterprise
+  when: ansible_enterprise_id is defined
+  block:
+    - name: Impersonate to enterprise {{ ansible_enterprise_id }}
+      ansible.builtin.uri:
+        url: "{{ api_base_url }}/v1/auth/session?enterpriseId={{ ansible_enterprise_id }}"
+        method: GET
+        headers:
+          Content-Type: "application/json"
+          Authorization: "{{ bearer_token }}"
+        status_code: [200]
+      register: impersonate_response
+
+    - name: Get enterprise details
+      when: enterprise_name is not defined or parent_enterprise_name is not defined or parent_enterprise_id is not defined
+      ansible.builtin.include_role:
+        name: get_enterprise_info

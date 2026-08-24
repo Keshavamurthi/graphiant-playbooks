@@ -1,0 +1,48 @@
+---
+- name: Verify api_base_url is available
+  when: api_base_url is not defined
+  ansible.builtin.fail:
+    msg: "api_base_url not found"
+
+- name: Verify bearer_token is available
+  when: bearer_token is not defined
+  ansible.builtin.fail:
+    msg: "bearer_token not found"
+
+- name: Verify device_id is available
+  when: device_id is not defined
+  ansible.builtin.fail:
+    msg: "device_id not found"
+
+- name: Verify Device Dataplane, Controlplane and Systemplane Status
+  graphiant.naas.graphiant_api:
+    host: "{{ api_base_url }}"
+    access_token: "{{ bearer_token }}"
+    method: post_troubleshooting_device_by_device_id
+    kwargs:
+      device_id: "{{ device_id }}"
+      recent_ts: "{{ recent_ts }}"
+      old_ts: "{{ old_ts }}"
+      bucket_size_sec: 30
+  register: troubleshooting_status
+  # fail_json results omit response_data; only evaluate planes after a succeeded call.
+  until: >
+    troubleshooting_status is succeeded
+    and troubleshooting_status.get('response_data') is not none
+    and ((troubleshooting_status['response_data'].get('data_plane') or {}).get('status', '')) == 'Healthy'
+    and ((troubleshooting_status['response_data'].get('control_plane') or {}).get('status', '')) == 'Healthy'
+    and ((troubleshooting_status['response_data'].get('system_plane') or {}).get('status', '')) == 'Healthy'
+  retries: 10
+  delay: 30
+
+- name: Set dataplane, controlplane and systemplane status
+  ansible.builtin.set_fact:
+    dataplane_status: "{{ troubleshooting_status.response_data.data_plane.status }}"
+    controlplane_status: "{{ troubleshooting_status.response_data.control_plane.status }}"
+    systemplane_status: "{{ troubleshooting_status.response_data.system_plane.status }}"
+  delegate_to: localhost
+
+- name: Display troubleshooting status
+  ansible.builtin.debug:
+    msg: "Dataplane Status: {{ dataplane_status }}, Controlplane Status: {{ controlplane_status }}, Systemplane Status: {{ systemplane_status }}"
+  delegate_to: localhost

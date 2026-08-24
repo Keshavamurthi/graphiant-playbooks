@@ -1,0 +1,35 @@
+---
+- name: Verify api_base_url is available
+  when: api_base_url is not defined
+  ansible.builtin.fail:
+    msg: "api_base_url not found"
+
+- name: Verify bearer_token is available
+  when: bearer_token is not defined
+  ansible.builtin.fail:
+    msg: "bearer_token not found"
+
+- name: Verify device_type is available
+  when: device_type is not defined
+  ansible.builtin.fail:
+    msg: "device_type not found"
+
+- name: Create onboarding token in Portal
+  graphiant.naas.graphiant_api:
+    host: "{{ api_base_url }}"
+    access_token: "{{ bearer_token }}"
+    method: post_device_bringup_token
+    kwargs:
+      role: "{{ device_type }}"
+  register: onboarding_token_response
+  retries: 3
+  delay: 10
+  # A failed call omits response_data; only read the token after a succeeded call.
+  until: >
+    onboarding_token_response is succeeded
+    and onboarding_token_response.get('response_data') is not none
+    and onboarding_token_response['response_data'].get('access_token') is not none
+
+- name: Set onboarding token
+  ansible.builtin.set_fact:
+    onboarding_token: "{{ onboarding_token_response.response_data.access_token }}"

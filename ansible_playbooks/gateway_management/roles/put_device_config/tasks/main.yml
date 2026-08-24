@@ -1,0 +1,53 @@
+---
+- name: Verify api_base_url is available
+  when: api_base_url is not defined
+  ansible.builtin.fail:
+    msg: "api_base_url not found"
+
+- name: Verify bearer_token is available
+  when: bearer_token is not defined
+  ansible.builtin.fail:
+    msg: "bearer_token not found"
+
+- name: Verify device_id is available
+  when: device_id is not defined
+  ansible.builtin.fail:
+    msg: "device_id not found"
+
+- name: Before applying configuration, check Portal Status is ready
+  ansible.builtin.include_role:
+    name: get_portal_status
+
+- name: Put Device Configuration
+  graphiant.naas.graphiant_api:
+    host: "{{ api_base_url }}"
+    access_token: "{{ bearer_token }}"
+    method: put_device_config
+    kwargs:
+      device_id: "{{ device_id }}"
+      edge: "{{ final_config_payload.edge }}"
+  register: put_device_config_response
+  retries: 3
+  delay: 10
+  # A failed call omits response_data; only read job_id after a succeeded call.
+  until: >
+    put_device_config_response is succeeded
+    and put_device_config_response.get('response_data') is not none
+    and put_device_config_response['response_data'].get('job_id') is not none
+
+- name: Display put_device_config_response
+  ansible.builtin.debug:
+    msg: "{{ put_device_config_response }}"
+
+- name: Verify a job_id was returned
+  when: (put_device_config_response.get('response_data') or {}).get('job_id') is none
+  ansible.builtin.fail:
+    msg: "put_device_config failed for host {{ api_base_url }}, device_id {{ device_id }}. Retries exhausted."
+
+- name: Waiting for configuration to be applied
+  ansible.builtin.pause:
+    seconds: 30
+
+- name: After configuration is applied, check Portal Status is ready
+  ansible.builtin.include_role:
+    name: get_portal_status

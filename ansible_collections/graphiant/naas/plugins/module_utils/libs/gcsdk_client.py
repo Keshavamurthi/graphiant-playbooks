@@ -355,24 +355,30 @@ class GraphiantPortalClient:
         LOG.debug("get_all_enterprises : %s", enterprises)
         return enterprises
 
-    def get_edges_summary(self, device_id=None):
+    def get_edges_summary(self, device_id=None, hostname=None):
         """
-        Get all edges summary from GCS.
+        Get edges summary from GCS, optionally filtered to a single edge.
 
         Args:
-            device_id (int, optional): The device ID to filter edges.
-            If not provided, returns all edges.
+            device_id (int or str, optional): Device ID to match. Coerced with int(), since
+                Ansible passes variables as strings.
+            hostname (str, optional): Device hostname to match.
 
         Returns:
-            list or dict: A list of all edges info if no device_id is provided,
-            or a single edge's information if a device_id is provided.
+            list: All edges when neither filter is given.
+            object: The matching edge when device_id or hostname is given.
+            None: When a filter is given but nothing matches.
         """
         response = self.api.v1_edges_summary_get(authorization=self.bearer_token)
-        if device_id:
-            for edge_info in response.edges_summary:
-                if edge_info.device_id == device_id:
-                    return edge_info
-        return response.edges_summary
+        if device_id is None and hostname is None:
+            return response.edges_summary
+        for edge_info in response.edges_summary:
+            if device_id is not None and edge_info.device_id == int(device_id):
+                return edge_info
+            if hostname and edge_info.hostname == hostname:
+                return edge_info
+        LOG.debug("get_edges_summary: No edge matched device_id=%s hostname=%s", device_id, hostname)
+        return None
 
     def get_device_id(self, device_name):
         """
@@ -449,6 +455,9 @@ class GraphiantPortalClient:
          also verifies device connections to tunnel terminators status.
         """
         edge_summary = self.get_edges_summary(device_id=device_id)
+        if edge_summary is None:
+            LOG.info("verify_device_portal_status: %s not present in edges summary yet. Retrying..", device_id)
+            raise APIError(f"verify_device_portal_status: {device_id} not found in edges summary. Retrying..")
         if edge_summary.portal_status == "Ready":
             if edge_summary.tt_conn_count and edge_summary.tt_conn_count == 2:
                 return
@@ -2980,3 +2989,138 @@ class GraphiantPortalClient:
             raise APIError(
                 f"get_macsec_status: Failed to retrieve MACsec status for device_id={device_id}. Exception: {e}"
             )
+
+    def get_bearer_token(self):
+        """
+        Return the current bearer token, establishing a session first if needed.
+
+        Accessor over set_bearer_token(), which sets self.bearer_token but returns None.
+        Gateway automation playbooks fetch the token once and pass it to later tasks.
+
+        Returns:
+            str or None: The bearer token in "Bearer <token>" form.
+        """
+        if not getattr(self, "bearer_token", None):
+            self.set_bearer_token()
+        return self.bearer_token
+
+    def post_device_bringup_token(
+        self, role: str = "Gateway", valid_till_ts: Optional[int] = None, validity_sec: Optional[int] = None
+    ):
+        """
+        Create a device onboarding (bringup) token.
+
+        Args:
+            role (str): The role of the device.
+            valid_till_ts (int): Timestamp until which the token is valid.
+            validity_sec (int): Validity of the token in seconds.
+
+        Returns:
+            API response object, or None if the call failed.
+        """
+        api_url = f"{self.api.api_client.configuration.host}/v1/devices/bringup/token"
+        valid_till = (
+            graphiant_sdk.GoogleProtobufTimestamp(seconds=int(valid_till_ts), nanos=0)
+            if valid_till_ts is not None
+            else None
+        )
+        request_body = graphiant_sdk.V1DevicesBringupTokenPostRequest(
+            role=role, validTillTs=valid_till, validitySec=validity_sec
+        )
+        try:
+            LOG.info("post_device_bringup_token: Requesting bringup token for role %s", role)
+            response = self.api.v1_devices_bringup_token_post(
+                authorization=self.bearer_token, v1_devices_bringup_token_post_request=request_body
+            )
+            LOG.info("post_device_bringup_token: Successfully created bringup token for role %s", role)
+            return response
+        except ApiException as e:
+            self._log_api_error(method_name="post_device_bringup_token", api_url=api_url, exception=e)
+            return None
+
+    def post_troubleshooting_device_by_device_id(
+        self, device_id: int, recent_ts: int, old_ts: int, bucket_size_sec: int = 30
+    ):
+        """
+        Get troubleshooting status for a device over a time window.
+
+        Args:
+            device_id (int): The device ID to troubleshoot.
+            recent_ts (int): Recent boundary of the time window, in epoch seconds.
+            old_ts (int): Old boundary of the time window, in epoch seconds.
+            bucket_size_sec (int): Bucket size in seconds.
+
+        Returns:
+            API response object, or None if the call failed.
+        """
+        api_url = f"{self.api.api_client.configuration.host}/v1/troubleshooting/device/{device_id}"
+        try:
+            LOG.info("post_troubleshooting_device_by_device_id: Troubleshooting device ID %s", device_id)
+            request_time_window = graphiant_sdk.StatsmonTroubleshootingTimeWindow(
+                bucketSizeSec=int(bucket_size_sec),
+                oldTs=graphiant_sdk.GoogleProtobufTimestamp(seconds=int(old_ts), nanos=0),
+                recentTs=graphiant_sdk.GoogleProtobufTimestamp(seconds=int(recent_ts), nanos=0),
+            )
+            request_body = graphiant_sdk.V1TroubleshootingDeviceDeviceIdPostRequest(timeWindow=request_time_window)
+            response = self.api.v1_troubleshooting_device_device_id_post(
+                authorization=self.bearer_token,
+                device_id=int(device_id),
+                v1_troubleshooting_device_device_id_post_request=request_body,
+            )
+            LOG.info("post_troubleshooting_device_by_device_id: Retrieved status for device ID %s", device_id)
+            return response
+        except ApiException as e:
+            self._log_api_error(
+                method_name="post_troubleshooting_device_by_device_id",
+                api_url=api_url,
+                path_params={"device_id": device_id},
+                exception=e,
+            )
+            return None
+
+    def get_software_download_url(self, version, image_ext="qcow2"):
+        """
+        Get the download URL for a GNOS image from the portal.
+
+        Args:
+            version (str): GNOS image version, e.g. "2512.202606261054".
+            image_ext (str): GNOS image type, "qcow2" or "ova".
+
+        Returns:
+            API response object carrying imageLink, or None if the call failed.
+        """
+        api_url = f"{self.api.api_client.configuration.host}/v1/software/releases/download"
+        try:
+            LOG.info("get_software_download_url: Retrieving %s download URL for version %s", image_ext, version)
+            response = self.api.v1_software_releases_download_get(
+                authorization=self.bearer_token,
+                version=version,
+                image_ext=image_ext,
+            )
+            LOG.info("get_software_download_url: Successfully retrieved download URL for version %s", version)
+            return response
+        except ApiException as e:
+            self._log_api_error(
+                method_name="get_software_download_url",
+                api_url=api_url,
+                query_params={"version": version, "imageExt": image_ext},
+                exception=e,
+            )
+            return None
+
+    def get_software_releases_summary(self):
+        """
+        Get the software releases summary from the portal.
+
+        Returns:
+            API response object, or None if the call failed.
+        """
+        api_url = f"{self.api.api_client.configuration.host}/v1/software/releases/summary"
+        try:
+            LOG.info("get_software_releases_summary: Retrieving software releases summary")
+            response = self.api.v1_software_releases_summary_get(authorization=self.bearer_token)
+            LOG.info("get_software_releases_summary: Successfully retrieved software releases summary")
+            return response
+        except ApiException as e:
+            self._log_api_error(method_name="get_software_releases_summary", api_url=api_url, exception=e)
+            return None

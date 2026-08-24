@@ -1,0 +1,43 @@
+---
+- name: Verify VM Status
+  hosts: gateway_hypervisors
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - vars/runtime_vars_{{ inventory_hostname }}.yml
+    - vars/gateway_vm_vars.yml
+
+  pre_tasks:
+    - name: Verify hypervisor_hostname is defined
+      when: hypervisor_hostname is not defined
+      ansible.builtin.fail:
+        msg: "hypervisor_hostname not found"
+
+    - name: Get bearer token
+      when: bearer_token is not defined
+      ansible.builtin.include_role:
+        name: get_bearer_token
+
+    - name: Get device ID from device hostname from Portal
+      ansible.builtin.include_role:
+        name: get_device_id_from_device_name
+
+  tasks:
+    - name: Get Portal Status
+      ansible.builtin.include_role:
+        name: get_portal_status
+
+    - name: Get Device Troubleshooting Status
+      vars:
+        recent_ts: "{{ ansible_date_time.epoch | int }}"
+        old_ts: "{{ (ansible_date_time.epoch | int) - 900 }}"
+      ansible.builtin.include_role:
+        name: get_device_troubleshooting_status
+
+    - name: Update device info in audit log
+      when: inventory_hostname == hypervisor_hostname
+      vars:
+        gateway_vm_status: "Operational"
+      ansible.builtin.include_role:
+        name: update_audit_log

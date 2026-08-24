@@ -1,0 +1,193 @@
+---
+- name: Verify device_hostname is available
+  when: device_hostname is not defined
+  ansible.builtin.fail:
+    msg: "device_hostname not found"
+
+- name: Veify vm_index is available
+  when: vm_index is not defined
+  ansible.builtin.fail:
+    msg: "vm_index not found"
+
+- name: Read VMs config file
+  ansible.builtin.include_role:
+    name: read_vms_yml_file
+
+- name: Get VM interface configs from vms.yml
+  loop: "{{ vms_dict | dict2items }}"
+  vars:
+    matched_vms: >-
+      {{ item.value.vms | default({}) | dict2items
+         | selectattr('value.hostname', 'eq', device_hostname) | list }}
+  when: matched_vms | length > 0
+  ansible.builtin.set_fact:
+    hypervisor_hostname: "{{ item.key }}"
+    region_name: "{{ item.value['RegionName'] }}"
+    interface_configs: "{{ matched_vms[0].value }}"
+    static_routes: "{{ item.value['static_routes'] }}"
+  delegate_to: localhost
+
+- name: Get interface IPs from interface configs
+  when: gcs_env == 'production'
+  ansible.builtin.set_fact:
+    GigabitEthernet3_0_0: "{{ interface_configs.GigabitEthernet3_0_0 }}"
+    VirtualFunctionEthernet6_0_0: "{{ interface_configs.VirtualFunctionEthernet6_0_0 }}"
+    VirtualFunctionEthernet7_0_0: "{{ interface_configs.VirtualFunctionEthernet7_0_0 }}"
+  delegate_to: localhost
+
+- name: Get interface IPs from interface configs
+  when: gcs_env != 'production'
+  ansible.builtin.set_fact:
+    VirtualFunctionEthernet6_0_0: "{{ interface_configs.VirtualFunctionEthernet6_0_0 }}"
+    VirtualFunctionEthernet7_0_0: "{{ interface_configs.VirtualFunctionEthernet7_0_0 }}"
+  delegate_to: localhost
+
+- name: Construct sub-interfaces configs for VirtualFunctionEthernet5/0/0 towards PacketFabric
+  loop: [1, 2, 3, 4, 5]
+  ansible.builtin.set_fact:
+    pf_sub_interfaces: >-
+      {{ pf_sub_interfaces | default([]) + [{
+           'vlan': 200 + (vm_index | int * 10) + item,
+           'description': 'packetFabric-' + item | string,
+           'alias': 'packetFabric-' + item | string}] }}
+  delegate_to: localhost
+
+- name: Construct interface config for production environment
+  when: gcs_env == 'production'
+  ansible.builtin.set_fact:
+    interfaces:
+      - interface_name: GigabitEthernet1/0/0
+        circuit: c-gigabitethernet1-0-0
+        description: "opengear isp wan"
+        alias: "opengear isp wan"
+        label: 'internet_dia_1'
+        circuit_type: 'circuitType_internet'
+      - interface_name: GigabitEthernet3/0/0
+        circuit: c-gigabitethernet3-0-0
+        description: "primary isp wan"
+        alias: "primary isp wan"
+        ipv4_address: "{{ GigabitEthernet3_0_0 }}"
+        label: 'internet_dia_2'
+        circuit_type: 'circuitType_internet'
+        static_routes: "{{ static_routes | default({}) }}"
+      - interface_name: VirtualFunctionEthernet5/0/0
+        description: "towards-packetFabric"
+        alias: "packetFabric"
+        action: "default_lan"
+        sub_interfaces: "{{ pf_sub_interfaces }}"
+      - interface_name: VirtualFunctionEthernet6/0/0
+        circuit: c-virtualfunctionethernet6-0-0
+        description: "direct peer et-0"
+        alias: "direct peer et-0"
+        ipv4_address: "{{ VirtualFunctionEthernet6_0_0 }}"
+        label: 'PeeringPrivate_1'
+        circuit_type: 'circuitType_direct_peer'
+        circuit_upload_bandwidth: 1024
+        circuit_download_bandwidth: 1024
+      - interface_name: VirtualFunctionEthernet7/0/0
+        circuit: c-virtualfunctionethernet7-0-0
+        description: "direct peer et-1"
+        alias: "direct peer et-1"
+        ipv4_address: "{{ VirtualFunctionEthernet7_0_0 }}"
+        label: 'PeeringPrivate_2'
+        circuit_type: 'circuitType_direct_peer'
+        circuit_upload_bandwidth: 1024
+        circuit_download_bandwidth: 1024
+  delegate_to: localhost
+
+- name: Construct interface config for non-production environments
+  when: gcs_env != 'production'
+  ansible.builtin.set_fact:
+    interfaces:
+      - interface_name: VirtualFunctionEthernet5/0/0
+        description: "towards-packetfabric"
+        action: "default_lan"
+        sub_interfaces: "{{ pf_sub_interfaces }}"
+      - interface_name: VirtualFunctionEthernet6/0/0
+        circuit: c-virtualfunctionethernet6-0-0
+        description: "direct peer et-0"
+        alias: "direct peer et-0"
+        ipv4_address: "{{ VirtualFunctionEthernet6_0_0 }}"
+        label: 'PeeringPrivate_1'
+        circuit_type: 'circuitType_direct_peer'
+        circuit_upload_bandwidth: 1024
+        circuit_download_bandwidth: 1024
+      - interface_name: VirtualFunctionEthernet7/0/0
+        circuit: c-virtualfunctionethernet7-0-0
+        description: "direct peer et-1"
+        alias: "direct peer et-1"
+        ipv4_address: "{{ VirtualFunctionEthernet7_0_0 }}"
+        label: 'PeeringPrivate_2'
+        circuit_type: 'circuitType_direct_peer'
+        circuit_upload_bandwidth: 1024
+        circuit_download_bandwidth: 1024
+  delegate_to: localhost
+
+- name: Display interface config
+  ansible.builtin.debug:
+    msg: "{{ interfaces | to_nice_yaml }}"
+  delegate_to: localhost
+
+- name: Declare rendered template, circuit payload and interface payload
+  ansible.builtin.set_fact:
+    rendered_template: []
+    circuit_payload: {}
+    interface_payload: {}
+  delegate_to: localhost
+
+- name: Render jinja2 template to variable
+  loop: "{{ interfaces }}"
+  vars:
+    interface_name: "{{ item.interface_name }}"
+    circuit: "{{ item.circuit | default('') }}"
+    description: "{{ item.description | default('') }}"
+    alias: "{{ item.alias | default('') }}"
+    ipv4_address: "{{ item.ipv4_address | default('') }}"
+    circuit_type: "{{ item.circuit_type | default('') }}"
+    circuit_label: "{{ item.label | default('') }}"
+    circuit_upload_bandwidth: "{{ item.circuit_upload_bandwidth | default('') }}"
+    circuit_download_bandwidth: "{{ item.circuit_download_bandwidth | default('') }}"
+    static_routes: "{{ item.static_routes | default({}) }}"
+    # ~ not +: ansible_enterprise_id arrives as an int, and + will not coerce it.
+    default_lan: "{{ item.default_lan | default('default-' ~ ansible_enterprise_id) }}"
+    sub_interfaces: "{{ item.sub_interfaces | default([]) }}"
+    action: "{{ item.action | default('add') }}"
+    ipv6_address:
+  ansible.builtin.set_fact:
+    rendered_template: "{{ rendered_template + [lookup('template', role_path + '/templates/interface_template.yml') | from_yaml] }}"
+  delegate_to: localhost
+
+- name: Print rendered template
+  ansible.builtin.debug:
+    msg: "{{ rendered_template | to_nice_yaml }}"
+  delegate_to: localhost
+
+- name: Compute circuit payload
+  loop: "{{ rendered_template }}"
+  when: item.circuits is defined
+  ansible.builtin.set_fact:
+    circuit_payload: "{{ circuit_payload | combine(item.circuits) }}"
+  delegate_to: localhost
+
+- name: Compute interface payload
+  loop: "{{ rendered_template }}"
+  when: item.interfaces is defined
+  ansible.builtin.set_fact:
+    interface_payload: "{{ interface_payload | combine(item.interfaces) }}"
+  delegate_to: localhost
+
+- name: Combine interface and circuit payload
+  ansible.builtin.set_fact:
+    final_config_payload:
+      edge:
+        name: "{{ device_hostname }}"
+        site:
+          name: "{{ site_name }}"
+        region: "{{ region_name }}"
+        interfaces: "{{ interface_payload }}"
+        circuits: "{{ circuit_payload }}"
+
+- name: Display final config payload
+  ansible.builtin.debug:
+    msg: "{{ final_config_payload | to_json }}"
+  delegate_to: localhost

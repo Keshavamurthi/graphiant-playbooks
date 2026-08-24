@@ -1,0 +1,35 @@
+---
+# Teardown is best effort throughout: a VM, directory or pool may already be gone from a
+# previous partial run, and a missing resource must not stop the remaining cleanup.
+# Hence failed_when: false rather than ignore_errors, which also keeps the output clean.
+- name: Verify vm_name is available
+  when: vm_name is not defined
+  ansible.builtin.fail:
+    msg: "vm_name not found"
+
+- name: Destroy VM - {{ vm_name }}
+  community.libvirt.virt:
+    name: "{{ vm_name }}"
+    state: destroyed
+  failed_when: false
+
+- name: Undefine VM - {{ vm_name }}
+  ansible.builtin.command: virsh undefine {{ vm_name }} --nvram
+  register: undefine_result
+  changed_when: undefine_result.rc == 0
+  failed_when: false
+
+- name: Remove device directory
+  ansible.builtin.file:
+    path: "{{ vm_dir }}"
+    state: absent
+  failed_when: false
+
+- name: Remove storage pools
+  loop:
+    - "{{ vm_name }}"
+    - "{{ vm_name }}_cloud_img"
+  ansible.builtin.shell: virsh pool-destroy {{ item }} && virsh pool-undefine {{ item }}
+  register: pool_result
+  changed_when: pool_result.rc == 0
+  failed_when: false

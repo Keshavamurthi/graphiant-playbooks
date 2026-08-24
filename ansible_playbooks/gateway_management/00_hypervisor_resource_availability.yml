@@ -1,0 +1,20 @@
+---
+- name: Get Hypervisor Resource Availability
+  hosts: gateway_hypervisors
+  become: true
+  gather_facts: false
+
+  pre_tasks:
+    - name: Install required packages
+      when: dependencies_installed is not defined
+      ansible.builtin.include_role:
+        name: install_dependencies
+
+  tasks:
+    - name: Get the configured VM capacity for this hypervisor
+      ansible.builtin.include_role:
+        name: get_max_vm_count
+
+    - name: Check the hypervisor resource availability and find next available VM index
+      ansible.builtin.include_role:
+        name: get_next_available_vm_index

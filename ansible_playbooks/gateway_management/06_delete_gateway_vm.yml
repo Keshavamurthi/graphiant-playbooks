@@ -1,0 +1,112 @@
+---
+- name: Delete Gateway VM
+  hosts: gateway_hypervisors
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - vars/gateway_vm_vars.yml
+
+  pre_tasks:
+    - name: Get bearer token
+      when: bearer_token is not defined
+      ansible.builtin.include_role:
+        name: get_bearer_token
+
+    - name: Compute and verify device hostname
+      block:
+        - name: Get device hostname from device ID
+          ansible.builtin.include_role:
+            name: get_device_hostname_from_device_id
+
+        - name: Exit gracefully if device was already decommissioned
+          when: device_not_found is defined and device_not_found
+          block:
+            - name: Log already decommissioned message
+              ansible.builtin.debug:
+                msg: >-
+                  Cannot find device `{{ device_id }}` in enterprise `{{ ansible_enterprise_id }}`.
+                  The device may have already been decommissioned by a previous run.
+
+            - name: End play without failure
+              ansible.builtin.meta: end_play
+
+        - name: Verify device hostname is available
+          when: device_hostname is not defined
+          ansible.builtin.fail:
+            msg: "Device Hostname not found"
+
+    - name: Compute and verify hypervisor hostname
+      block:
+        - name: Read VMs config file
+          ansible.builtin.include_role:
+            name: read_vms_yml_file
+
+        - name: Get hypervisor hostname based on device hostname
+          loop: "{{ vms_dict | dict2items }}"
+          vars:
+            matched_vms: >-
+              {{ item.value.vms | default({}) | dict2items
+                 | selectattr('value.hostname', 'eq', device_hostname) | list }}
+          when: matched_vms | length > 0
+          ansible.builtin.set_fact:
+            hypervisor_hostname: "{{ item.key }}"
+          delegate_to: localhost
+
+        - name: Verify hypervisor hostname is available
+          when: hypervisor_hostname is not defined
+          ansible.builtin.fail:
+            msg: "Hypervisor hostname not found"
+
+    - name: Compute and verify VM index
+      when: hypervisor_hostname == inventory_hostname
+      block:
+        - name: Compute VM name and index from device hostname
+          vars:
+            vm_keys: >-
+              {{ vms_dict[hypervisor_hostname].vms | default({}) | dict2items
+                 | selectattr('value.hostname', 'eq', device_hostname)
+                 | map(attribute='key') | list }}
+          ansible.builtin.set_fact:
+            vm_name: "{{ vm_keys[0] }}"
+            vm_index: "{{ vm_keys[0] | regex_replace('^gw-(\\d+)-vm$', '\\1') }}"
+
+        - name: Verify vm_index is available
+          when: vm_index is not defined
+          ansible.builtin.fail:
+            msg: "VM Index not found"
+
+    - name: Set derived variables
+      when: hypervisor_hostname == inventory_hostname
+      ansible.builtin.set_fact:
+        # vm_name is the vms.yml key, resolved above — never rebuilt here.
+        vm_dir: "/home/gso/devices/{{ vm_name }}"
+        cloud_img_dir: "/home/gso/devices/{{ vm_name }}/{{ vm_name }}_cloud_img"
+
+  tasks:
+    - name: Display deployment information
+      when: hypervisor_hostname == inventory_hostname
+      ansible.builtin.debug:
+        msg: |
+          Action: Delete VM
+          Hypervisor: {{ hypervisor_hostname }}
+          VM Name: {{ vm_name }}
+          VM Hostname: {{ device_hostname }}
+          Inventory Hostname: {{ inventory_hostname }}
+
+    - name: Destroy VM and cleanup the hypervisor
+      when: hypervisor_hostname == inventory_hostname
+      block:
+        - name: Destroy VM in Hypervisor matching Inventory Hostname
+          ansible.builtin.include_role:
+            name: destroy_vm_in_hypervisor
+
+        - name: Decommission VM in Portal
+          ansible.builtin.include_role:
+            name: decommission_vm_in_portal
+
+        - name: Update audit log
+          vars:
+            gateway_vm_status: "Deleted"
+          ansible.builtin.include_role:
+            name: update_audit_log

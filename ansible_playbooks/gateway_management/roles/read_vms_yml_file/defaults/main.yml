@@ -1,0 +1,4 @@
+---
+# Directory holding the per-environment gateway VM config files,
+# laid out as <gateway_configs_dir>/<gcs_env>/<site>-gw.yml.
+gateway_configs_dir: "{{ playbook_dir }}/configs"

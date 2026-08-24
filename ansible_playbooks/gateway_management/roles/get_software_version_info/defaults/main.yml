@@ -1,0 +1,3 @@
+---
+# Directory for the runtime_vars*.yml files this role writes and later playbooks read.
+playbook_vars_dir: "{{ playbook_dir }}/vars"

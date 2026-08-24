@@ -1,0 +1,23 @@
+# Gateway VM Default Configuration Values
+#########################################################################################
+# Configure these values for locally testing the gateway automation playbooks.
+
+# api_base_url: "https://api.graphiant.com"
+# gcs_env: "production"
+# api_username: <Username> # Replace with your Graphiant portal username
+# api_password: <Password> # Replace with your Graphiant portal password
+# Replace with the enterprise ID the Gateway VMs has to be deployed into. 
+# The api_username should have impersonation rights for this enterprise.
+# ansible_enterprise_id: <Enterprise ID> 
+
+# Hypervisor SSH Login details
+# ansible_user: <Hypervisor SSH Username> # Replace with your hypervisor SSH username
+# gateway_hypervisor_ssh_password: "<Hypervisor SSH Password>" # Replace with your hypervisor SSH password
+##########################################################################################
+
+# Paths. playbook_vars_dir is where the generated runtime_vars*.yml files are written and
+# read back by later plays; gateway_configs_dir holds the per-environment gateway configs.
+playbook_vars_dir: "{{ playbook_dir }}/vars"
+gateway_configs_dir: "{{ playbook_dir }}/configs"
+scripts_dir: "{{ playbook_dir }}/scripts"
+cloud_img_dir: "{{ playbook_dir }}/cloud_images"

@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  author: Graphiant
+  description: "Wait for a device to report Ready portal status"
+  company: Graphiant
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.17"
+  galaxy_tags:
+    - graphiant
+    - gateway
+    - naas
+dependencies: []

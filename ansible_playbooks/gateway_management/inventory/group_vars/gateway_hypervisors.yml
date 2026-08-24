@@ -1,0 +1,44 @@
+---
+# Fleet-wide defaults for gateway hypervisors.
+# Override per site in group_vars/<site>.yml, or per box in host_vars/<hostname>.yml.
+
+# Named VM SKUs. A hypervisor selects one by name with gateway_vm_sku.
+# Keep cpu_pin_start an int: 03_deploy_gateway_vm.yml does arithmetic on it to build the
+# CPU pin set, and a quoted string would break range().
+gateway_vm_skus:
+  standard:
+    vcpus: 4
+    memory: 4096
+    cpu_pin_start: 16
+  large:
+    vcpus: 8
+    memory: 8192
+    cpu_pin_start: 32
+
+# Default SKU for any hypervisor that does not choose one.
+gateway_vm_sku: standard
+max_vm_count: 10
+
+# GraphNOS Configuration
+graphnos_role: "gateway" # cpe, gateway,
+service_version: "Recommended" # Recommended, Latest, Custom
+gnos_mode: "{{ 'production' if gcs_env == 'production' else 'devtest-persist' }}" # production, devtest-persist, devtest
+
+########################################################
+# Host Bridge mappings - conditional based on gcs_env
+########################################################
+opengear_wan_bridge: "{{ 'br_opengear' if gnos_mode == 'production' else 'br_arelion' }}"
+isp_wan_bridge: "{{ 'br_arelion' if gnos_mode == 'production' else 'br_opengear' }}"
+local_mgmt_bridge_suffix: "br_local_mgmt"
+
+# VM Interface mappings - conditional based on gcs_env
+opengear_wan: "{{ 'GigabitEthernet1/0/0' if gnos_mode == 'production' else 'GigabitEthernet3/0/0' }}"
+local_mgmt: "GigabitEthernet2/0/0"
+########################################################
+
+# Physical NIC names on the hypervisor. These build the SR-IOV lookup keys
+# (<nic>v<vm_index>) that index sr_iov_mappings, which is read off the host at deploy time.
+# A box whose NICs are named differently must override these or virt-install fails.
+towards_packetfabric: "ens87f0"
+towards_core0: "ens87f2"
+towards_core1: "ens87f3"

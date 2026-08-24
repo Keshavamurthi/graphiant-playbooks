@@ -1,0 +1,42 @@
+---
+- name: Get list of all VMs on the hypervisor
+  community.libvirt.virt:
+    command: list_vms
+  register: vm_list
+
+- name: Filter gateway VMs and extract indices
+  ansible.builtin.set_fact:
+    deployed_vm_indices: "{{ vm_list.list_vms | select('match', '^gw-\\d+-vm$') | map('regex_replace', '^gw-(\\d+)-vm$', '\\1') | map('int') | sort | list }}"
+    vm_count: "{{ (vm_list.list_vms | select('match', '^gw-\\d+-vm$') | list) | length }}"
+
+- name: Find next available VM index
+  ansible.builtin.set_fact:
+    # The trailing + [0] keeps `first` from raising "sequence was empty" when the
+    # hypervisor is full; 0 then trips the `> 0` assertion with a readable message.
+    next_available_vm_index: >-
+      {{ ((range(1, (max_vm_count | default(10) | int) + 1)
+           | difference(deployed_vm_indices) | list) + [0]) | first }}
+
+- name: Validate next available VM index
+  ansible.builtin.assert:
+    that:
+      - next_available_vm_index is defined
+      - (next_available_vm_index | int) > 0
+      - (next_available_vm_index | int) < (max_vm_count | default(10) | int) + 1
+      - (vm_count | int) < (max_vm_count | default(10) | int) + 1
+    fail_msg: >-
+      Resource availability check failed. Next available VM index
+      {{ next_available_vm_index | default('(unset)') }} is not between 1 and
+      {{ max_vm_count | default(10) }} on {{ inventory_hostname }}.
+    success_msg: "Next available VM index is set to {{ next_available_vm_index }}"
+
+- name: Set next available vm_index
+  ansible.builtin.set_fact:
+    vm_index: "{{ (next_available_vm_index | int) }}"
+
+- name: Display VM information
+  ansible.builtin.debug:
+    msg: |
+      Total number of Gateway VMs found: {{ vm_count }}
+      Deployed VMs: {{ vm_list.list_vms }}
+      Next available Gateway VM index: {{ vm_index }}

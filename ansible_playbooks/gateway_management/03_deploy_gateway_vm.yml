@@ -1,0 +1,300 @@
+---
+- name: Deploy Gateway VM
+  hosts: gateway_hypervisors
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - vars/gateway_vm_vars.yml
+
+  pre_tasks:
+    - name: Get bearer token
+      when: bearer_token is not defined
+      ansible.builtin.include_role:
+        name: get_bearer_token
+
+    - name: Get Software Version Information
+      ansible.builtin.include_role:
+        name: get_software_version_info
+
+    - name: Download GNOS qcow2 image
+      ansible.builtin.include_role:
+        name: download_gnos_qcow2
+
+    - name: Verify GNOS qcow2 image is available
+      when: gnos_qcow2_path is not defined
+      ansible.builtin.fail:
+        msg: "GNOS qcow2 image not found on hypervisor {{ inventory_hostname }}"
+
+    - name: Verify playbook_vars_dir is available
+      when: playbook_vars_dir is not defined
+      ansible.builtin.fail:
+        msg: "playbook_vars_dir is not defined"
+
+    - name: Get the configured VM capacity for this hypervisor
+      ansible.builtin.include_role:
+        name: get_max_vm_count
+
+    - name: Check hypervisor resource availability and get next available VM index
+      ansible.builtin.include_role:
+        name: get_next_available_vm_index
+
+    - name: Look up device hostname for this VM index
+      block:
+        - name: Get VM Info from vms.yml
+          ansible.builtin.include_role:
+            name: read_vms_yml_file
+
+        # VM entries are keyed by the libvirt domain name, gw-<index>-vm — the same
+        # name get_next_available_vm_index scans the hypervisor for.
+        - name: Verify vms.yml declares a VM for index {{ vm_index }}
+          when: ('gw-' ~ vm_index ~ '-vm') not in (vms_dict[inventory_hostname].vms | default({}))
+          ansible.builtin.fail:
+            msg: >-
+              gw-{{ vm_index }}-vm not found under {{ inventory_hostname }}.vms
+              in {{ vms_file_name }}.
+
+        # vm_name is the vms.yml key itself, so the libvirt domain name always comes
+        # from config rather than being rebuilt from vm_index.
+        - name: Get VM name and hostname from VM Info
+          vars:
+            vm_entry: >-
+              {{ vms_dict[inventory_hostname].vms | dict2items
+                 | selectattr('key', 'eq', 'gw-' ~ vm_index ~ '-vm') | first }}
+          ansible.builtin.set_fact:
+            vm_name: "{{ vm_entry.key }}"
+            device_hostname: "{{ vm_entry.value.hostname }}"
+
+    # Sizing comes from a named SKU chosen per hypervisor in inventory/host_vars.
+    - name: Verify the selected VM SKU exists
+      when: gateway_vm_sku not in gateway_vm_skus
+      ansible.builtin.fail:
+        msg: >-
+          Unknown gateway_vm_sku '{{ gateway_vm_sku }}' on {{ inventory_hostname }}.
+          Available SKUs: {{ gateway_vm_skus.keys() | list | join(', ') }}.
+          Define it in inventory/group_vars/gateway_hypervisors.yml or pick an existing one
+          in inventory/host_vars/{{ inventory_hostname }}.yml.
+
+    - name: Resolve the VM SKU for this hypervisor
+      ansible.builtin.set_fact:
+        vm_sku: "{{ gateway_vm_skus[gateway_vm_sku] }}"
+
+    - name: Set derived variables
+      ansible.builtin.set_fact:
+        # vm_name is the vms.yml key, resolved above — never rebuilt here.
+        vm_dir: "/home/gso/devices/{{ vm_name }}"
+        cloud_img_dir: "/home/gso/devices/{{ vm_name }}/{{ vm_name }}_cloud_img"
+        # Four consecutive host CPUs, offset by this VM's index. The | int guards against a
+        # SKU value arriving as a string, which range() would reject.
+        pin_cpus: >-
+          {{ range(vm_sku.cpu_pin_start | int + (vm_index | int) * 4,
+                   vm_sku.cpu_pin_start | int + (vm_index | int) * 4 + 4) | join(',') }}
+        local_mgmt_bridge: "{{ local_mgmt_bridge_suffix }}{{ vm_index }}"
+        virtual_interface_5_0_0: "{{ towards_packetfabric }}v{{ vm_index }}"
+        virtual_interface_6_0_0: "{{ towards_core0 }}v{{ vm_index }}"
+        virtual_interface_7_0_0: "{{ towards_core1 }}v{{ vm_index }}"
+
+    - name: Generate onboarding token for Gateway VM
+      vars:
+        device_type: "Gateway"
+      ansible.builtin.include_role:
+        name: generate_device_onboarding_token
+
+  tasks:
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg: |
+          Action: Create VM
+          Hypervisor: {{ inventory_hostname }}
+          VM Name: {{ vm_name }}
+          Gateway Hostname: {{ device_hostname }}
+          GraphNOS Role: {{ graphnos_role }}
+          Image: {{ software_version }}
+          GCS Environment: {{ gcs_env }}
+
+    - name: Create device directory
+      ansible.builtin.file:
+        path: "{{ vm_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create cloud-init directory
+      ansible.builtin.file:
+        path: "{{ cloud_img_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copy generate_cloud_init.sh to the cloud image directory {{ cloud_img_dir }}
+      ansible.builtin.copy:
+        src: "{{ scripts_dir }}/cloud-init-generator/generate-cloud-init.sh"
+        dest: "{{ cloud_img_dir }}/generate-cloud-init.sh"
+        mode: '0755'
+        owner: gso
+        group: gso
+
+    - name: Compute cloud_init_env string based on gcs_env
+      ansible.builtin.set_fact:
+        cloud_init_env: "{{ gcs_env }}"
+
+    - name: Generate cloud-init qcow2
+      ansible.builtin.shell: |
+        {{ cloud_img_dir }}/generate-cloud-init.sh \
+          --wan-iface {{ opengear_wan }} \
+          --mgmt-iface {{ local_mgmt }} \
+          --env {{ cloud_init_env }} \
+          --role {{ graphnos_role }} \
+          --token {{ onboarding_token }} \
+          --dhcp \
+          --hostname {{ device_hostname }} \
+          --cloud-init-dir {{ cloud_img_dir }} \
+          --output cloud.qcow2
+      args:
+        creates: "{{ cloud_img_dir }}/cloud.qcow2"
+
+    - name: Set Libvirt VM configuration variables
+      block:
+        - name: Set memory and CPU arguments
+          ansible.builtin.set_fact:
+            mem_args: ",hugepages=yes"
+            perf_args: "--memorybacking hugepages=yes,hugepages.page.size=1,hugepages.page.unit=G,nosharepages=yes,locked=yes,allocation.mode=immediate"
+            cpu_args: ",placement=static,cpuset={{ pin_cpus }}"
+        - name: Set TPM arguments
+          ansible.builtin.set_fact:
+            tpm_args: ""
+            tpm_virt_args: "--tpm backend.type=emulator,backend.version=2.0,model=tpm-crb"
+
+    - name: Create dnsmasq directory
+      ansible.builtin.file:
+        path: /var/lib/libvirt/dnsmasq/
+        state: directory
+        mode: '0755'
+
+    - name: Check SR-IOV mappings file exists
+      ansible.builtin.stat:
+        path: "/home/gso/sr-iov_mappings.yml"
+      register: sr_iov_mappings_yml_check
+
+    - name: Convert SR-IOV mappings from shell to YAML format
+      when: not sr_iov_mappings_yml_check.stat.exists
+      block:
+        - name: Convert shell exports to YAML using shell
+          ansible.builtin.shell: |
+            set -o pipefail
+            echo "# Converted to yaml by ansible from /home/gso/sr-iov_mappings" > /home/gso/sr-iov_mappings.yml
+            echo "" >> /home/gso/sr-iov_mappings.yml
+            grep "^export " /home/gso/sr-iov_mappings \
+              | sed 's/export //' \
+              | sed 's/=/: "/' \
+              | sed 's/^/  /' \
+              | sed 's/$/"/' >> /home/gso/sr-iov_mappings.yml
+          args:
+            executable: /bin/bash
+            creates: "/home/gso/sr-iov_mappings.yml"
+
+        - name: Set proper permissions on YAML file
+          ansible.builtin.file:
+            path: "/home/gso/sr-iov_mappings.yml"
+            mode: '0644'
+            owner: gso
+            group: gso
+
+        - name: Display conversion result
+          ansible.builtin.debug:
+            msg: "Successfully converted SR-IOV mappings from shell to YAML format"
+
+    - name: Load SR-IOV mappings from remote file
+      ansible.builtin.slurp:
+        src: "/home/gso/sr-iov_mappings.yml"
+      register: sr_iov_mappings_content
+      failed_when: false
+
+    - name: Set SR-IOV mappings variables
+      ansible.builtin.set_fact:
+        sr_iov_mappings: "{{ sr_iov_mappings_content.content | b64decode | from_yaml }}"
+      when: sr_iov_mappings_content.content is defined
+
+    - name: Create VM using virt-install for device {{ device_hostname }}
+      ansible.builtin.shell: |
+        virt-install \
+          --name '{{ vm_name }}' \
+          --virt-type kvm --machine q35 --osinfo debiantesting \
+          --cpu=host --features acpi=on,apic=on,pae=on \
+          --graphics vnc,listen=0.0.0.0 \
+          --memory {{ vm_sku.memory }}{{ mem_args }} --vcpus {{ vm_sku.vcpus }}{{ cpu_args }} {{ perf_args }} \
+          --install no_install=yes \
+          --disk path={{ vm_dir }}/{{ vm_name }}.qcow2,size=10,backing_store={{ gnos_qcow2_path }},backing_format=qcow2,bus=virtio,cache=none \
+          --cdrom '{{ cloud_img_dir }}/cloud.qcow2' \
+          --boot loader=/usr/share/OVMF/OVMF_CODE.fd,loader.readonly=yes,loader.type=pflash,nvram.template=/usr/share/OVMF/OVMF_VARS.fd,loader_secure=no \
+          {{ tpm_virt_args }} \
+          --autoconsole none \
+          --console=pty,target_type=serial \
+          --network bridge={{ opengear_wan_bridge }},model=virtio \
+          --network bridge={{ local_mgmt_bridge }},model=virtio \
+          --network bridge={{ isp_wan_bridge }},model=virtio \
+          --hostdev {{ sr_iov_mappings[virtual_interface_5_0_0] }},address.bus=5,address.type=pci \
+          --hostdev {{ sr_iov_mappings[virtual_interface_6_0_0] }},address.bus=6,address.type=pci \
+          --hostdev {{ sr_iov_mappings[virtual_interface_7_0_0] }},address.bus=7,address.type=pci
+      args:
+        creates: "{{ vm_dir }}/{{ vm_name }}.qcow2"
+
+    - name: Dump VM XML for future use
+      ansible.builtin.shell: virsh dumpxml {{ vm_name }} > "{{ vm_dir }}/{{ vm_name }}.xml"
+      args:
+        creates: "{{ vm_dir }}/{{ vm_name }}.xml"
+
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: "VM {{ vm_name }} created successfully"
+
+    - name: Check if VM is running for device {{ device_hostname }}
+      block:
+        - name: Wait for VM to start and check status
+          community.libvirt.virt:
+            name: "{{ vm_name }}"
+            command: status
+          register: vm_status
+          retries: 10
+          delay: 15
+          until: vm_status.status == 'running'
+
+        - name: Display VM status
+          ansible.builtin.debug:
+            msg: |
+              VM Name: {{ vm_name }}
+              Status: {{ vm_status.status }}
+              Running: {{ vm_status.status == 'running' }}
+
+    - name: Display VM information file path
+      ansible.builtin.debug:
+        msg: |
+          VM information will be written to file {{ playbook_vars_dir }}/runtime_vars_{{ inventory_hostname }}.yml
+
+    - name: Write VM information to file
+      ansible.builtin.blockinfile:
+        path: "{{ playbook_vars_dir }}/runtime_vars_{{ inventory_hostname }}.yml"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - device configuration"
+        block: |
+          device_hostname: "{{ device_hostname }}"
+          hypervisor_hostname: "{{ inventory_hostname }}"
+          vm_name: "{{ vm_name }}"
+          vm_index: "{{ vm_index }}"
+        create: true
+        mode: '0644'
+      register: variables_result
+      delegate_to: localhost
+
+    - name: Get portal status
+      block:
+        - name: Wait for the device to get onboarded
+          ansible.builtin.include_role:
+            name: get_device_id_from_device_name
+
+        - name: Get portal status
+          ansible.builtin.include_role:
+            name: get_portal_status
+
+    - name: Update device info in audit log
+      vars:
+        gateway_vm_status: "Onboarded"
+      ansible.builtin.include_role:
+        name: update_audit_log

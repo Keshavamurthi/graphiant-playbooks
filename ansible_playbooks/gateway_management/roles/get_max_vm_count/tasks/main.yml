@@ -1,0 +1,20 @@
+---
+# Reuse the existing loader; the guard matches the `when: bearer_token is not defined`
+# idiom the playbooks use, so a second slurp is skipped when vms.yml is already loaded.
+- name: Read VMs config file
+  when: vms_dict is not defined
+  ansible.builtin.include_role:
+    name: read_vms_yml_file
+
+- name: Verify this hypervisor has a vms section
+  when: (vms_dict[inventory_hostname] | default({})).vms is not defined
+  ansible.builtin.fail:
+    msg: "No 'vms' section for {{ inventory_hostname }} in {{ vms_file_name }}."
+
+- name: Set max VM count for this hypervisor
+  ansible.builtin.set_fact:
+    max_vm_count: "{{ vms_dict[inventory_hostname].vms | length }}"
+
+- name: Display max VM count
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} allows up to {{ max_vm_count }} gateway VMs ({{ vms_file_name }})"

@@ -1,0 +1,12 @@
+---
+- name: Deactivate Gateway VM in Graphiant Portal
+  vars:
+    bringup_status: "Denied"
+  ansible.builtin.include_role:
+    name: update_device_bringup_status
+
+- name: Decommission Gateway VM in Graphiant Portal
+  vars:
+    bringup_status: "Removed"
+  ansible.builtin.include_role:
+    name: update_device_bringup_status

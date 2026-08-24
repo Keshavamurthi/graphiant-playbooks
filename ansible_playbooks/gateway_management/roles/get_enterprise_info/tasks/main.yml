@@ -1,0 +1,24 @@
+---
+- name: Get enterprise details
+  graphiant.naas.graphiant_api:
+    host: "{{ api_base_url }}"
+    access_token: "{{ bearer_token }}"
+    method: get_all_enterprises
+  register: enterprises_response
+
+- name: Get enterprise name
+  loop: "{{ enterprises_response.response_data.enterprises }}"
+  when: item.enterprise_id | int == ansible_enterprise_id | int
+  ansible.builtin.set_fact:
+    enterprise_name: "{{ item.company_name }}"
+    parent_enterprise_name: "{{ item.parent_company_name }}"
+    parent_enterprise_id: "{{ item.parent_enterprise_id }}"
+
+- name: Print Enterprise Details
+  when: enterprise_name is defined and parent_enterprise_name is defined and parent_enterprise_id is defined
+  ansible.builtin.debug:
+    msg: |
+      Enterprise ID: {{ ansible_enterprise_id }}
+      Enterprise Name: {{ enterprise_name }}
+      Parent Enterprise Name: {{ parent_enterprise_name }}
+      Parent Enterprise ID: {{ parent_enterprise_id }}

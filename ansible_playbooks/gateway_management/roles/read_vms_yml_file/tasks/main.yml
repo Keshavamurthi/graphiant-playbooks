@@ -1,0 +1,18 @@
+---
+- name: Compute vms file name
+  ansible.builtin.set_fact:
+    vms_file_name: "{{ (device_hostname | default(inventory_hostname)).split('-')[0:2] | join('-') }}.yml"
+
+- name: Read vms config file
+  ansible.builtin.slurp:
+    src: "{{ gateway_configs_dir }}/{{ gcs_env }}/{{ vms_file_name }}"
+  register: vms_yml_content
+  delegate_to: localhost
+
+- name: Parse vms.yml content into dictionary
+  ansible.builtin.set_fact:
+    vms_dict: "{{ vms_yml_content.content | b64decode | from_yaml }}"
+
+- name: Print contents of vms_dict
+  ansible.builtin.debug:
+    var: vms_dict

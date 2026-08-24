@@ -1,0 +1,37 @@
+---
+- name: Verify api_base_url is available
+  when: api_base_url is not defined
+  ansible.builtin.fail:
+    msg: "api_base_url not found"
+
+- name: Verify bearer_token is available
+  when: bearer_token is not defined
+  ansible.builtin.fail:
+    msg: "bearer_token not found"
+
+- name: Verify device_id is available
+  when: device_id is not defined
+  ansible.builtin.fail:
+    msg: "device_id not found"
+
+- name: Get edge summary
+  graphiant.naas.graphiant_api:
+    host: "{{ api_base_url }}"
+    access_token: "{{ bearer_token }}"
+    method: get_edges_summary
+    kwargs:
+      device_id: "{{ device_id }}"
+  register: edge_summary_response
+  # fail_json omits response_data; only evaluate payload after a succeeded call.
+  until: >
+    edge_summary_response is succeeded
+    and edge_summary_response.get('response_data') is not none
+    and (edge_summary_response['response_data'].get('portal_status', '')) == 'Ready'
+  retries: 10
+  delay: 30
+
+- name: Get device portal status
+  ansible.builtin.set_fact:
+    device_portal_status: "{{ edge_summary_response.response_data.portal_status }}"
+    device_status: "{{ edge_summary_response.response_data.status }}"
+  delegate_to: localhost

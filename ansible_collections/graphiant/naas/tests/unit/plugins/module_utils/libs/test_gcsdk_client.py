@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from ansible_collections.graphiant.naas.plugins.module_utils.libs.gcsdk_client import (
+    APIError,
     ApiException,
     GraphiantPortalClient,
     ValidationError,
@@ -1186,3 +1187,181 @@ def test_get_local_extranet_nat_usage_raises_on_error_response() -> None:
 
     with pytest.raises(ApiException):
         client.get_local_extranet_nat_usage(42)
+
+
+def test_get_bearer_token_returns_existing_token_without_reauth() -> None:
+    client = _make_client()
+    client.set_bearer_token = MagicMock()
+
+    assert client.get_bearer_token() == "test-token"
+    client.set_bearer_token.assert_not_called()
+
+
+def test_get_bearer_token_authenticates_when_unset() -> None:
+    client = _make_client()
+    client.bearer_token = None
+
+    def _login():
+        client.bearer_token = "Bearer fresh"
+
+    client.set_bearer_token = MagicMock(side_effect=_login)
+
+    assert client.get_bearer_token() == "Bearer fresh"
+    client.set_bearer_token.assert_called_once()
+
+
+def _edges_response(*edges):
+    """Build a v1_edges_summary_get response wrapping the given edge objects."""
+    response = MagicMock()
+    response.edges_summary = list(edges)
+    return response
+
+
+def test_get_edges_summary_matches_hostname() -> None:
+    client = _make_client()
+    other = MagicMock(device_id=1, hostname="gateway-0")
+    wanted = MagicMock(device_id=2, hostname="gateway-1")
+    client.api.v1_edges_summary_get.return_value = _edges_response(other, wanted)
+
+    assert client.get_edges_summary(hostname="gateway-1") is wanted
+
+
+def test_get_edges_summary_returns_none_when_no_match() -> None:
+    client = _make_client()
+    edge = MagicMock(device_id=1, hostname="gateway-0")
+    client.api.v1_edges_summary_get.return_value = _edges_response(edge)
+
+    assert client.get_edges_summary(hostname="absent") is None
+    assert client.get_edges_summary(device_id="999") is None
+
+
+def test_get_edges_summary_handles_empty_summary() -> None:
+    client = _make_client()
+    response = MagicMock()
+    response.edges_summary = None
+    client.api.v1_edges_summary_get.return_value = response
+
+    assert client.get_edges_summary(device_id="1") is None
+
+
+def test_post_device_bringup_token_returns_response() -> None:
+    client = _make_client()
+    response = MagicMock()
+    client.api.v1_devices_bringup_token_post.return_value = response
+
+    with patch(
+        "ansible_collections.graphiant.naas.plugins.module_utils.libs.gcsdk_client.graphiant_sdk"
+    ) as sdk:
+        sdk.V1DevicesBringupTokenPostRequest.return_value = MagicMock()
+        assert client.post_device_bringup_token(role="Gateway") is response
+
+
+def test_post_device_bringup_token_returns_none_on_api_error() -> None:
+    client = _make_client()
+    client.api.v1_devices_bringup_token_post.side_effect = ApiException(status=500, reason="failed")
+
+    with patch(
+        "ansible_collections.graphiant.naas.plugins.module_utils.libs.gcsdk_client.graphiant_sdk"
+    ) as sdk:
+        sdk.V1DevicesBringupTokenPostRequest.return_value = MagicMock()
+        assert client.post_device_bringup_token() is None
+
+
+def test_post_troubleshooting_device_by_device_id_returns_response() -> None:
+    client = _make_client()
+    response = MagicMock()
+    client.api.v1_troubleshooting_device_device_id_post.return_value = response
+
+    with patch(
+        "ansible_collections.graphiant.naas.plugins.module_utils.libs.gcsdk_client.graphiant_sdk"
+    ) as sdk:
+        sdk.StatsmonTroubleshootingTimeWindow.return_value = MagicMock()
+        sdk.V1TroubleshootingDeviceDeviceIdPostRequest.return_value = MagicMock()
+        # String arguments, as Ansible supplies them.
+        result = client.post_troubleshooting_device_by_device_id(
+            device_id="42", recent_ts="1700000900", old_ts="1700000000"
+        )
+
+    assert result is response
+
+
+def test_post_troubleshooting_device_by_device_id_returns_none_on_api_error() -> None:
+    client = _make_client()
+    client.api.v1_troubleshooting_device_device_id_post.side_effect = ApiException(status=500, reason="failed")
+
+    with patch(
+        "ansible_collections.graphiant.naas.plugins.module_utils.libs.gcsdk_client.graphiant_sdk"
+    ) as sdk:
+        sdk.StatsmonTroubleshootingTimeWindow.return_value = MagicMock()
+        sdk.V1TroubleshootingDeviceDeviceIdPostRequest.return_value = MagicMock()
+        result = client.post_troubleshooting_device_by_device_id(device_id=42, recent_ts=2, old_ts=1)
+
+    assert result is None
+
+
+def test_get_software_download_url_returns_response() -> None:
+    client = _make_client()
+    response = MagicMock()
+    client.api.v1_software_releases_download_get.return_value = response
+
+    assert client.get_software_download_url(version="2512.202606261054") is response
+    client.api.v1_software_releases_download_get.assert_called_once_with(
+        authorization=client.bearer_token,
+        version="2512.202606261054",
+        image_ext="qcow2",
+    )
+
+
+def test_get_software_download_url_returns_none_on_api_error() -> None:
+    client = _make_client()
+    client.api.v1_software_releases_download_get.side_effect = ApiException(status=500, reason="failed")
+
+    assert client.get_software_download_url(version="2512.202606261054", image_ext="ova") is None
+
+
+def test_get_software_releases_summary_returns_response() -> None:
+    client = _make_client()
+    response = MagicMock()
+    client.api.v1_software_releases_summary_get.return_value = response
+
+    assert client.get_software_releases_summary() is response
+
+
+def test_get_software_releases_summary_returns_none_on_api_error() -> None:
+    client = _make_client()
+    client.api.v1_software_releases_summary_get.side_effect = ApiException(status=500, reason="failed")
+
+    assert client.get_software_releases_summary() is None
+
+
+def _unpolled(method):
+    """
+    Return the undecorated function behind @poller.
+
+    The decorator returns a bare closure rather than using functools.wraps, so there is no
+    __wrapped__ to follow. Calling the decorated method directly would retry for its full
+    timeout before surfacing the failure.
+    """
+    for cell in method.__closure__ or []:
+        target = cell.cell_contents
+        if callable(target) and getattr(target, "__name__", None) == "verify_device_portal_status":
+            return target
+    raise AssertionError("could not unwrap @poller")
+
+
+def test_verify_device_portal_status_raises_when_device_absent() -> None:
+    """A filtered lookup that matches nothing returns None; the caller must raise so the
+    poller retries, rather than dereferencing None while a device is still onboarding."""
+    client = _make_client()
+    client.api.v1_edges_summary_get.return_value = _edges_response(MagicMock(device_id=1))
+
+    with pytest.raises(APIError):
+        _unpolled(GraphiantPortalClient.verify_device_portal_status)(client, 999)
+
+
+def test_verify_device_portal_status_passes_when_ready() -> None:
+    client = _make_client()
+    edge = MagicMock(device_id=42, portal_status="Ready", tt_conn_count=2)
+    client.api.v1_edges_summary_get.return_value = _edges_response(edge)
+
+    assert _unpolled(GraphiantPortalClient.verify_device_portal_status)(client, 42) is None

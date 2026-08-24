@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  author: Graphiant
+  description: "Set the bringup status of a device in the portal"
+  company: Graphiant
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.17"
+  galaxy_tags:
+    - graphiant
+    - gateway
+    - naas
+dependencies: []

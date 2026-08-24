@@ -1,0 +1,126 @@
+---
+# Example gateway VM configuration - NOT real deployment data.
+#
+# Addresses use the IANA documentation ranges reserved by RFC 5737
+# (203.0.113.0/24 TEST-NET-3, 198.51.100.0/24 TEST-NET-2) so they can never collide
+# with real routable or internal addressing.
+#
+# Layout: <hypervisor hostname> -> RegionName, static_routes, then one entry per gateway VM
+# mapping interface name to CIDR. The file name must match the first two dash-separated
+# fields of the VM names inside it, because roles/read_vms_yml_file derives it that way:
+#   virginia-hypervisor-1-vm-1 -> virginia-hypervisor.yml
+
+virginia-hypervisor-1:
+  RegionName: "us_east_1"
+  static_routes:
+    - destination_prefix: 0.0.0.0/0
+      next_hop: 203.0.113.65
+      description: dia_default_route
+  vms:
+    gw-1-vm:
+      hostname: virginia-hypervisor-1-vm-1
+      GigabitEthernet3_0_0: 203.0.113.75/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.31/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.131/24
+    gw-2-vm:
+      hostname: virginia-hypervisor-1-vm-2
+      GigabitEthernet3_0_0: 203.0.113.76/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.32/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.132/24
+    gw-3-vm:
+      hostname: virginia-hypervisor-1-vm-3
+      GigabitEthernet3_0_0: 203.0.113.77/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.33/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.133/24
+    gw-4-vm:
+      hostname: virginia-hypervisor-1-vm-4
+      GigabitEthernet3_0_0: 203.0.113.78/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.34/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.134/24
+    gw-5-vm:
+      hostname: virginia-hypervisor-1-vm-5
+      GigabitEthernet3_0_0: 203.0.113.79/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.35/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.135/24
+    gw-6-vm:
+      hostname: virginia-hypervisor-1-vm-6
+      GigabitEthernet3_0_0: 203.0.113.80/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.36/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.136/24
+    gw-7-vm:
+      hostname: virginia-hypervisor-1-vm-7
+      GigabitEthernet3_0_0: 203.0.113.81/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.37/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.137/24
+    gw-8-vm:
+      hostname: virginia-hypervisor-1-vm-8
+      GigabitEthernet3_0_0: 203.0.113.82/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.38/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.138/24
+    gw-9-vm:
+      hostname: virginia-hypervisor-1-vm-9
+      GigabitEthernet3_0_0: 203.0.113.83/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.39/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.139/24
+    gw-10-vm:
+      hostname: virginia-hypervisor-1-vm-10
+      GigabitEthernet3_0_0: 203.0.113.84/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.40/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.140/24
+virginia-hypervisor-2:
+  RegionName: "us_east_1"
+  static_routes:
+    - destination_prefix: 0.0.0.0/0
+      next_hop: 203.0.113.97
+      description: dia_default_route
+  vms:
+    gw-1-vm:
+      hostname: virginia-hypervisor-2-vm-1
+      GigabitEthernet3_0_0: 203.0.113.107/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.41/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.141/24
+    gw-2-vm:
+      hostname: virginia-hypervisor-2-vm-2
+      GigabitEthernet3_0_0: 203.0.113.108/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.42/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.142/24
+    gw-3-vm:
+      hostname: virginia-hypervisor-2-vm-3
+      GigabitEthernet3_0_0: 203.0.113.109/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.43/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.143/24
+    gw-4-vm:
+      hostname: virginia-hypervisor-2-vm-4
+      GigabitEthernet3_0_0: 203.0.113.110/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.44/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.144/24
+    gw-5-vm:
+      hostname: virginia-hypervisor-2-vm-5
+      GigabitEthernet3_0_0: 203.0.113.111/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.45/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.145/24
+    gw-6-vm:
+      hostname: virginia-hypervisor-2-vm-6
+      GigabitEthernet3_0_0: 203.0.113.112/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.46/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.146/24
+    gw-7-vm:
+      hostname: virginia-hypervisor-2-vm-7
+      GigabitEthernet3_0_0: 203.0.113.113/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.47/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.147/24
+    gw-8-vm:
+      hostname: virginia-hypervisor-2-vm-8
+      GigabitEthernet3_0_0: 203.0.113.114/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.48/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.148/24
+    gw-9-vm:
+      hostname: virginia-hypervisor-2-vm-9
+      GigabitEthernet3_0_0: 203.0.113.115/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.49/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.149/24
+    gw-10-vm:
+      hostname: virginia-hypervisor-2-vm-10
+      GigabitEthernet3_0_0: 203.0.113.116/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.50/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.150/24

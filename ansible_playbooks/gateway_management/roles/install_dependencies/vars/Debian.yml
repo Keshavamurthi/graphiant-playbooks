@@ -1,0 +1,11 @@
+---
+install_dependencies_packages:
+  - swtpm-tools
+  - tpm-udev
+  - python3-lxml
+  - libvirt-clients
+  - libvirt-daemon-system
+  - pkg-config
+  - libvirt-dev
+  - python3-dev
+  - build-essential

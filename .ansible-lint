@@ -1,0 +1,42 @@
+---
+# Ansible Lint configuration for the repo-root Ansible content (ansible_playbooks/gateway_management/).
+# The graphiant.naas collection is linted separately via its own .ansible-lint.
+# https://ansible-lint.readthedocs.io/
+
+exclude_paths:
+  # Environment data, not Ansible content: per-site gateway configs and inventories.
+  # Copied from backbone-sre-operations and untracked (see .gitignore).
+  - ansible_playbooks/gateway_management/configs/
+  - ansible_playbooks/gateway_management/inventory/
+  # Generated at runtime by get_bearer_token and get_software_version_info.
+  - ansible_playbooks/gateway_management/vars/runtime_vars.yml
+  # The collection has its own .ansible-lint and its own CI job.
+  - ansible_collections/
+  - venv/
+  - terraform/
+
+use_default_rules: true
+verbosity: 1
+
+# ansible-lint infers file kind from path, and treats everything under a directory named
+# a playbooks-style directory as a playbook. requirements.yml is a galaxy requirements
+# explicitly or it fails syntax-check as "not a list of plays".
+kinds:
+  - requirements: "ansible_playbooks/gateway_management/requirements.yml"
+
+
+skip_list:
+  # These roles are deliberately a pipeline: each one publishes facts (bearer_token,
+  # device_id, device_hostname, vm_index, ...) that later roles and the calling play
+  # consume. Prefixing those facts per-role would break every hand-off, and the
+  # `when: X is not defined` guards that make the roles individually re-runnable.
+  - var-naming[no-role-prefix]
+  # Interface fact names mirror the GNOS interface names they carry
+  # (GigabitEthernet3_0_0, VirtualFunctionEthernet6_0_0) so payload debugging lines up
+  # with device configuration.
+  - var-naming[pattern]
+
+warn_list:
+  # `action` is a loop variable feeding interface_template.yml, which expects that key
+  # name. Renaming means changing the template contract; tracked, not silenced.
+  - var-naming[no-reserved]

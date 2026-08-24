@@ -233,3 +233,11 @@ test/test.ini
 # Vault secrets
 ansible_collections/graphiant/naas/configs/vault_secrets.yml
 ansible_collections/graphiant/naas/configs/vault_site_to_site_vpn_secrets.yml
+
+# Gateway automation configs and inventories.
+# These are copied verbatim from backbone-sre-operations for local testing and contain
+# real production topology (gateway/management IPs, site hostnames) and customer
+# enterprise IDs. Do NOT commit until replaced with sanitized examples.
+# Gateway automation: runtime-generated vars and the local credentials file.
+# gateway_vm_vars.yml holds portal and hypervisor passwords - never commit it.
+ansible_playbooks/gateway_management/vars/runtime_vars*.yml

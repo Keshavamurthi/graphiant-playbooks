@@ -1,0 +1,126 @@
+---
+# Example gateway VM configuration - NOT real deployment data.
+#
+# Addresses use the IANA documentation ranges reserved by RFC 5737
+# (203.0.113.0/24 TEST-NET-3, 198.51.100.0/24 TEST-NET-2) so they can never collide
+# with real routable or internal addressing.
+#
+# Layout: <hypervisor hostname> -> RegionName, static_routes, then one entry per gateway VM
+# mapping interface name to CIDR. The file name must match the first two dash-separated
+# fields of the VM names inside it, because roles/read_vms_yml_file derives it that way:
+#   sanjose-hypervisor-1-vm-1 -> sanjose-hypervisor.yml
+
+sanjose-hypervisor-1:
+  RegionName: "us_west_2"
+  static_routes:
+    - destination_prefix: 0.0.0.0/0
+      next_hop: 203.0.113.1
+      description: dia_default_route
+  vms:
+    gw-1-vm:
+      hostname: sanjose-hypervisor-1-vm-1
+      GigabitEthernet3_0_0: 203.0.113.11/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.11/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.111/24
+    gw-2-vm:
+      hostname: sanjose-hypervisor-1-vm-2
+      GigabitEthernet3_0_0: 203.0.113.12/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.12/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.112/24
+    gw-3-vm:
+      hostname: sanjose-hypervisor-1-vm-3
+      GigabitEthernet3_0_0: 203.0.113.13/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.13/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.113/24
+    gw-4-vm:
+      hostname: sanjose-hypervisor-1-vm-4
+      GigabitEthernet3_0_0: 203.0.113.14/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.14/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.114/24
+    gw-5-vm:
+      hostname: sanjose-hypervisor-1-vm-5
+      GigabitEthernet3_0_0: 203.0.113.15/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.15/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.115/24
+    gw-6-vm:
+      hostname: sanjose-hypervisor-1-vm-6
+      GigabitEthernet3_0_0: 203.0.113.16/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.16/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.116/24
+    gw-7-vm:
+      hostname: sanjose-hypervisor-1-vm-7
+      GigabitEthernet3_0_0: 203.0.113.17/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.17/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.117/24
+    gw-8-vm:
+      hostname: sanjose-hypervisor-1-vm-8
+      GigabitEthernet3_0_0: 203.0.113.18/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.18/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.118/24
+    gw-9-vm:
+      hostname: sanjose-hypervisor-1-vm-9
+      GigabitEthernet3_0_0: 203.0.113.19/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.19/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.119/24
+    gw-10-vm:
+      hostname: sanjose-hypervisor-1-vm-10
+      GigabitEthernet3_0_0: 203.0.113.20/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.20/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.120/24
+sanjose-hypervisor-2:
+  RegionName: "us_west_2"
+  static_routes:
+    - destination_prefix: 0.0.0.0/0
+      next_hop: 203.0.113.33
+      description: dia_default_route
+  vms:
+    gw-1-vm:
+      hostname: sanjose-hypervisor-2-vm-1
+      GigabitEthernet3_0_0: 203.0.113.43/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.21/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.121/24
+    gw-2-vm:
+      hostname: sanjose-hypervisor-2-vm-2
+      GigabitEthernet3_0_0: 203.0.113.44/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.22/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.122/24
+    gw-3-vm:
+      hostname: sanjose-hypervisor-2-vm-3
+      GigabitEthernet3_0_0: 203.0.113.45/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.23/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.123/24
+    gw-4-vm:
+      hostname: sanjose-hypervisor-2-vm-4
+      GigabitEthernet3_0_0: 203.0.113.46/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.24/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.124/24
+    gw-5-vm:
+      hostname: sanjose-hypervisor-2-vm-5
+      GigabitEthernet3_0_0: 203.0.113.47/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.25/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.125/24
+    gw-6-vm:
+      hostname: sanjose-hypervisor-2-vm-6
+      GigabitEthernet3_0_0: 203.0.113.48/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.26/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.126/24
+    gw-7-vm:
+      hostname: sanjose-hypervisor-2-vm-7
+      GigabitEthernet3_0_0: 203.0.113.49/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.27/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.127/24
+    gw-8-vm:
+      hostname: sanjose-hypervisor-2-vm-8
+      GigabitEthernet3_0_0: 203.0.113.50/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.28/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.128/24
+    gw-9-vm:
+      hostname: sanjose-hypervisor-2-vm-9
+      GigabitEthernet3_0_0: 203.0.113.51/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.29/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.129/24
+    gw-10-vm:
+      hostname: sanjose-hypervisor-2-vm-10
+      GigabitEthernet3_0_0: 203.0.113.52/27
+      VirtualFunctionEthernet6_0_0: 198.51.100.30/24
+      VirtualFunctionEthernet7_0_0: 198.51.100.130/24

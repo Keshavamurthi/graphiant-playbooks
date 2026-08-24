@@ -1,0 +1,98 @@
+---
+- name: Configure Gateway VM
+  hosts: gateway_hypervisors
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - vars/runtime_vars_{{ inventory_hostname }}.yml
+    - vars/gateway_vm_vars.yml
+
+  pre_tasks:
+    - name: Get bearer token
+      when: bearer_token is not defined
+      ansible.builtin.include_role:
+        name: get_bearer_token
+
+    - name: Compute device ID and site name
+      block:
+        - name: Get device ID from device hostname
+          ansible.builtin.include_role:
+            name: get_device_id_from_device_name
+
+        - name: Verify device ID is available
+          when: device_id is not defined
+          ansible.builtin.fail:
+            msg: "Device ID not found"
+
+        - name: Compute device site name
+          ansible.builtin.set_fact:
+            site_name: >-
+              {{ hypervisor_hostname.split('-')[0:4] | join('-') }}
+
+    - name: Render configs from vms.yml
+      block:
+        - name: Read VM  config
+          ansible.builtin.include_role:
+            name: read_vms_yml_file
+
+        - name: Get VM interface configs from vms.yml
+          loop: "{{ vms_dict | dict2items }}"
+          vars:
+            matched_vms: >-
+              {{ item.value.vms | default({}) | dict2items
+                 | selectattr('value.hostname', 'eq', device_hostname) | list }}
+          when: matched_vms | length > 0
+          ansible.builtin.set_fact:
+            hypervisor_hostname: "{{ item.key }}"
+            interface_configs: "{{ matched_vms[0].value }}"
+          delegate_to: localhost
+
+        - name: Get interface IPs from interface configs
+          ansible.builtin.set_fact:
+            GigabitEthernet3_0_0: "{{ interface_configs.GigabitEthernet3_0_0 }}"
+            VirtualFunctionEthernet6_0_0: "{{ interface_configs.VirtualFunctionEthernet6_0_0 }}"
+            VirtualFunctionEthernet7_0_0: "{{ interface_configs.VirtualFunctionEthernet7_0_0 }}"
+          delegate_to: localhost
+
+  tasks:
+
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg: |
+          Action: Configure VM
+          VM Hostname: {{ device_hostname }}
+          VM OSS-ID: {{ device_id }}
+          Interface IPs:
+            GigabitEthernet3_0_0: {{ GigabitEthernet3_0_0 }}
+            VirtualFunctionEthernet6_0_0: {{ VirtualFunctionEthernet6_0_0 }}
+            VirtualFunctionEthernet7_0_0: {{ VirtualFunctionEthernet7_0_0 }}
+
+    - name: Compute interface config payload (final_config_payload)
+      ansible.builtin.include_role:
+        name: compute_interface_config_payload
+
+    - name: Put Device Configuration
+      ansible.builtin.include_role:
+        name: put_device_config
+
+    - name: Activate Device
+      vars:
+        bringup_status: "Allowed"
+      ansible.builtin.include_role:
+        name: update_device_bringup_status
+
+    - name: Waiting for the device to be activated
+      ansible.builtin.pause:
+        seconds: 30
+
+    - name: After activation, check Portal Status is ready
+      ansible.builtin.include_role:
+        name: get_portal_status
+
+    - name: Update device info in audit log
+      when: inventory_hostname == hypervisor_hostname
+      vars:
+        gateway_vm_status: "Configured"
+      ansible.builtin.include_role:
+        name: update_audit_log

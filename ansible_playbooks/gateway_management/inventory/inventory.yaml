@@ -1,0 +1,21 @@
+---
+all:
+  vars:
+    ansible_user: "{{ ansible_user }}"
+    ansible_ssh_pass: "{{ gateway_hypervisor_ssh_password }}"
+    ansible_python_interpreter: "/venv/bin/python"
+  children:
+    gateway_hypervisors:
+      children:
+        sanjose:
+          hosts:
+            sanjose-hypervisor-1:
+              ansible_host: 100.70.4.100
+            sanjose-hypervisor-2:
+              ansible_host: 100.70.5.100
+        virginia:
+          hosts:
+            virginia-hypervisor-1:
+              ansible_host: 100.70.4.100
+            virginia-hypervisor-2:
+              ansible_host: 100.70.5.100

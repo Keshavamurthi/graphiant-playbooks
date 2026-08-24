@@ -1,0 +1,48 @@
+---
+- name: Cleanup VM in Hypervisor
+  hosts: gateway_hypervisors
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    # Resolve on the target hypervisor only; the work below is gated the same way.
+    - name: Resolve the VM from vms.yml
+      when: hypervisor_hostname == inventory_hostname
+      block:
+        - name: Get VM Info from vms.yml
+          ansible.builtin.include_role:
+            name: read_vms_yml_file
+
+        - name: Verify vms.yml declares a VM for index {{ vm_index }}
+          when: ('gw-' ~ vm_index ~ '-vm') not in (vms_dict[inventory_hostname].vms | default({}))
+          ansible.builtin.fail:
+            msg: >-
+              gw-{{ vm_index }}-vm not found under {{ inventory_hostname }}.vms
+              in {{ vms_file_name }}.
+
+        # vm_name is the vms.yml key itself, never rebuilt from vm_index.
+        - name: Set derived variables
+          vars:
+            vm_entry: >-
+              {{ vms_dict[inventory_hostname].vms | dict2items
+                 | selectattr('key', 'eq', 'gw-' ~ vm_index ~ '-vm') | first }}
+          ansible.builtin.set_fact:
+            vm_name: "{{ vm_entry.key }}"
+            device_hostname: "{{ vm_entry.value.hostname }}"
+            vm_dir: "/home/gso/devices/{{ vm_entry.key }}"
+            cloud_img_dir: "/home/gso/devices/{{ vm_entry.key }}/{{ vm_entry.key }}_cloud_img"
+
+  tasks:
+    - name: Display deployment information
+      when: hypervisor_hostname == inventory_hostname
+      ansible.builtin.debug:
+        msg: |
+          Action: Delete VM
+          Hypervisor: {{ hypervisor_hostname }}
+          VM Name: {{ vm_name }}
+          VM Hostname: {{ device_hostname }}
+
+    - name: Cleanup VM in Hypervisor
+      when: hypervisor_hostname == inventory_hostname
+      ansible.builtin.include_role:
+        name: destroy_vm_in_hypervisor

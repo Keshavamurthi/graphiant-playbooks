@@ -1,0 +1,23 @@
+---
+- name: Get device ID from device hostname
+  when: device_id is not defined
+  ansible.builtin.include_role:
+    name: get_device_id_from_device_name
+
+- name: Create /home/gso/gateway_vms_audit.log file in hypervisor
+  ansible.builtin.file:
+    path: "/home/gso/gateway_vms_audit.log"
+    state: touch
+    mode: '0644'
+    owner: "{{ ansible_user | default('gso') }}"
+    group: "{{ ansible_user | default('gso') }}"
+
+- name: Append device entry to /home/gso/gateway_vms_audit.log
+  ansible.builtin.lineinfile:
+    path: "/home/gso/gateway_vms_audit.log"
+    line: >-
+      {{ ansible_date_time.iso8601 }} | {{ gcs_env }} | {{ parent_enterprise_name }} |
+      {{ enterprise_name }} | {{ ansible_enterprise_id }} | {{ device_hostname }} |
+      {{ device_id }} | {{ gateway_vm_status }}
+    create: true
+    mode: '0644'
