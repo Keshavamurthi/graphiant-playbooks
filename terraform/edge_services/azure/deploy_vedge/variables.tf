@@ -100,6 +100,7 @@ variable "token" {
   description = "Graphiant vEdge onboarding authentication token"
   type        = string
   sensitive   = true
+  default     = ""
 }
 
 variable "cloud_init_username" {
@@ -341,7 +342,7 @@ variable "test_vm_name" {
 variable "test_vm_size" {
   description = "Azure VM size for the test VM"
   type        = string
-  default     = "Standard_B1s"
+  default     = "Standard_B2ts_v2"
 }
 
 variable "test_vm_admin_username" {
@@ -352,6 +353,39 @@ variable "test_vm_admin_username" {
 
 variable "test_vm_admin_password" {
   description = "Admin password for the test VM (12-123 chars via CLI, must meet 3 of 4 complexity requirements : Have lowercase, Have uppercase, Have a digit, Have a special char)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+# --- Mgmt VM (optional) ---
+
+variable "deploy_mgmt_vm" {
+  description = "Whether to deploy a desktop VM (RDP) on the mgmt subnet to access the vEdge local web server"
+  type        = bool
+  default     = false
+}
+
+variable "mgmt_vm_name" {
+  description = "Name of the mgmt VM"
+  type        = string
+  default     = "graphiant-vedge-mgmt-vm"
+}
+
+variable "mgmt_vm_size" {
+  description = "Azure VM size for the mgmt VM"
+  type        = string
+  default     = "Standard_B2s_v2"
+}
+
+variable "mgmt_vm_admin_username" {
+  description = "Admin username for the mgmt VM (used for RDP login)"
+  type        = string
+  default     = "azureuser"
+}
+
+variable "mgmt_vm_admin_password" {
+  description = "Admin password for the mgmt VM (12-123 chars via CLI, must meet 3 of 4 complexity requirements : Have lowercase, Have uppercase, Have a digit, Have a special char)"
   type        = string
   sensitive   = true
   default     = ""

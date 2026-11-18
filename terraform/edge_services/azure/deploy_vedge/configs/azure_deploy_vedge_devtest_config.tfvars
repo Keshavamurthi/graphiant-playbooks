@@ -47,6 +47,7 @@ source_image_id = ""
 ssh_public_key = ""
 
 # token: Edge Authentication token for Onboarding the vEdge into a specific Enterprise within Graphiant Portal
+# If token is left empty, the vEdge falls back to URL/QR code based onboarding.
 token = ""
 
 # =============================================================================
@@ -132,10 +133,20 @@ allowed_cidr = "0.0.0.0/0"
 # ================================================================
 # deploy_test_vm = true
 # test_vm_name = "graphiant-vedge-devtest-test-vm"
-# test_vm_size = "Standard_B1s"
+# test_vm_size = "Standard_B2ts_v2"
 # test_vm_admin_username = "azureuser"
 # test_vm_admin_password = ""  # 12-123 chars via CLI, must meet 3 of 4 complexity requirements : Have lowercase, Have uppercase, Have a digit, Have a special char
 # nsg_test_vm_id = "/subscriptions/xxxx/resourceGroups/rg/providers/Microsoft.Network/networkSecurityGroups/test-vm-nsg"   # only with deploy_test_vm
+
+# ================================================================
+# Mgmt VM Configuration (Optional — desktop VM on mgmt subnet to access the vEdge local web server)
+# ================================================================
+# RDP to mgmt_vm_public_ip (allowed only from allowed_cidr), then browse to the vedge_local_web_server_url output
+# deploy_mgmt_vm = true
+# mgmt_vm_name = "graphiant-vedge-devtest-mgmt-vm"
+# mgmt_vm_size = "Standard_B2s_v2"
+# mgmt_vm_admin_username = "azureuser"
+# mgmt_vm_admin_password = ""  # 12-123 chars via CLI, must meet 3 of 4 complexity requirements : Have lowercase, Have uppercase, Have a digit, Have a special char
 
 # tags: Additional tags to apply
 # tags = {

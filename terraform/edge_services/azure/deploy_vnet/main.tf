@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.80.0"
+      version = "~> 3.117.0"
     }
   }
 }
@@ -64,27 +64,30 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_subnet" "mgmt" {
-  count                = local.is_create ? 1 : 0
-  name                 = "mgmt"
-  resource_group_name  = local.rg_name
-  virtual_network_name = azurerm_virtual_network.vnet[0].name
-  address_prefixes     = [var.subnet_mgmt_prefix]
+  count                           = local.is_create ? 1 : 0
+  name                            = "mgmt"
+  resource_group_name             = local.rg_name
+  virtual_network_name            = azurerm_virtual_network.vnet[0].name
+  address_prefixes                = [var.subnet_mgmt_prefix]
+  default_outbound_access_enabled = false
 }
 
 resource "azurerm_subnet" "wan" {
-  count                = local.is_create ? 1 : 0
-  name                 = "wan"
-  resource_group_name  = local.rg_name
-  virtual_network_name = azurerm_virtual_network.vnet[0].name
-  address_prefixes     = [var.subnet_wan_prefix]
+  count                           = local.is_create ? 1 : 0
+  name                            = "wan"
+  resource_group_name             = local.rg_name
+  virtual_network_name            = azurerm_virtual_network.vnet[0].name
+  address_prefixes                = [var.subnet_wan_prefix]
+  default_outbound_access_enabled = false
 }
 
 resource "azurerm_subnet" "lan" {
-  count                = local.is_create ? 1 : 0
-  name                 = "lan"
-  resource_group_name  = local.rg_name
-  virtual_network_name = azurerm_virtual_network.vnet[0].name
-  address_prefixes     = local.lan_ipv6 ? [var.subnet_lan_prefix, cidrsubnet(var.vnet_address_space_v6, 64 - tonumber(split("/", var.vnet_address_space_v6)[1]), 3)] : [var.subnet_lan_prefix]
+  count                           = local.is_create ? 1 : 0
+  name                            = "lan"
+  resource_group_name             = local.rg_name
+  virtual_network_name            = azurerm_virtual_network.vnet[0].name
+  address_prefixes                = local.lan_ipv6 ? [var.subnet_lan_prefix, cidrsubnet(var.vnet_address_space_v6, 64 - tonumber(split("/", var.vnet_address_space_v6)[1]), 3)] : [var.subnet_lan_prefix]
+  default_outbound_access_enabled = false
 }
 
 # -----------------------------------------------------------------------------
@@ -97,7 +100,7 @@ resource "azurerm_route_table" "wan" {
   name                          = "${var.project_name}-wan-rt"
   location                      = local.rg_location
   resource_group_name           = local.rg_name
-  disable_bgp_route_propagation = true
+  bgp_route_propagation_enabled = false
 
   route {
     name           = "default-to-igw"
@@ -126,7 +129,7 @@ resource "azurerm_route_table" "lan" {
   name                          = "${var.project_name}-lan-rt"
   location                      = local.rg_location
   resource_group_name           = local.rg_name
-  disable_bgp_route_propagation = false
+  bgp_route_propagation_enabled = true
 
   tags = local.tags
 }
